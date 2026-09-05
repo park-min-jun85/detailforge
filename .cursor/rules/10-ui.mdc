@@ -1,0 +1,19 @@
+---
+description: DetailForge UI — primitives first, separate logic, desktop editor 3-column layout
+globs: src/app/**/*.{ts,tsx,css},src/components/**/*.{ts,tsx},src/features/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# UI
+
+기존 디자인 primitive를 우선 사용한다. 새 UI 요소를 만들기 전에 `src/components/`를 확인한다.
+
+Business logic과 presentation을 분리한다. 도메인 규칙, Product Facts, Adapter, AI 호출은 UI 컴포넌트에 넣지 않는다.
+
+MVP는 desktop 편집 환경을 우선한다.
+
+향후 editor는 다음 3열 구조를 기본으로 한다.
+
+- Section Navigator
+- Preview
+- Property Inspector

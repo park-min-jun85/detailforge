@@ -1,0 +1,14 @@
+---
+description: DetailForge core rules — read docs first, stay in task scope, verify after changes
+alwaysApply: true
+---
+
+# Core
+
+작업을 시작하기 전에 `AGENTS.md`와 관련 `docs/`를 먼저 확인한다. 현재 TASK 범위는 `docs/tasks/`를 따른다.
+
+현재 TASK 범위를 벗어난 대규모 리팩터링을 하지 않는다. 관련 없는 파일을 임의로 수정하지 않는다.
+
+코드 작성 전에 설치된 Next.js 가이드(`node_modules/next/dist/docs/`)를 확인한다. `AGENTS.md`의 `nextjs-agent-rules` 블록을 제거하거나 수정하지 않는다.
+
+변경 후 TypeScript / lint / build를 확인한다 (`npx tsc --noEmit`, `npm run lint`, `npm run build`).
