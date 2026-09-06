@@ -4,14 +4,18 @@
 
 ## 현재 단계
 
-PHASE 0 / TASK-002 — 프로젝트 규칙, 문서 골격, Cursor rules를 준비한다.
+PHASE 0 / TASK-003 — Supabase 기반 데이터 계층과 Core Domain Model을 구축한다.
 
-이 단계에서 구현하지 않는다.
+이 단계에서는 6개 Core table, private Storage bucket, 서버 전용 Supabase client,
+Domain/Database 타입을 구현한다.
 
-- DB / Supabase
+- Auth와 사용자별 RLS policy
 - AI API
 - 상품 입력 기능
 - 상세페이지 UI
+- 이미지 업로드
+- 도매사이트 크롤링
+- 오픈마켓 연동
 
 ## 규칙
 

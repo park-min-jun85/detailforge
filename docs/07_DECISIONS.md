@@ -46,3 +46,24 @@ App Router와 TypeScript를 기본 스택으로 사용한다. Pages Router를 �
 - Date: 2026-09-05
 
 도매사이트별 차이는 Adapter 계층에서 처리한다. 특정 오픈마켓 로직이 Core Domain에 침투하지 않게 한다. MVP에서는 자동 크롤링을 구현하지 않는다.
+
+## ADR-006
+
+**MVP Supabase 접근은 서버 전용으로 제한**
+
+- Status: Accepted
+- Date: 2026-09-05
+
+초기 MVP에서는 Next.js 서버의 service role client만 Supabase에 접근한다. Browser
+client와 Auth policy는 사용자 소유권 모델이 확정된 후 도입한다. 모든 public table은
+RLS를 활성화하고 `anon`, `authenticated` 허용 policy를 만들지 않는다.
+
+## ADR-007
+
+**초기 MVP에서 ORM을 사용하지 않음**
+
+- Status: Accepted
+- Date: 2026-09-05
+
+초기 데이터 모델은 Supabase SQL migration과 `@supabase/supabase-js`로 관리한다.
+Prisma나 Drizzle은 추가하지 않으며, 실제 요구가 생기면 별도 결정으로 검토한다.
