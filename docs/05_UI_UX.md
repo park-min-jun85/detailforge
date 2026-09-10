@@ -3,7 +3,7 @@
 ## 목적
 
 판매자가 상품을 입력하고 상세페이지 초안을 편집하는 화면 구조를 정의한다.
-PHASE 0 / TASK-004에서는 데이터 연결 전의 App Shell과 Navigation을 구축한다.
+PHASE 0 / TASK-004의 App Shell 위에 PHASE 1 / TASK-005의 프로젝트 생성·조회를 연결한다.
 
 ## App Shell
 
@@ -20,14 +20,16 @@ PHASE 0 / TASK-004에서는 데이터 연결 전의 App Shell과 Navigation을 �
 
 - `/`: Dashboard
 - `/projects`: 프로젝트
+- `/projects/new`: 프로젝트명 입력 및 생성
 - `/templates`: 템플릿
 - `/settings`: 설정
 
 Sidebar에는 DetailForge 홈 링크와 Dashboard, Projects, Templates, Settings를 둔다.
-`NavItem`만 Client Component이며 `usePathname`으로 현재 메뉴를 계산한다.
+Shell의 `NavItem`은 Client Component이며 `usePathname`으로 현재 메뉴를 계산한다.
 홈은 정확히 `/`일 때만 선택되고 다른 메뉴는 해당 경로와 하위 경로에서 선택된다.
 선택 상태는 흰 배경, 테두리, 굵은 글씨 및 `aria-current="page"`로 표시한다.
-페이지와 나머지 공통 컴포넌트는 Server Components로 유지한다.
+페이지와 나머지 공통 컴포넌트는 Server Components로 유지한다. 프로젝트 생성 폼은
+`useActionState`를 사용하는 Client Component이며 Server Action으로 제출한다.
 
 ## 화면 구성
 
@@ -35,23 +37,37 @@ Sidebar에는 DetailForge 홈 링크와 Dashboard, Projects, Templates, Settings
 
 - 제목: Dashboard
 - 설명: 상품 상세페이지 제작 현황을 확인하세요.
-- Primary CTA: 새 상세페이지 만들기 — 현재는 `/projects`로 이동한다.
+- Primary CTA: 새 상세페이지 만들기 — `/projects/new`로 이동한다.
 - 전체 프로젝트 / 작업 중 / 완료의 세 요약 카드
-- 수치는 모두 `—` placeholder이다. 보조 문구와 스크린리더용 텍스트로
-  집계 준비 중임을 알리며 실제 DB 수치로 표시하지 않는다.
-- 최근 프로젝트: 아직 생성된 프로젝트가 없습니다.
+- 수치는 실제 DB의 exact count이다. 작업 중에는 draft/analyzing/generated/editing,
+  완료에는 completed만 포함한다. 프로젝트가 없을 때는 0을 표시한다.
+- 최근 프로젝트는 수정일 내림차순 최대 5개이며 목록과 동일한 행 UI를 사용한다.
+- 프로젝트가 없으면 기존 '아직 생성된 프로젝트가 없습니다.' 안내를 표시한다.
+- 조회 실패는 오류 안내와 다시 불러오기 링크를 표시하며, 0건으로 대체하지 않는다.
 - 전체 프로젝트 보기 링크는 `/projects`로 이동한다.
 
 ### Projects
 
 - 제목: 프로젝트
-- CTA: 새 프로젝트
-- 프로젝트 생성 기능은 준비 중이라는 설명을 버튼 아래 표시한다.
-- 버튼은 `type="button"`, `aria-disabled="true"`이며 동작/폼/서버 호출이 없다.
-  키보드 포커스는 받을 수 있고 `aria-describedby`로 준비 중 설명을 연결한다.
+- CTA: 새 프로젝트 — `/projects/new`로 이동한다.
+- 실제 목록은 수정일 내림차순, 동일 수정일에서는 id 내림차순으로 20개씩 표시한다.
+- 이름, 한국어 상태, 한국 시간 기준 최근 수정일을 표시한다. DB의 상태값은 보존한다.
+- 프로젝트 열기는 '준비 중' 표시만 두며 미구현 상세 route로 이동하지 않는다.
+- 이전/다음 링크로 pagination하며 잘못된 page 입력은 안전한 페이지로 정규화한다.
 - Empty State: 아직 프로젝트가 없습니다.
-- TASK-005에서는 페이지의 서버 경계에서 데이터와 생성 동작을 연결한다.
-  공통 Shell과 EmptyState에 Supabase 또는 도메인 로직을 넣지 않는다.
+- 조회 실패 시 일반 오류 메시지와 다시 불러오기 링크를 표시한다.
+- 공통 Shell과 EmptyState에 Supabase 또는 도메인 로직을 넣지 않는다.
+
+### 프로젝트 생성
+
+- 전용 `/projects/new` route에서 프로젝트명 하나만 입력한다. 별도 wizard는 없다.
+- 서버에서 Zod로 trim 후 1~100자를 검증한다. 필드 오류는 입력란에 연결한다.
+- 입력값은 오류 시 유지한다. 제출 중에는 입력을 읽기 전용으로, 생성 버튼을 disabled로
+  표시하며 '생성 중…' 상태를 알린다. 동기 제출 잠금으로 빠른 중복 제출도 막는다.
+- 성공 시 Projects로 이동하고 생성 완료 안내와 갱신된 목록을 표시한다.
+- 실패 시 내부 정보 없는 오류 메시지와 목록 확인 링크를 제공한다. 응답 유실 시
+  저장 여부가 불명확할 수 있어 목록 확인 후 재시도하도록 안내한다.
+- 취소는 저장 없이 Projects로 이동한다. Product 입력이나 Editor는 열지 않는다.
 
 ### Templates / Settings
 
@@ -63,6 +79,7 @@ Sidebar에는 DetailForge 홈 링크와 Dashboard, Projects, Templates, Settings
 
 - `src/components/app-shell/`: AppShell, AppSidebar, AppHeader, NavItem
 - `src/components/ui/`: PageHeader, EmptyState, AppIcon
+- `src/features/projects/components/`: CreateProjectForm, ProjectList, ProjectLoadError
 - Neutral zinc 계열의 밝은 화면, 흰 패널, 명확한 테두리와 절제된 모서리를 사용한다.
 - 주 CTA는 짙은 중립색으로 강조하고 넉넉한 작업 공간과 높은 가독성을 우선한다.
 - Tailwind CSS와 공통 CSS 클래스를 사용하며 추가 UI/아이콘 의존성은 없다.

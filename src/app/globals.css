@@ -38,7 +38,8 @@ body {
   .button-primary:hover {
     @apply bg-zinc-700;
   }
-  .button-primary[aria-disabled="true"] {
+  .button-primary[aria-disabled="true"],
+  .button-primary:disabled {
     @apply cursor-not-allowed border-zinc-200 bg-zinc-200 text-zinc-600;
   }
   .text-link {
