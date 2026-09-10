@@ -51,6 +51,34 @@ Product에 종속된 사실정보의 Source of Truth이며, DetailPage는 순서
 - DB 오류, 연결 실패, 환경변수 누락은 일반 사용자 메시지로 변환한다. 내부 오류와
   service role key는 응답이나 로그에 출력하지 않는다. DB 요청 제한 시간은 10초다.
 
+## PHASE 1 / TASK-006 상품정보
+
+- `/projects/[projectId]`는 UUID/Project 존재 여부를 확인하고 상품정보를 서버에서 조회한다.
+- `src/features/products/queries.ts`: Project와 Product 조회 및 Domain/Form 데이터 조합.
+- `schemas.ts`, `mappers.ts`: 입력과 JSON 검증, manual snapshot/Facts 생성, DB→Domain 변환.
+- `actions.ts`: FormData를 받아 저장 흐름을 호출하고 상세 route를 재검증한다.
+- `persistence.ts`: 기존 서버 client로 products와 product_facts를 저장한다. UI에는 DB query를 두지 않는다.
+- `components/product-form.tsx`: 입력, 스펙 행, 저장 진행/오류/성공 상태를 표현한다.
+- Product 저장은 Project의 status와 updated_at을 변경하지 않으므로 기존 목록/집계 의미를 유지한다.
+
+### 두 테이블 저장과 보상
+
+Product와 기존 Facts를 먼저 조회해 스냅샷을 보관한다. Product를 먼저 INSERT/UPDATE하고
+Facts를 INSERT/UPDATE한다. 두 UNIQUE 제약을 유지하며 무조건적인 upsert로 다른 쓰기를 덮지 않는다.
+기존 record UPDATE와 복원에는 updated_at 비교 조건을 사용한다. 오래된 폼은 저장을 거부한다.
+같은 프로세스의 같은 Project 저장은 동시 실행을 거부한다.
+
+Facts 저장 실패 시 재조회하여 응답만 유실되었는지 확인한다. Facts가 이전 상태 그대로이면
+신규 Product는 해당 요청의 id/updated_at 조건으로 삭제하고, 기존 Product는 이전 내용으로
+복원한다. 복원 시 DB trigger로 변경된 updated_at을 폼에 돌려주어 재시도를 허용한다.
+Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 오래된 값으로 덮어쓰지 않고
+재확인 필요 상태를 반환하며 폼을 잠근다. 사용자에게 다시 열어 저장 내용을 확인하도록 안내한다.
+
+이는 보상 처리이며 DB 트랜잭션이 아니다. 프로세스 중단, 장기 연결 장애, 여러 서버 프로세스의
+동시 쓰기에서는 부분 상태가 남을 수 있고 두 쓰기 사이의 중간 상태도 조회될 수 있다.
+신규 migration/RPC 없이 ACID atomicity를 보장하지 않는다. 엄격한 원자성이 필요해지는
+단계에서 DB transaction/RPC를 별도 설계해야 한다.
+
 ## 현재 운영 전제
 
 현재 MVP는 **single-user/local-development assumption**이다. Server Action도 외부에서

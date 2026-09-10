@@ -35,11 +35,44 @@ Project당 하나만 존재한다. 정규화된 기본 상품정보와 입력 �
 `raw_data`는 수동 입력 또는 향후 Adapter가 전달한 원본 Source Data를 손실 없이
 보존하는 JSONB다.
 
+TASK-006 수동 입력은 `source_type = manual`로 저장한다. project_id UNIQUE 기준으로
+없으면 INSERT, 있으면 UPDATE하며 Product id를 유지한다. 선택 필드의 빈 값은 일반
+컬럼에서는 null로 저장한다. manual raw_data는 Zod 검증 후 trim과 완전히 빈 스펙 행 제거를
+적용한 입력 snapshot이다. 사용자가 제공하지 않은 내용을 추가하지 않으며 원본 문자의
+앞뒤 공백까지 보존하는 형식은 아니다.
+
+```json
+{
+  "inputMethod": "manual",
+  "productName": "상품명",
+  "brand": "",
+  "category": "",
+  "description": "사용자 제공 설명",
+  "sourceUrl": "",
+  "specifications": [{ "name": "재질", "value": "ABS" }]
+}
+```
+
+선택 필드는 raw_data 안에서는 일관된 빈 문자열로 유지한다. 초기 schema 기본값인 `{}`는
+스펙 없는 기존 상품으로 읽을 수 있으나, 그 외 알 수 없는 원본 JSON은 조용히 무시하지 않고
+조회 오류로 처리한다. 상세 검증 규칙은 `src/features/products/schemas.ts`에 있다.
+
 ### product_facts
 
 Product당 하나만 존재하며 검증된 사실정보의 Source of Truth다. `facts`와 이를
 검증할 때 사용한 `source_snapshot`을 분리해 저장한다. `version`은 후속 확장을 위해
 유지하지만 이번 MVP에서는 별도 history나 immutable version 구조를 만들지 않는다.
+
+TASK-006에서는 product_id UNIQUE 기준으로 생성/갱신하고 기존 id와 version을 유지한다.
+신규 version은 1이다. facts에는 productName, 값이 있는 brand/category, 완전한
+specifications(name/value)만 저장한다. 빈 선택값, 설명, URL은 Facts로 복사하지 않는다.
+description은 사용자 제공 문구이며 검증된 사실이라고 가정하지 않는다.
+source_snapshot에는 해당 저장의 manual raw_data를 그대로 복사한다.
+
+수동 저장은 AI Fact validation이 아니므로 validated_at은 null로 둔다. 기존 검증 시각이
+있어도 입력 갱신 시 null로 해제한다. products/Facts는 별도 요청이며 Facts 실패 시
+신규 Product 정리 또는 기존 Product 복원으로 보상한다. 복구 실패/중단 시 부분 상태가
+남을 수 있다는 한계는 Architecture와 TASK-006 문서에 기록한다. schema/migration은 변경하지 않는다.
 
 ### assets
 

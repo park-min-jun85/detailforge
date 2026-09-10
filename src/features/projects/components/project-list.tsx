@@ -1,12 +1,6 @@
-import type { Project, ProjectStatus } from "@/types/domain";
-
-const statusLabels = {
-  draft: "초안",
-  analyzing: "분석 중",
-  generated: "생성됨",
-  editing: "편집 중",
-  completed: "완료",
-} satisfies Record<ProjectStatus, string>;
+import Link from "next/link";
+import type { Project } from "@/types/domain";
+import { ProjectStatusBadge } from "./project-status";
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric", month: "2-digit", day: "2-digit",
@@ -23,15 +17,13 @@ export function ProjectList({ projects }: { projects: Project[] }) {
         {projects.map((project) => (
           <li key={project.id} className="grid gap-4 px-6 py-5 lg:grid-cols-[minmax(0,1fr)_7rem_12rem_7rem] lg:items-center">
             <p className="min-w-0 font-medium leading-6 [overflow-wrap:anywhere]">{project.name}</p>
-            <div><span className={`inline-flex rounded-md border px-2 py-1 text-xs font-medium ${
-              project.status === "completed" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            }`}><span className="sr-only">상태: </span>{statusLabels[project.status]}</span></div>
+            <div><ProjectStatusBadge status={project.status} /></div>
             <time dateTime={project.updatedAt} className="text-xs leading-5 text-zinc-500">
               <span className="lg:sr-only">최근 수정: </span>{dateFormatter.format(new Date(project.updatedAt))}
             </time>
-            <span className="text-xs text-zinc-500" aria-disabled="true">
-              열기 <span className="ml-1 rounded border border-zinc-200 px-1.5 py-0.5">준비 중</span>
-            </span>
+            <Link href={`/projects/${project.id}`} className="text-link" aria-label={`${project.name} 열기`}>
+              열기 <span aria-hidden="true">→</span>
+            </Link>
           </li>
         ))}
       </ul>
