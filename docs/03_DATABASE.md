@@ -77,7 +77,20 @@ source_snapshot에는 해당 저장의 manual raw_data를 그대로 복사한다
 ### assets
 
 private Storage 파일의 `storage_path`, 원본 파일명, 크기와 분류 등 메타데이터를
-저장한다. 실제 업로드 기능은 후속 TASK에서 구현한다.
+저장한다. TASK-007은 기존 `product-assets` private bucket과 assets 구조만 사용한다.
+
+- 경로: `projects/{projectId}/products/{productId}/{serverUuid}.{jpg|png|webp}`.
+  원본 filename은 경로 식별자로 사용하지 않는다. 확장자는 검증된 MIME으로 결정한다.
+- `original_filename`: 경로 부분과 제어문자를 제거하고 NFC 정규화한 표시용 이름.
+- `project_id`, `product_id`: 서버에서 Project/Product의 관계를 확인하여 저장한다.
+- `mime_type`, `size_bytes`: 서버가 검사한 MIME과 실제 읽은 바이트 수.
+- `asset_type = unclassified`, `metadata = {}`, `width/height = null`. AI 추측이나 이미지 변환은 하지 않는다.
+- `sort_order`: 기존 최대값 + 1, 최초 0. 삭제 시 재번호를 매기지 않는다.
+  조회는 `sort_order ASC, created_at ASC, id ASC`로 안정적인 순서를 유지한다.
+- DB에는 경로만 저장하며 signed URL은 저장하지 않는다. 미리보기 URL은 300초 후 만료된다.
+- 기존 개별 FK는 Project/Product 조합이나 경로 소속을 보장하지 않으므로 서버가 이를 검증한다.
+  상품당 30개 제한과 순서 생성은 애플리케이션 규칙이며 다중 프로세스 DB 제약은 아니다.
+- Storage/DB의 부분 실패 처리와 파일 먼저 삭제하는 전략의 한계는 TASK-007을 참고한다.
 
 ### detail_pages
 

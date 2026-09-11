@@ -41,6 +41,9 @@ body {
   .panel {
     @apply rounded-xl border border-zinc-200 bg-white;
   }
+  .form-actions {
+    @apply flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5;
+  }
   .button-primary {
     @apply inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-900 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white;
   }

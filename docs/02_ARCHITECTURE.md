@@ -12,7 +12,8 @@ Browser
     -> Supabase Database and private Storage
 ```
 
-브라우저는 Supabase에 직접 연결하지 않는다. 데이터 접근은 Next.js 서버에서만
+브라우저의 DB 조회와 Storage 변경은 Next.js 서버에서만 수행한다. 비공개 이미지 표시는
+서버가 발급한 임시 signed URL로 Storage에서 원본을 읽는다. 데이터 변경은
 `src/lib/supabase/server.ts`의 service role client를 통해 수행한다.
 
 ## 계층 책임
@@ -79,9 +80,31 @@ Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 �
 신규 migration/RPC 없이 ACID atomicity를 보장하지 않는다. 엄격한 원자성이 필요해지는
 단계에서 DB transaction/RPC를 별도 설계해야 한다.
 
+## PHASE 1 / TASK-007 제품 이미지
+
+- `/projects/[projectId]/images`: Server Component에서 Project/Product를 검증하고 초기 목록을 조합한다.
+- `features/assets/service.ts`: 기존 server-only client로 소속 검증, 목록, signed URL, 업로드/삭제 보상을 담당한다.
+- `schemas.ts`: UUID, 파일 MIME/크기/시그니처, 표시 파일명, 경로 소속, 수량/순서, DB→Domain 경계다.
+- `http.ts`: 동일 Origin/Host 검증, 크기가 제한된 바이너리 읽기, 비공개 캐시와 일반 오류 응답.
+- `client.ts`, `components/asset-manager.tsx`: 서버 API 호출과 파일별 진행/결과, 썸네일 및 삭제 확인 UI.
+- `POST /api/projects/[projectId]/assets`는 파일당 한 요청이다. Content-Type에 MIME,
+  X-File-Name에 URL 인코딩 파일명을 전달한다. 서버는 Content-Length뿐 아니라 실제 스트림의
+  바이트 수를 검사하며 최대 10MiB까지만 읽는다. 여러 파일은 브라우저에서 순차 전송한다.
+- `GET`은 안정적으로 정렬한 Asset과 5분 signed URL을 반환한다. `DELETE .../assets/[assetId]`는
+  DB에 저장된 경로만 사용한다. 응답은 `Cache-Control: private, no-store`이다.
+- Storage에는 UUID 경로로 원본을 업로드하고 assets에 메타데이터를 INSERT한다.
+  INSERT 실패 시 id로 재조회하여 응답 유실이면 성공 처리하고, row가 없으면 파일을 정리한다.
+  재조회 실패 시 저장된 row의 파일을 지우지 않고 확인 필요 오류를 반환한다.
+- 삭제는 Storage → DB 순서다. 파일 삭제 실패 시 row를 유지하고, DB 삭제 실패 시 남은 row를
+  다시 삭제할 수 있다. 파일이 이미 없어도 Storage remove를 재시도할 수 있다.
+- 동일 프로세스의 Product별 변경 잠금과 exact count/max sort_order로 순서를 정한다.
+  다중 서버의 수량/순서 경쟁, 프로세스 중단, 장기 장애의 고아 파일은 엄격하게 방지하지 못한다.
+  Storage/DB는 하나의 transaction이 아니며 상세 한계와 수동 정리 기준은 TASK-007에 기록한다.
+
 ## 현재 운영 전제
 
 현재 MVP는 **single-user/local-development assumption**이다. Server Action도 외부에서
 호출할 수 있는 서버 진입점이며, 서버 전용 service role client만으로 사용자 접근 통제가
 완성되는 것은 아니다. **외부 공개 배포 전에 Auth + owner_id + 사용자별 RLS**와
-Server Action의 인증/소유권 검증이 필요하다. TASK-005에서는 Auth와 migration을 추가하지 않는다.
+Server Action/Route Handler의 인증·소유권 검증 및 사용자별 Storage 정책이 필요하다.
+TASK-007에서는 Auth와 migration을 추가하지 않는다. Origin 검사는 사용자 인증을 대신하지 않는다.

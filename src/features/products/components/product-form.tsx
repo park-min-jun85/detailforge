@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import Link from "next/link";
 import { saveProductAction } from "../actions";
 import { MAX_SPECIFICATIONS, type ProductInput } from "../schemas";
 import type { ProductSaveState } from "../types";
@@ -46,6 +47,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
     }, { status: "idle" },
   );
   const blocked = pending || state.status === "recovery-required";
+  const hasSavedProduct = Boolean(state.revision ?? revision);
   const errors = showFeedback && !pending ? state.fieldErrors : undefined;
   const changeField = (field: TextField, value: string) => {
     setShowFeedback(false);
@@ -141,16 +143,22 @@ export function ProductForm({ projectId, initialValues, revision }: {
         </section>
       </fieldset>
 
-      <div className="panel flex flex-wrap items-center gap-4 p-5 sm:p-6">
-        <button type="submit" disabled={blocked} className="button-primary">{pending ? "저장 중…" : "상품정보 저장"}</button>
-        {pending && <p role="status" className="text-sm text-zinc-600">상품정보와 사실정보를 저장하고 있습니다.</p>}
-        {!pending && showFeedback && state.message && (
-          <p role={state.status === "success" ? "status" : "alert"}
-            className={`text-sm leading-6 ${state.status === "success" ? "text-emerald-800" : "text-red-700"}`}>{state.message}</p>
-        )}
-        {state.status === "recovery-required" && <a className="text-link" href={`/projects/${projectId}`}>저장 내용 다시 확인</a>}
+      <div className="panel form-actions">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+          <button type="submit" disabled={blocked} className="button-primary">{pending ? "저장 중…" : "상품정보 저장"}</button>
+          {pending && <p role="status" className="text-sm text-zinc-600">상품정보와 사실정보를 저장하고 있습니다.</p>}
+          {!pending && showFeedback && state.message && (
+            <p role={state.status === "success" ? "status" : "alert"}
+              className={`text-sm leading-6 ${state.status === "success" ? "text-emerald-800" : "text-red-700"}`}>{state.message}</p>
+          )}
+          {state.status === "recovery-required" && <a className="text-link" href={`/projects/${projectId}`}>저장 내용 다시 확인</a>}
+        </div>
+        {hasSavedProduct && state.status !== "recovery-required" ? (
+          <Link href={`/projects/${projectId}/images`} className="button-secondary shrink-0">다음: 이미지 등록 →</Link>
+        ) : !hasSavedProduct ? (
+          <p className="text-xs leading-5 text-zinc-500">상품정보를 저장하면 이미지 등록 단계로 이동할 수 있습니다.</p>
+        ) : null}
       </div>
-      <p className="text-xs leading-5 text-zinc-500">다음 단계는 이미지 업로드입니다. 이미지 업로드 기능은 이후 단계에서 제공됩니다.</p>
     </form>
   );
 }
