@@ -67,3 +67,21 @@ RLS를 활성화하고 `anon`, `authenticated` 허용 policy를 만들지 않는
 
 초기 데이터 모델은 Supabase SQL migration과 `@supabase/supabase-js`로 관리한다.
 Prisma나 Drizzle은 추가하지 않으며, 실제 요구가 생기면 별도 결정으로 검토한다.
+
+## ADR-008
+
+**Asset AI 분석은 시각적 관찰로 분리하고 기존 metadata에 저장**
+
+- Status: Accepted
+- Date: 2026-09-13
+
+OpenAI Responses API의 strict Structured Outputs를 사용하고 서버에서 Zod로 재검증한다.
+private Asset은 소속을 확인한 뒤 임시 signed URL로 전달한다. 모델과 키는 서버 config에서만 관리한다.
+
+AI output은 untrusted visual observation이며 Product Facts를 수정하지 않는다. heroSuitability는
+보조 점수이고 hero는 이 단계에서 확정하지 않는다. confidence 0.65 이상일 때만 role을
+asset_type에 적용하고 나머지는 unclassified로 저장한다.
+
+결과와 상태는 기존 metadata.aiAnalysis에 저장한다. 다른 key를 보존하고 재분석 실패 시
+이전 성공 결과를 유지한다. migration과 queue 없이 동기 MVP로 시작하며 중단된 작업의 지속 실행,
+다중 인스턴스 전체 동시 호출 제한, 정확히 한 번 과금은 보장하지 않는다.

@@ -34,7 +34,7 @@ Product에 종속된 사실정보의 Source of Truth이며, DetailPage는 순서
 조합으로 표현한다. 실제 이미지 파일은 private Storage의 `product-assets` bucket에
 두고 Asset에는 경로와 메타데이터만 저장한다.
 
-인증과 사용자별 소유권, AI 파이프라인, 공급처 Adapter, 렌더링 및 편집 UI의 상세
+인증과 사용자별 소유권, 후속 AI 파이프라인, 공급처 Adapter, 렌더링 및 편집 UI의 상세
 설계는 후속 TASK에서 추가한다.
 
 ## PHASE 1 / TASK-005 프로젝트 생성·조회
@@ -101,10 +101,25 @@ Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 �
   다중 서버의 수량/순서 경쟁, 프로세스 중단, 장기 장애의 고아 파일은 엄격하게 방지하지 못한다.
   Storage/DB는 하나의 transaction이 아니며 상세 한계와 수동 정리 기준은 TASK-007에 기록한다.
 
+## PHASE 2 / TASK-008 이미지 AI 분석
+
+- `features/asset-analysis/service.ts`: 소속 검증, 분석 상태/재분석, 조건부 DB 저장을 조정한다.
+- `provider.ts`, `config.ts`: 서버 전용 OpenAI SDK와 모델/키/timeout 설정 경계다.
+- `schemas.ts`, `prompts.ts`: strict 결과 검증과 고정 정책/비신뢰 입력 분리를 담당한다.
+- `client.ts`, `components/analysis-result.tsx`: 기존 이미지 화면의 요청과 결과 표현을 분리한다.
+- `POST /api/projects/[projectId]/assets/[assetId]/analyze`: Asset 하나당 한 요청이다.
+  서버가 검증한 private 경로의 5분 signed URL을 provider에 전달한다.
+- metadata/asset_type 비교 조건과 attemptId로 다른 시도의 결과를 덮어쓰지 않는다.
+  다른 metadata key가 바뀌면 최신 값에 merge하며 AI 자동 재호출은 하지 않는다.
+- AI 결과는 시각적 관찰이며 Product Facts를 변경하지 않는다. hero는 최종 지정하지 않는다.
+- 동기 요청 기반 MVP로, 브라우저는 순차 요청하고 프로세스당 최대 2개를 분석한다.
+  지속 실행이나 다중 인스턴스 전체의 동시 호출 제한은 보장하지 않는다.
+- schema, 상태, 오류 복구 및 한계는 `04_AI_PIPELINE.md`와 `tasks/TASK-008.md`를 참고한다.
+
 ## 현재 운영 전제
 
 현재 MVP는 **single-user/local-development assumption**이다. Server Action도 외부에서
 호출할 수 있는 서버 진입점이며, 서버 전용 service role client만으로 사용자 접근 통제가
 완성되는 것은 아니다. **외부 공개 배포 전에 Auth + owner_id + 사용자별 RLS**와
 Server Action/Route Handler의 인증·소유권 검증 및 사용자별 Storage 정책이 필요하다.
-TASK-007에서는 Auth와 migration을 추가하지 않는다. Origin 검사는 사용자 인증을 대신하지 않는다.
+TASK-008까지 Auth와 migration을 추가하지 않는다. Origin 검사는 사용자 인증을 대신하지 않는다.

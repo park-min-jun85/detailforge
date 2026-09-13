@@ -92,6 +92,18 @@ private Storage 파일의 `storage_path`, 원본 파일명, 크기와 분류 등
   상품당 30개 제한과 순서 생성은 애플리케이션 규칙이며 다중 프로세스 DB 제약은 아니다.
 - Storage/DB의 부분 실패 처리와 파일 먼저 삭제하는 전략의 한계는 TASK-007을 참고한다.
 
+#### TASK-008 AI metadata
+
+기존 `metadata.aiAnalysis`에 schemaVersion 1의 analyzing/completed/failed 상태를 저장한다.
+completed에는 시각적 결과와 provider/model/attemptId/analyzedAt을 둔다. analyzing/failed는
+startedAt과 이전 성공 한 개(previousResult)를 보관하고 실패 시 failedAt/errorCode를 추가한다.
+다른 metadata key는 보존하며 조건부 UPDATE로 경쟁하는 분석 결과를 덮어쓰지 않는다.
+
+성공 결과의 confidence가 0.65 이상이면 role을 asset_type에 저장하고 미만이면 unclassified로
+저장한다. AI role에는 hero가 없으며 기존 DB enum은 변경하지 않는다. 실패 시 기존 분류를 유지한다.
+signed URL과 API key는 저장하지 않는다. Product Facts나 기존 schema/migration은 변경하지 않는다.
+전체 결과 schema와 상태 전이는 `04_AI_PIPELINE.md`를 참고한다.
+
 ### detail_pages
 
 Project당 하나의 상세페이지 구성과 기본 너비, 테마 및 설정을 저장한다.

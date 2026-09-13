@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { fetchAssets, removeAsset, sendAsset } from "../client";
 import { IMAGE_MIME_TYPES, MAX_PRODUCT_ASSETS, validateFile } from "../schemas";
 import type { AssetList } from "../types";
+import { requestAssetAnalysis } from "@/features/asset-analysis/client";
+import { AnalysisResultCard, ASSET_TYPE_LABELS } from "@/features/asset-analysis/components/analysis-result";
+import { isActiveAnalysis, readAnalysis } from "@/features/asset-analysis/schemas";
 
 type Selection = { file: File; status: "ready" | "uploading" | "success" | "error"; message?: string };
 const sizeLabel = (bytes: number) => bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
@@ -24,8 +27,49 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
   const [error, setError] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const locked = useRef(false);
+  const [now, setNow] = useState(() => Date.now());
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
+  const [progress, setProgress] = useState<{ done: number; total: number; success: number; failed: number } | null>(null);
+  const hasActiveAnalysis = list.items.some(({ asset }) => isActiveAnalysis(readAnalysis(asset.metadata), now));
+  const analysisTargets = list.items.filter(({ asset }) => {
+    const state = readAnalysis(asset.metadata);
+    return state?.status !== "completed" && !isActiveAnalysis(state, now);
+  }).map(({ asset }) => asset.id);
 
   async function refresh() { setList(await fetchAssets(projectId)); }
+
+  useEffect(() => {
+    if (!hasActiveAnalysis) return;
+    const interval = window.setInterval(async () => {
+      setNow(Date.now());
+      if (locked.current || document.visibilityState !== "visible") return;
+      locked.current = true;
+      try { setList(await fetchAssets(projectId)); }
+      catch { setError("분석 진행 상태를 확인하지 못했습니다. 목록을 새로고침해 주세요."); }
+      finally { locked.current = false; }
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [hasActiveAnalysis, projectId]);
+
+  async function analyze(ids: string[]) {
+    if (locked.current || !ids.length) return;
+    locked.current = true; setBusy(true); setError(""); setMessage(""); setConfirmId(null);
+    setProgress({ done: 0, total: ids.length, success: 0, failed: 0 });
+    try {
+      for (const id of ids) {
+        setAnalyzingId(id); setAnalysisErrors((current) => ({ ...current, [id]: "" }));
+        const reply = await requestAssetAnalysis(projectId, id);
+        const updated = reply.asset;
+        if (updated) setList((current) => ({ ...current, items: current.items.map((item) => item.asset.id === id ? { ...item, asset: updated } : item) }));
+        if (!reply.ok) setAnalysisErrors((current) => ({ ...current, [id]: reply.message }));
+        setProgress((current) => current && ({ ...current, done: current.done + 1, success: current.success + (reply.ok ? 1 : 0), failed: current.failed + (reply.ok ? 0 : 1) }));
+        setNow(Date.now());
+      }
+      await refresh();
+    } catch { setError("분석 목록을 갱신하지 못했습니다. 목록 새로고침으로 저장 결과를 확인해 주세요."); }
+    finally { locked.current = false; setBusy(false); setAnalyzingId(null); }
+  }
 
   useEffect(() => {
     // 5분 URL 만료 전에 갱신하며, 백그라운드 탭에서 복귀할 때도 다시 발급한다.
@@ -134,10 +178,23 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           <button type="button" className="button-secondary" disabled={busy} onClick={async () => {
             if (locked.current) return;
             locked.current = true; setBusy(true); setError("");
-            try { await refresh(); } catch (cause) { setError(errorMessage(cause)); }
+            try { await refresh(); setAnalysisErrors({}); } catch (cause) { setError(errorMessage(cause)); }
             finally { locked.current = false; setBusy(false); }
           }}>목록 새로고침</button>
         </div>
+        {list.items.length > 0 && <div className="mt-5 space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">AI 이미지 분석</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">미분석·실패 이미지를 순서대로 분석합니다. 완료 이미지는 카드에서 재분석할 수 있습니다.</p>
+            </div>
+            <button type="button" className="button-primary" disabled={busy || !analysisTargets.length} onClick={() => analyze(analysisTargets)}>
+              AI 이미지 분석 ({analysisTargets.length})
+            </button>
+          </div>
+          <p className="text-xs leading-5 text-zinc-500">AI 결과는 시각적 관찰이며 상품 사실정보가 아닙니다. 대표 이미지 적합도는 최종 대표 이미지 선택을 의미하지 않습니다.</p>
+          {progress && <p role="status" className="text-sm text-zinc-700">{progress.done} / {progress.total} 분석 처리 · 성공 {progress.success}개 · 실패 {progress.failed}개</p>}
+        </div>}
         {!list.items.length ? <p className="py-16 text-center text-sm text-zinc-500">아직 등록된 이미지가 없습니다.</p> : (
           <ul className="mt-6 grid grid-cols-1 gap-4 min-[440px]:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {list.items.map(({ asset, previewUrl }, index) => (
@@ -147,7 +204,9 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
                 </div>
                 <div className="space-y-3 p-4">
                   <p className="break-all text-sm font-medium">{index + 1}. {asset.originalFilename}</p>
-                  <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 미분류</p>
+                  <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 저장 분류: {ASSET_TYPE_LABELS[asset.assetType]}</p>
+                  <AnalysisResultCard asset={asset} now={now} pending={analyzingId === asset.id} disabled={busy}
+                    error={analysisErrors[asset.id]} onAnalyze={() => analyze([asset.id])} />
                   {confirmId === asset.id ? <div className="space-y-3">
                     <p className="text-sm text-zinc-700">이 이미지를 삭제할까요?</p>
                     <div className="flex flex-wrap gap-2">
@@ -161,7 +220,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
-      <p className="text-sm leading-6 text-zinc-500">다음 단계는 AI 분석입니다. 이미지 분석 기능은 이후 단계에서 제공됩니다.</p>
+      <p className="text-sm leading-6 text-zinc-500">이미지 분석 후 상품 분석과 상세페이지 구성을 진행하게 됩니다. 해당 기능은 이후 단계에서 제공됩니다.</p>
     </div>
   );
 }

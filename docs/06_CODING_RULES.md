@@ -23,6 +23,16 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - 브라우저 origin은 요청 Host와 대조한다. NextURL의 loopback 정규화만 신뢰하지 않는다.
 - 인증 없는 로컬 단일 사용자 전제다. 외부 공개 전에 Auth + owner_id + 사용자별 Storage/RLS가 필요하다.
 
+## 이미지 AI 경계 (TASK-008)
+
+- OpenAI SDK/config/service는 server-only로 유지하고 키를 클라이언트, metadata, 오류, 로그에 전달하지 않는다.
+- 고정 developer 정책과 비신뢰 상품 데이터/이미지를 분리한다. 이미지 속 지시를 실행 정책으로 취급하지 않는다.
+- Structured Outputs의 strict schema와 서버 Zod 재검증을 함께 사용한다. 자유 텍스트를 JSON으로 추측 복구하지 않는다.
+- 시각적 관찰로 Product Facts를 생성/수정하거나 hero를 자동 지정하지 않는다.
+- metadata의 다른 key와 재분석 이전 성공을 보존한다. 늦은 결과는 attemptId와 조건부 저장으로 거부한다.
+- provider는 60초 제한과 자동 재시도 0회를 적용한다. DB 저장 재시도가 AI 재호출로 이어지지 않게 한다.
+- 자동 테스트는 mock provider/transport를 사용한다. 실제 API 검증 여부와 테스트 데이터 정리를 별도로 기록한다.
+
 ## 타입과 검증
 
 - DB row의 `snake_case`와 Domain의 `camelCase`를 구분한다.

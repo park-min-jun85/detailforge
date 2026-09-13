@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { isDeepStrictEqual } from "node:util";
 
 export const projectId = "7645f432-b847-4e28-9ee7-f41beccccf46";
 export const productId = "6645f432-b847-4e28-9ee7-f41beccccf46";
@@ -17,7 +18,7 @@ export async function startAssetDb() {
   const state = {
     project: { id: projectId, name: "검증 프로젝트" }, product: { id: productId, project_id: projectId, name: "검증 상품" },
     assets: [], objects: new Set(), requests: [], failure: null, ackLost: false, failRecoveryRead: false,
-    failCleanup: false, ignoreProductFilter: false,
+    failCleanup: false, ignoreProductFilter: false, beforePatch: null, patchAckLost: null,
   };
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -34,6 +35,11 @@ export async function startAssetDb() {
     const fail = () => send({ message: "private-db-detail secret-test-key", error: "private-storage-error", statusCode: "400", code: "TEST" }, 400);
     if (url.pathname.startsWith("/storage/v1/object/sign/")) {
       if (state.failure === "sign") return fail();
+      if (!payload.paths) {
+        const path = url.pathname.slice("/storage/v1/object/sign/product-assets/".length);
+        if (!state.objects.has(path)) return fail();
+        return send({ signedURL: `/object/sign/product-assets/${path}?token=temporary-test-token` });
+      }
       return send(payload.paths.map((path) => ({ path, error: state.objects.has(path) ? null : "missing",
         signedURL: state.objects.has(path) ? `/object/sign/product-assets/${path}?token=temporary-test-token` : null })));
     }
@@ -51,7 +57,8 @@ export async function startAssetDb() {
       }
     }
     const table = url.pathname.split("/").at(-1);
-    const matches = (row) => [...url.searchParams].every(([field, value]) => !value.startsWith("eq.") || String(row[field]) === value.slice(3));
+    const matches = (row) => [...url.searchParams].every(([field, value]) => !value.startsWith("eq.")
+      || (field === "metadata" ? isDeepStrictEqual(row[field], JSON.parse(value.slice(3))) : String(row[field]) === value.slice(3)));
     if (request.method === "GET") {
       if (state.failure === "read" || (table === "assets" && url.searchParams.has("id") && state.failRecoveryRead)) return fail();
       let rows = table === "projects" ? (state.project ? [state.project] : [])
@@ -67,6 +74,15 @@ export async function startAssetDb() {
       return send(object ? (rows[0] ?? null) : rows, 200, { "Content-Range": `0-${Math.max(rows.length - 1, 0)}/${total}` });
     }
     if (table !== "assets") return fail();
+    if (request.method === "PATCH") {
+      if (state.beforePatch) await state.beforePatch(payload);
+      const status = payload.metadata?.aiAnalysis?.status;
+      if (state.failure === `patch-${status}`) return fail();
+      const row = state.assets.find(matches);
+      if (row) Object.assign(row, payload);
+      if (state.patchAckLost === status) { state.patchAckLost = null; return fail(); }
+      return send(row ?? null);
+    }
     if (request.method === "POST") {
       if (state.failure === "insert") return fail();
       const row = assetRow(payload);
