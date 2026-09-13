@@ -116,10 +116,25 @@ Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 �
   지속 실행이나 다중 인스턴스 전체의 동시 호출 제한은 보장하지 않는다.
 - schema, 상태, 오류 복구 및 한계는 `04_AI_PIPELINE.md`와 `tasks/TASK-008.md`를 참고한다.
 
+## PHASE 2 / TASK-009 상품 AI 분석
+
+- `/projects/[projectId]/analysis`: 기존 Shell 안의 상품 분석 화면이다. 이미지 화면의 다음 링크로 이동한다.
+- `features/product-analysis/evidence.ts`: Product Facts, 완료된 Asset 관찰, 미검증 설명을 F/V/S 근거로 정규화하고 SHA-256 입력 fingerprint를 만든다.
+- `schemas.ts`: 전략 결과, evidence snapshot, attempt/latestResult의 런타임 경계다. 존재하지 않는 근거 ID를 거부한다.
+- `provider.ts`, `config.ts`, `prompts.ts`: 기존 OpenAI SDK/Structured Outputs 패턴을 사용한다. 고정 정책과 비신뢰 텍스트 입력을 분리한다.
+- `service.ts`: Project/Product/Facts/Asset 소속 확인, 입력 조합, 조건부 상태 저장을 담당한다.
+  AI 입력에는 원본 이미지나 signed URL을 넣지 않고 Storage API도 호출하지 않는다.
+- `GET/POST /api/projects/[projectId]/product-analysis`: GET은 현재 입력/결과, POST는 명시적 분석 실행이다.
+- `products.ai_analysis`만 UPDATE한다. 기존 products updated_at trigger는 작동하므로 상품정보 폼의 revision이 바뀔 수 있다.
+  raw_data, Product Facts, Project status를 쓰지 않는다. ProductFacts의 수동 저장 보상도 ai_analysis를 덮어쓰지 않는다.
+- 서버 발급 runId와 attempt 상태의 조건부 비교로 중복/늦은 결과를 방어한다. 큰 JSON 결과를 URL 필터로 보내지 않는다.
+  입력 변경 중 분석은 원래 snapshot을 저장하고 현재 fingerprint와의 차이를 표시한다.
+- 동기 MVP의 프로세스 종료/다중 서버 비용 제어 한계는 TASK-008과 같다. TASK-009는 별도 프로세스당 2개 한도를 둔다.
+
 ## 현재 운영 전제
 
 현재 MVP는 **single-user/local-development assumption**이다. Server Action도 외부에서
 호출할 수 있는 서버 진입점이며, 서버 전용 service role client만으로 사용자 접근 통제가
 완성되는 것은 아니다. **외부 공개 배포 전에 Auth + owner_id + 사용자별 RLS**와
 Server Action/Route Handler의 인증·소유권 검증 및 사용자별 Storage 정책이 필요하다.
-TASK-008까지 Auth와 migration을 추가하지 않는다. Origin 검사는 사용자 인증을 대신하지 않는다.
+TASK-009에서도 Auth는 추가하지 않으며 products JSONB 컬럼의 additive migration만 허용한다. Origin 검사는 사용자 인증을 대신하지 않는다.

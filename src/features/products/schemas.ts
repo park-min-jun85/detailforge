@@ -55,6 +55,7 @@ export const productRowSchema = z.object({
   brand: z.string().nullable(), category: z.string().nullable(),
   description: z.string().nullable(), source_type: z.string(), source_url: z.string().nullable(),
   raw_data: jsonObject,
+  ai_analysis: jsonObject.default({}),
   created_at: z.iso.datetime({ offset: true }), updated_at: z.iso.datetime({ offset: true }),
 });
 export const productFactsRowSchema = z.object({

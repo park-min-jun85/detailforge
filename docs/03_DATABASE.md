@@ -57,6 +57,21 @@ TASK-006 수동 입력은 `source_type = manual`로 저장한다. project_id UNI
 스펙 없는 기존 상품으로 읽을 수 있으나, 그 외 알 수 없는 원본 JSON은 조용히 무시하지 않고
 조회 오류로 처리한다. 상세 검증 규칙은 `src/features/products/schemas.ts`에 있다.
 
+#### TASK-009 products.ai_analysis
+
+`0002_add_product_ai_analysis.sql`은 products에 `ai_analysis jsonb NOT NULL DEFAULT '{}'::jsonb`와
+JSON object CHECK만 추가한다. 새 테이블, 데이터 삭제, 타입 변경, RLS 변경은 없다.
+
+초기 `{}`는 미분석이다. 분석 후에는 schemaVersion 1, attempt(status/runId/startedAt/finishedAt/errorCode),
+latestResult(provider/model/analyzedAt/inputFingerprint/evidenceSnapshot/analysis)를 저장한다.
+attempt와 마지막 성공을 분리하여 재분석 중/실패 시 latestResult를 유지한다.
+evidenceSnapshot과 inputFingerprint는 서버가 생성하며 AI가 생성하지 않는다.
+
+상품 분석은 ai_analysis만 쓰고 기존 updated_at trigger는 그대로 둔다. raw_data와 product_facts의
+facts/source_snapshot/validated_at, Project status는 변경하지 않는다. inputFingerprint에는 updated_at을
+넣지 않으므로 분석 상태 저장 자체로 stale이 되지 않는다. 기존 상품정보의 UPDATE/보상은 ai_analysis를 보존한다.
+원격 적용/생성 타입 검증 상태는 `tasks/TASK-009.md`에 기록한다.
+
 ### product_facts
 
 Product당 하나만 존재하며 검증된 사실정보의 Source of Truth다. `facts`와 이를
@@ -123,8 +138,8 @@ JSONB 값은 object 형태만 허용하며, 외부 입력과 DB에서 읽은 값
 ## 이름 규칙
 
 DB table과 column은 `snake_case`, Application Domain 필드는 `camelCase`를 사용한다.
-현재 `database.types.ts`는 initial migration에 맞춘 수동 최소 타입이다. Remote DB에
-migration을 적용한 뒤 다음 명령으로 생성 타입을 교체한다.
+`database.types.ts`는 linked DB 생성 타입을 기준으로 관리한다. Remote DB에
+migration을 적용한 뒤 다음 명령으로 생성 타입을 교체하며 성공한 출력만 파일에 반영한다.
 
 ```bash
 npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts

@@ -33,6 +33,14 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - provider는 60초 제한과 자동 재시도 0회를 적용한다. DB 저장 재시도가 AI 재호출로 이어지지 않게 한다.
 - 자동 테스트는 mock provider/transport를 사용한다. 실제 API 검증 여부와 테스트 데이터 정리를 별도로 기록한다.
 
+## 상품 AI 경계 (TASK-009)
+
+- Product Facts와 전략 해석을 분리한다. 완료된 Asset 관찰만 사용하고 이미지/Storage 서명을 다시 요청하지 않는다.
+- F/V/S evidence registry, snapshot, canonical SHA-256 fingerprint는 서버가 만든다.
+- strict 결과 검증 후 모든 evidenceId가 실제 registry에 있는지 검사한다. 근거 존재 검사가 의미의 사실성을 보장하지 않는다.
+- 제품 분석은 products.ai_analysis만 쓴다. raw_data/Facts/source_snapshot/validated_at/Project status를 변경하지 않는다.
+- 재분석 실패는 attempt만 실패로 저장하고 latestResult를 보존한다. 입력 변경은 stale로 표시하고 사용자 실행을 기다린다.
+
 ## 타입과 검증
 
 - DB row의 `snake_case`와 Domain의 `camelCase`를 구분한다.

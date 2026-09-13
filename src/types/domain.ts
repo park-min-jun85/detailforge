@@ -28,6 +28,7 @@ export interface Product {
   sourceType: string;
   sourceUrl: string | null;
   rawData: JsonObject;
+  aiAnalysis: JsonObject;
   createdAt: string;
   updatedAt: string;
 }

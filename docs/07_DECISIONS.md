@@ -85,3 +85,20 @@ asset_type에 적용하고 나머지는 unclassified로 저장한다.
 결과와 상태는 기존 metadata.aiAnalysis에 저장한다. 다른 key를 보존하고 재분석 실패 시
 이전 성공 결과를 유지한다. migration과 queue 없이 동기 MVP로 시작하며 중단된 작업의 지속 실행,
 다중 인스턴스 전체 동시 호출 제한, 정확히 한 번 과금은 보장하지 않는다.
+
+## ADR-009
+
+**상품 AI 전략을 Facts와 분리하고 근거 snapshot/fingerprint로 추적**
+
+- Status: Accepted
+- Date: 2026-09-13
+
+Product Facts는 Source of Truth이며 Product Analysis는 전략적 해석이다. F/V/S registry로
+사실/시각 관찰/미검증 설명을 구분하고, AI의 모든 evidenceId를 서버가 재검증한다.
+분석 당시의 evidenceSnapshot과 canonical SHA-256 fingerprint를 서버에서 생성해 보관한다.
+입력이 달라지면 stale을 표시하며 자동 유료 재분석은 하지 않는다.
+
+완료된 Asset 관찰을 재사용하여 원본 이미지 재전송과 Vision 비용 중복을 피한다.
+기존 products에 JSON object 제약을 가진 ai_analysis 컬럼 하나만 추가한다.
+attempt와 latestResult를 분리해 재분석 실패 시 마지막 성공을 보존한다.
+Facts/raw_data/Project status를 쓰지 않으며 Fact Validation은 TASK-010에서 별도 설계한다.

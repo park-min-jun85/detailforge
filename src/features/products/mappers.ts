@@ -20,7 +20,7 @@ export function toProduct(row: ProductRow): Product {
   return {
     id: row.id, projectId: row.project_id, name: row.name, brand: row.brand,
     category: row.category, description: row.description, sourceType: row.source_type,
-    sourceUrl: row.source_url, rawData: row.raw_data, createdAt: row.created_at, updatedAt: row.updated_at,
+    sourceUrl: row.source_url, rawData: row.raw_data, aiAnalysis: row.ai_analysis, createdAt: row.created_at, updatedAt: row.updated_at,
   };
 }
 

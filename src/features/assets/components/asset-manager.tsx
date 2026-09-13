@@ -220,7 +220,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
-      <p className="text-sm leading-6 text-zinc-500">이미지 분석 후 상품 분석과 상세페이지 구성을 진행하게 됩니다. 해당 기능은 이후 단계에서 제공됩니다.</p>
+      <p className="text-sm leading-6 text-zinc-500">완료된 이미지 분석은 다음 상품 분석 단계에서 사용합니다. 상세페이지 구성은 이후 단계에서 제공됩니다.</p>
     </div>
   );
 }

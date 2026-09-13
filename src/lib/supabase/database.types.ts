@@ -161,6 +161,7 @@ export type Database = {
       }
       products: {
         Row: {
+          ai_analysis: Json
           brand: string | null
           category: string | null
           created_at: string
@@ -174,6 +175,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_analysis?: Json
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -187,6 +189,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_analysis?: Json
           brand?: string | null
           category?: string | null
           created_at?: string
