@@ -33,7 +33,7 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
             <li className="text-zinc-500">2. 이미지</li>
             <li className="text-zinc-500">3. 상품 분석</li>
             <li className="text-zinc-500">4. Fact 검증</li>
-            <li className="text-zinc-500">5. 상세페이지</li>
+            <li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li className="text-zinc-500">6. 상세페이지</li>
           </ol>
           <ProductForm projectId={result.project.id} initialValues={result.values} revision={result.product?.updatedAt ?? ""} />
         </>

@@ -6,8 +6,8 @@
 
 ## 현재 흐름
 
-Product Facts → **Asset Analysis (TASK-008)** → **Product Analysis (TASK-009)** → **Fact Validation (TASK-010)** → Page Planning → Section Generation.
-이미지 관찰, 상품 전략 해석, 입력 근거 범위의 Fact 일관성 평가를 구현한다. Product Facts와 실제 이미지 원본을 변경하지 않는다.
+Product Facts → **Asset Analysis (TASK-008)** → **Product Analysis (TASK-009)** → **Fact Validation (TASK-010)** → **Page Planning (TASK-011)** → Section Generation (TASK-012 예정).
+이미지 관찰, 상품 전략 해석, 입력 근거 범위의 Fact 일관성 평가와 Page Plan 생성을 구현한다. Product Facts와 실제 이미지 원본을 변경하지 않는다.
 
 ## Asset Analysis
 
@@ -17,7 +17,7 @@ Product Facts → **Asset Analysis (TASK-008)** → **Product Analysis (TASK-009
 → `assets.metadata.aiAnalysis`와 `asset_type`의 단일 UPDATE.
 
 - Asset 하나당 AI 요청 하나. 브라우저는 순차 분석하고 서버 프로세스의 동시 분석은 최대 2개다.
-- 공식 `openai` Node SDK를 사용한다. SDK 호출은 `features/asset-analysis/provider.ts`에 한정한다.
+- 공식 `openai` Node SDK를 사용한다. Asset Analysis SDK 호출은 `features/asset-analysis/provider.ts`에 한정한다.
 - 서버 전용 config의 기본 모델은 `gpt-5.6-luna`; `OPENAI_ASSET_MODEL`로 재정의할 수 있다.
   `OPENAI_API_KEY`는 서버에서만 읽으며 로그·DB·브라우저에 전달하지 않는다.
 - provider 제한 시간 60초, SDK 자동 재시도 0회, `store: false`, 출력 최대 4,000토큰.
@@ -171,9 +171,8 @@ provider 60초/DB 10초, 자동 재시도 0회, store=false, 출력 최대 16,00
 
 ## 후속 단계
 
-TASK-011은 최신 입력 fingerprint와 Fact별 검증 상태를 확인하는 소비 정책이 필요하다.
-전략 결과/evidenceIds의 존재나 supported를 외부 진위 증명으로 오해하지 않는다. 최종 마케팅 문구, hero 선택,
-Page Planner와 Section Engine은 아직 구현하지 않았다.
+TASK-011은 아래 supported-only 소비 정책과 Plan 단위 Hero 선택을 구현했다.
+TASK-012에서 최신 Plan을 실제 Section 콘텐츠로 변환한다. 최종 마케팅 문구와 Section Engine은 아직 구현하지 않았다.
 
 ## 공식 참고
 
@@ -181,3 +180,35 @@ Page Planner와 Section Engine은 아직 구현하지 않았다.
 - [Images and vision](https://developers.openai.com/api/docs/guides/images-vision)
 - [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)
 - [GPT-5.6 Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+
+## PHASE 3 / TASK-011 Page Planner
+
+Page Planner는 최종 카피가 아닌 narrative, Hero 선택, Section 순서/type/purpose/contentBrief/근거/이미지를 설계한다.
+기존 10개 Section type만 허용하며 5~12개, 기본 목표 8~12개다. 5~7개에는 insufficient_content_evidence를 저장한다.
+key와 정규화된 purpose 중복을 거부한다. contentBrief는 후속 제작 지침이며 최종 광고 문구를 요청하지 않는다.
+
+- 최신 Fact Validation의 supported만 F registry에 넣는다. supported는 입력된 근거 안의 일관성이며 외부 진위 증명이 아니다.
+- insufficient/conflict/needs_review는 factPolicySnapshot.restricted에 보존하되 provider에는 ID/label/status만 전달한다.
+  제한된 값을 claim 근거로 전달하거나 validation을 자동 재실행하지 않는다.
+- 완료된 Asset Analysis만 V registry와 provider assets에 넣는다. 실패/진행/형식 오류 관찰을 재사용하지 않는다.
+  원본 이미지, signed URL, 파일명, 원본 설명/source_snapshot, Validation reason은 provider에 보내지 않는다.
+- 최신 Product Analysis는 사실과 분리한 strategy다. 기존 F ID는 스펙 순서가 다를 수 있어 label/value로 현재 F에 대응시킨다.
+  restricted Fact를 참조하는 전략 항목과 미검증 S 참조를 제거하고, restricted가 있으면 참조 없는 contentPriorities도 비운다.
+  stale 전략은 제외한다. V는 상품 재질/성능/치수 등의 사실을 증명하지 않는다.
+- Section은 실제 F/V ID만 참조한다. 모든 사용 이미지에 해당 V가 필요하며 V도 같은 Section의 Asset을 참조해야 한다.
+  keyBenefits/feature/useCase/specification/option은 supported F가 최소 하나 필요하다.
+- Hero는 현재 Product 소유의 분석 완료 이미지 중 showsProduct, confidence>=.65, heroSuitability>=.5,
+  visibility/clarity>=.5, 고밀도 텍스트 아님, blurry/cropped/low_visibility/heavy_text/ambiguous_subject 경고 없음 조건이다.
+  적합한 선택이 없으면 null이다. Hero는 Plan 단위 선택이며 assets.asset_type을 자동 변경하지 않는다.
+
+fingerprint는 canonical SHA-256이다. Facts 원문, 현재 Validation 상태/결과, Validation 입력 fingerprint,
+지원된 Facts, 전체 Asset ID와 완료 관찰, 최신 Product Analysis latestResult 및 전략 freshness를 포함한다.
+객체 키/Asset 순서에는 결정적이며 사용하지 않는 메타데이터는 제외한다. 스펙 순서/값과 Validation attempt 변경도 감지한다.
+저장 fingerprint가 현재와 다르면 stale이다. 자동 재계획하지 않는다. Validation missing/stale/invalid는 POST를 막는다.
+검증이 최신이어도 supported Fact와 완료 이미지가 모두 없으면 콘텐츠 근거 부족으로 실행하지 않는다.
+
+고정 developer instruction과 untrustedPlannerData user JSON을 분리하고 SDK strict Structured Output + Zod +
+서버 ID/ownership/provenance 검증을 적용한다. 모델은 OPENAI_PLANNER_MODEL, 기본 gpt-5.6-terra다.
+store=false, 자동 retry=0, max_output_tokens=10000. 재계획 실패는 attempt만 failed로 바꾸고 이전 latestResult를 남긴다.
+ID와 스키마 검증은 자연어의 의미 정확성/중복성/주장 적합성을 완전히 보증하지 않는다. 실제 상품의 구조 품질은 사람이 확인한다.
+TASK-012는 최신 Plan/fingerprint, supported-only 정책, 실제 Asset 소속을 재검증한 뒤 Section 콘텐츠를 생성해야 한다.

@@ -91,6 +91,7 @@ export interface DetailPage {
   width: number;
   themeId: string | null;
   settings: JsonObject;
+  plan: JsonObject;
   createdAt: string;
   updatedAt: string;
 }

@@ -178,3 +178,20 @@ Auth 도입 시 `owner_id`, `auth.users` 관계와 사용자별 RLS policy를 �
 초기 스키마는 `supabase/migrations/0001_initial_schema.sql`에 둔다. Remote DB에 적용된
 migration은 수정하지 않고 새 migration을 추가한다. 적용 전에는 SQL diff와 대상
 Project를 확인하고, Supabase Project를 link한 뒤 `npx supabase db push`로 적용한다.
+
+## TASK-011 DetailPage Plan
+
+0004_add_detail_page_plan.sql은 public.detail_pages에 plan JSONB NOT NULL DEFAULT '{}'와
+jsonb_typeof(plan) = 'object' CHECK만 추가한다. 테이블/기존 데이터/RLS 변경이나 destructive SQL은 없다.
+기존 project_id UNIQUE로 Project당 하나의 기본 DetailPage를 유지한다. 신규 페이지 폭은 860이다.
+
+plan은 schemaVersion=1, attempt(planning/completed/failed, runId, startedAt, finishedAt, errorCode),
+latestResult(provider, model, plannedAt, inputFingerprint, evidenceSnapshot, factPolicySnapshot,
+assetSnapshot, strategySnapshot, plan) 구조다. 최초에는 {}이며 실패한 재계획도 이전 latestResult를 보존한다.
+JSON object CHECK는 전체 스키마 검증이 아니므로 애플리케이션 Zod 재검증이 필요하다.
+Sections row는 생성/수정하지 않는다. 실제 콘텐츠 저장은 TASK-012에서 수행한다.
+
+2026-09-14 사용자가 0004만 push, Local/Remote 0001·0002·0003·0004 일치, linked 타입 재생성을 확인했다.
+에이전트는 생성 타입의 plan Row/Insert/Update 매핑과 실제 원격 plan 저장/재조회를 검증했다.
+파일만 작성한 후 dry-run을 요청했으나 제공된 답변은 실제 push 완료 보고이므로 dry-run 성공 출력은 확인하지 못했다.
+원격 push를 에이전트가 재실행하지 않았다.

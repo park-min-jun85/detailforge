@@ -153,3 +153,19 @@ Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 �
 완성되는 것은 아니다. **외부 공개 배포 전에 Auth + owner_id + 사용자별 RLS**와
 Server Action/Route Handler의 인증·소유권 검증 및 사용자별 Storage 정책이 필요하다.
 TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 additive migration만 추가한다. Origin 검사는 사용자 인증을 대신하지 않는다.
+
+## PHASE 3 / TASK-011 Page Planner
+
+- /projects/[projectId]/planner와 GET/POST /api/projects/[projectId]/page-plan을 추가한다.
+- features/page-planner의 evidence → provider → service → components 경계를 사용한다.
+  schemas는 출력/저장 provenance를 검증하고 config/prompts/provider/service/evidence는 서버에서 실행한다.
+- GET은 입력 상태와 저장 Plan을 읽으며 DetailPage를 만들지 않는다. Validation이 없거나 stale이어도 조회한다.
+- POST는 최신 Validation을 전제로 지원된 F와 완료된 V만 조합한다. 최신 Product Analysis는 별도 전략이다.
+- 최초 POST에서 project_id UNIQUE를 이용해 width=860, status=draft DetailPage 하나를 생성한다.
+  이후에는 같은 행의 plan만 변경한다. updated_at/runId/attempt 상태를 비교하는 조건부 저장과 응답 유실 재확인을 사용한다.
+- provider 완료 후 입력을 다시 읽고 fingerprint가 달라지면 input_changed로 실패시키며 이전 성공을 보존한다.
+  여러 테이블을 읽으므로 이 확인과 최종 저장 사이까지 원자적 transaction을 제공하지는 않는다. 이후 GET이 stale을 표시한다.
+- 실행당 provider 60초, DB 요청 10초, 프로세스당 최대 2건이다. planning lease는 3분 후 재시도할 수 있다.
+  DB project_id UNIQUE와 runId 조건으로 중복/늦은 저장을 막는다. 전역 비용 제한이나 background queue는 없다.
+- Facts/source_snapshot/Validation/Product Analysis/Asset/Project status/Sections는 Planner가 수정하지 않는다.
+- 기존 single-user/local-development 보안 전제와 RLS는 유지한다. Origin 검사는 인증을 대신하지 않는다.

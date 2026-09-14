@@ -81,6 +81,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          plan: Json
           project_id: string
           settings: Json
           status: string
@@ -91,6 +92,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          plan?: Json
           project_id: string
           settings?: Json
           status?: string
@@ -101,6 +103,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          plan?: Json
           project_id?: string
           settings?: Json
           status?: string

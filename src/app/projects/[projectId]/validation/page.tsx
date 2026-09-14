@@ -21,9 +21,9 @@ export default async function FactValidationPage({ params }: PageProps<"/project
     <ol aria-label="상세페이지 제작 단계" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-zinc-200 pb-5 text-sm">
       <li><Link href={`/projects/${projectId}`} className="text-link">1. 상품정보</Link></li>
       <li><Link href={`/projects/${projectId}/images`} className="text-link">2. 이미지</Link></li>
-      <li><Link href={`/projects/${projectId}/analysis`} className="text-link">3. 상품 분석</Link></li><li aria-current="step" className="font-semibold">4. Fact 검증</li><li className="text-zinc-500">5. 상세페이지</li>
+      <li><Link href={`/projects/${projectId}/analysis`} className="text-link">3. 상품 분석</Link></li><li aria-current="step" className="font-semibold">4. Fact 검증</li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li className="text-zinc-500">6. 상세페이지</li>
     </ol>
-    {result.ok ? <ValidationManager initialView={result.view} />
+    {result.ok ? <><ValidationManager initialView={result.view} /><div className="flex justify-end"><Link href={`/projects/${projectId}/planner`} className="button-primary">다음: 페이지 설계 →</Link></div></>
       : result.error.code === "product_required" || result.error.code === "facts_required" ? <section className="panel space-y-4 p-8">
         <h2 className="text-lg font-semibold">상품정보가 필요합니다</h2><p className="text-sm text-zinc-600">{result.error.message}</p>
         <Link href={`/projects/${projectId}`} className="button-primary">상품정보 입력</Link></section>

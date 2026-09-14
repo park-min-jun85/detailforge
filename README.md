@@ -1,15 +1,15 @@
 # DetailForge
 
-현재 PHASE 2 / TASK-010 Fact Validation을 구현했다. 상품 분석 다음 화면에서 기존 Product Facts와
-입력 근거의 일관성/충돌/근거 부족을 확인한다. AI는 Facts를 생성하거나 수정하지 않는다.
-supported는 입력 근거 안에서 일관된다는 뜻이며 외부 진위가 입증됐다는 뜻이 아니다.
+현재 PHASE 3 / TASK-011 Page Planner를 구현했다. 최신 Fact Validation의 supported Facts와
+완료된 이미지 관찰, 최신 상품 전략을 조합해 구조적 Page Plan을 생성한다.
+Facts와 Sections를 변경하지 않으며 supported는 외부 진위 증명이 아니다.
 
-- 화면: `/projects/[projectId]/validation`
-- 환경 변수는 `.env.example`을 참고한다. 검증 모델 override는 서버 전용 `OPENAI_VALIDATION_MODEL`이다.
-- DB는 `0003_add_fact_validation.sql`까지 필요하다. 원격 migration은 dry-run으로 대상을 확인한 뒤 적용한다.
-- 상세 구현/검증/한계: [TASK-010](docs/tasks/TASK-010.md), [현재 작업](docs/tasks/README.md)
+- 화면: `/projects/[projectId]/planner`
+- 모델: 서버 `OPENAI_PLANNER_MODEL`, 기본 `gpt-5.6-terra`. 환경 변수는 .env.example 참고.
+- DB: `0004_add_detail_page_plan.sql`까지 필요하다. 원격 migration은 dry-run으로 대상을 확인한 뒤 적용한다.
+- 상세 구현/검증/한계: [TASK-011](docs/tasks/TASK-011.md), [현재 작업](docs/tasks/README.md)
 - 자동 테스트: `node --conditions=react-server --import ./tests/register.mjs --test tests/*.test.mjs`
-- 필수 검사: `npx next typegen`, `npx tsc --noEmit`, `npm run lint`, `npm run build`
+- 필수 검사: `npx next typegen`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, `git diff --check`
 
 아래는 프로젝트 생성 도구의 기본 안내다.
 

@@ -1,0 +1,13 @@
+import type { ProductAnalysis } from "@/features/product-analysis/schemas";
+import type { FactPolicy, PlannerAsset, PlannerEvidence, PlannerState } from "./schemas";
+export type PlannerInput = { evidence: PlannerEvidence[]; assets: PlannerAsset[]; strategy: ProductAnalysis | null;
+  restrictedFacts: { factId: string; label: string; status: string }[]; warnings: string[] };
+export type PlannerProvider = { readonly model: string; plan(input: PlannerInput, signal: AbortSignal): Promise<unknown> };
+export type PlannerContextInput = { input: PlannerInput; inputFingerprint: string; factPolicy: FactPolicy; assetSnapshot: PlannerAsset[];
+  validationStatus: "ready" | "missing" | "stale" | "invalid"; productAnalysisStatus: "ready" | "missing" | "stale" | "invalid";
+  coverage: { total: number; completed: number; invalid: number } };
+export type PlannerView = { projectId: string; projectName: string; productName: string; detailPageId: string | null;
+  state: PlannerState | null; inputFingerprint: string | null; stale: boolean;
+  prerequisite: "ready" | "validation_required" | "content_required" | "invalid_input";
+  validationStatus: PlannerContextInput["validationStatus"]; productAnalysisStatus: PlannerContextInput["productAnalysisStatus"];
+  factPolicy: FactPolicy; assets: PlannerAsset[]; coverage: PlannerContextInput["coverage"] };
