@@ -6,8 +6,8 @@
 
 ## 현재 흐름
 
-Product Facts → **Asset Analysis (TASK-008)** → **Product Analysis (TASK-009)** → Page Planning → Section Generation.
-이미지의 시각적 관찰과 상품 전략 해석을 구현한다. Product Facts와 실제 이미지 원본을 변경하지 않는다.
+Product Facts → **Asset Analysis (TASK-008)** → **Product Analysis (TASK-009)** → **Fact Validation (TASK-010)** → Page Planning → Section Generation.
+이미지 관찰, 상품 전략 해석, 입력 근거 범위의 Fact 일관성 평가를 구현한다. Product Facts와 실제 이미지 원본을 변경하지 않는다.
 
 ## Asset Analysis
 
@@ -134,10 +134,45 @@ attempt(analyzing/completed/failed)와 latestResult를 분리한다. 첫 실패�
 바뀌어도 기존 snapshot을 보존하고 완료 후 재조회로 stale을 알린다. stale 감지는 AI 호출을 실행하지 않는다.
 이미지가 없거나 일부만 완료됐어도 Facts가 유효하면 실행할 수 있다. coverage와 시각 근거 없음은 입력/UI에 명시한다.
 
+## Fact Validation (TASK-010)
+
+기존 Facts + source_snapshot + 완료된 Asset 관찰 + 상품 분석 evidence snapshot의 V/S 자료
+→ 서버 검증 대상/근거 registry → 텍스트 전용 Structured Outputs → Zod/원본 값/ID 재검증
+→ `product_facts.validation` 저장 흐름이다. Product Analysis 실행은 필수 조건이 아니다.
+
+F는 검증 대상이다. S1은 미검증 입력 원본, V는 완료된 AI 관찰, H는 과거 snapshot의 관찰/설명이다.
+Product Analysis의 F 복사본, 요약, 전략, 고객/사용 가설은 비교 근거로 보내지 않는다.
+H는 현재와 다를 수 있고 같은 관찰의 복사본은 독립된 추가 증거가 아니다.
+
+각 Fact를 원본 factId/label/value 그대로 한 번씩 반환해야 한다. 네 상태의 의미는 다음과 같다.
+
+- supported: 입력 원본과 직접 비교했을 때 일관됨. 외부 진위 입증이 아니다.
+- insufficient: 관련 비교 근거가 부족함. 관찰에 없다는 것만으로 충돌을 만들지 않는다.
+- conflict: 직접 비교 가능한 입력 원본과 명시적 모순이 있음.
+- needs_review: 용어/단위/상품 정체성이 모호하거나 시각적 차이 가능성 등 사람 판단이 필요함.
+
+supported/conflict에는 source_snapshot 근거가 필요하다. V/H만으로 두 판정을 확정하는 응답은
+서버에서 거부한다. 시각적 해석이나 오래된 근거의 차이는 needs_review로 안내한다.
+confidence는 평가 신뢰도이며 사실 진위 확률이 아니다. 전체 status/counts는 서버가 집계한다.
+전체 우선순위는 conflict → needs_review → insufficient → supported다.
+
+검증은 Facts, source_snapshot, Product Analysis를 쓰지 않으며 validation에 attempt와 마지막 성공을
+분리 저장한다. 서버가 당시 근거 snapshot과 SHA-256 fingerprint를 생성한다. Object key를 정렬하고
+Fact/source 문자열은 원형을 유지한다. 스펙 순서는 Fact ID에 대응하므로 순서 변경도 stale이다.
+진행 중 입력 변경은 당시 결과를 보존하면서 최신 입력과의 차이를 표시한다. 재실행은 사람의 요청에 한한다.
+
+고정 developer 정책과 비신뢰 user JSON을 분리한다. 입력 안의 명령/비밀 공개 요청/URL을 실행하지 않는다.
+strict Structured Outputs에 더해 Zod, Fact의 완전성/원본 값 일치, 근거 ID 존재/중복을 검사한다.
+schema 검증은 의미의 정확성까지 보증하지 않는다. 상충하는 실제 자료의 판정 품질은 별도 평가가 필요하다.
+
+기본 모델은 기존 `gpt-5.6-terra`, override는 서버 `OPENAI_VALIDATION_MODEL`이다.
+provider 60초/DB 10초, 자동 재시도 0회, store=false, 출력 최대 16,000토큰이다.
+동기 실행의 중단/다중 인스턴스 비용 제어 한계는 앞선 단계와 같다. 상세 schema/한계/실제 검증은 TASK-010에 기록한다.
+
 ## 후속 단계
 
-TASK-010 Fact Validation은 기존 Facts와 source_snapshot을 근거로 별도 검증을 설계해야 한다.
-전략 결과/evidenceIds의 존재를 사실 검증으로 오해하지 않는다. 최종 마케팅 문구, hero 선택,
+TASK-011은 최신 입력 fingerprint와 Fact별 검증 상태를 확인하는 소비 정책이 필요하다.
+전략 결과/evidenceIds의 존재나 supported를 외부 진위 증명으로 오해하지 않는다. 최종 마케팅 문구, hero 선택,
 Page Planner와 Section Engine은 아직 구현하지 않았다.
 
 ## 공식 참고

@@ -131,10 +131,25 @@ Facts가 다른 내용으로 변경되었거나 조회/복구가 실패하면 �
   입력 변경 중 분석은 원래 snapshot을 저장하고 현재 fingerprint와의 차이를 표시한다.
 - 동기 MVP의 프로세스 종료/다중 서버 비용 제어 한계는 TASK-008과 같다. TASK-009는 별도 프로세스당 2개 한도를 둔다.
 
+## PHASE 2 / TASK-010 Fact Validation
+
+- `features/fact-validation/evidence.ts`는 기존 Facts를 검증 대상으로, source_snapshot/완료된 관찰/
+  Product Analysis의 과거 evidence snapshot을 비교 자료로 구분한다. 전략 문장은 사용하지 않는다.
+- `schemas.ts`는 네 가지 판정, Fact별 원본 값 일치, 완전한 Fact coverage, 실제 evidence ID와
+  저장 counts/전체 상태를 검증한다. provider 응답은 schema를 통과해도 외부 진위 증명이 아니다.
+- service는 `product_facts.validation`만 UPDATE한다. Facts/source_snapshot/validated_at,
+  Product/ai_analysis, Project, Asset/Storage는 쓰지 않는다. 기존 Facts updated_at trigger는 유지한다.
+- runId/attempt 상태와 Facts id/product_id/updated_at으로 조건부 저장한다. 수동 입력은 validation을
+  보존하고 validation은 수동 원본을 보존한다. 충돌 시 기존 수동 보상 흐름의 재확인 상태를 따른다.
+- `/projects/[projectId]/validation`은 상품 분석의 후속 화면이며 GET/POST
+  `/api/projects/[projectId]/fact-validation`으로 조회/명시적 실행을 분리한다.
+- attempt/latestResult 분리, 실패 시 이전 성공 보존, fingerprint/stale, 동기 실행 한계는 TASK-009
+  패턴을 따른다. 근거 및 보수적인 supported/conflict 정책의 상세는 TASK-010 문서에 있다.
+
 ## 현재 운영 전제
 
 현재 MVP는 **single-user/local-development assumption**이다. Server Action도 외부에서
 호출할 수 있는 서버 진입점이며, 서버 전용 service role client만으로 사용자 접근 통제가
 완성되는 것은 아니다. **외부 공개 배포 전에 Auth + owner_id + 사용자별 RLS**와
 Server Action/Route Handler의 인증·소유권 검증 및 사용자별 Storage 정책이 필요하다.
-TASK-009에서도 Auth는 추가하지 않으며 products JSONB 컬럼의 additive migration만 허용한다. Origin 검사는 사용자 인증을 대신하지 않는다.
+TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 additive migration만 추가한다. Origin 검사는 사용자 인증을 대신하지 않는다.

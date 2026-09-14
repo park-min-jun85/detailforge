@@ -3,7 +3,7 @@
 ## 목적
 
 판매자가 상품을 입력하고 상세페이지 초안을 편집하는 화면 구조를 정의한다.
-PHASE 0의 App Shell 위에 PHASE 1의 프로젝트 생성·조회, 상품정보 입력, 이미지 등록과 PHASE 2의 이미지 AI 분석을 연결한다.
+PHASE 0의 App Shell 위에 프로젝트·상품정보·이미지 등록과 이미지/상품 AI 분석, Fact Validation을 연결한다.
 
 ## App Shell
 
@@ -24,6 +24,7 @@ PHASE 0의 App Shell 위에 PHASE 1의 프로젝트 생성·조회, 상품정보
 - `/projects/[projectId]`: 상품정보 생성/수정
 - `/projects/[projectId]/images`: 저장된 상품의 이미지 등록·조회·삭제·AI 분석
 - `/projects/[projectId]/analysis`: Product Facts와 완료된 이미지 관찰 기반의 상품 전략 분석
+- `/projects/[projectId]/validation`: 기존 Facts와 입력 근거의 일관성·충돌·근거 부족 평가
 - `/templates`: 템플릿
 - `/settings`: 설정
 
@@ -132,6 +133,22 @@ Shell의 `NavItem`은 Client Component이며 `usePathname`으로 현재 메뉴�
   3분 이상 중단된 분석은 다시 실행할 수 있다. 자동 AI 재호출은 없다.
 - 버튼은 키보드로 접근 가능하며 요청 중 중복을 잠근다. 상태/오류에는 status/alert를 사용한다.
 - 상품 또는 Facts가 없으면 상품정보 입력 링크를 제공한다. 조회 오류를 빈 결과로 숨기지 않는다.
+
+### Fact Validation (TASK-010)
+
+- 상품정보 → 이미지 → 상품 분석 → Fact 검증 → 상세페이지의 4단계이며 상품 분석의 다음 링크로 연다.
+- 현재 Product Facts를 읽기 전용으로 표시하고, 별도 영역에 검증 당시 값과 결과를 표시한다.
+  stale 결과의 Fact ID를 현재 값에 자동 연결하거나 이전 값으로 덮어쓰는 UI는 제공하지 않는다.
+- Fact별 검증 완료(supported), 근거 부족, 충돌, 검토 필요의 텍스트/배지, 판정 이유,
+  평가 신뢰도, snapshot 근거 펼치기를 표시한다. 신뢰도는 외부 진위 확률이 아님을 병기한다.
+- 검증 완료는 입력 근거 범위 내 일관성이며 외부 세계의 진위를 입증하지 않는다는 안내를 항상 표시한다.
+  원본 snapshot은 같은 수동 입력의 복사본일 수 있고 AI 관찰/과거 분석은 사실 자체가 아님을 알린다.
+- 검증/재검증/새로고침은 명시적인 버튼이며 Fact 자동 생성/수정/교체 버튼은 없다.
+  충돌 발견 시 사람이 원본 자료를 확인하도록 안내한다.
+- 실행 상태와 판정 상태를 구분한다. 실패/진행 중에도 이전 성공을 유지하고 stale을 별도로 표시한다.
+  30초/탭 복귀 시 GET, 진행 중 5초 GET으로 갱신하며 자동 유료 호출은 없다.
+- semantic details/summary와 button, status/alert, 기본 키보드 focus를 사용한다.
+  결과 카드는 넓은 화면 2열/작은 화면 1열이며 긴 근거는 줄바꿈과 높이 제한 스크롤을 적용한다.
 
 ### Templates / Settings
 

@@ -127,6 +127,7 @@ export type Database = {
           source_snapshot: Json
           updated_at: string
           validated_at: string | null
+          validation: Json
           version: number
         }
         Insert: {
@@ -137,6 +138,7 @@ export type Database = {
           source_snapshot?: Json
           updated_at?: string
           validated_at?: string | null
+          validation?: Json
           version?: number
         }
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           source_snapshot?: Json
           updated_at?: string
           validated_at?: string | null
+          validation?: Json
           version?: number
         }
         Relationships: [

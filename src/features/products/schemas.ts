@@ -60,6 +60,7 @@ export const productRowSchema = z.object({
 });
 export const productFactsRowSchema = z.object({
   id: z.uuid(), product_id: z.uuid(), facts: jsonObject, source_snapshot: jsonObject,
+  validation: jsonObject.default({}),
   version: z.number().int().positive(), validated_at: z.iso.datetime({ offset: true }).nullable(),
   created_at: z.iso.datetime({ offset: true }), updated_at: z.iso.datetime({ offset: true }),
 });

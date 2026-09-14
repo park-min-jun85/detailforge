@@ -38,6 +38,7 @@ export interface ProductFacts {
   productId: string;
   facts: JsonObject;
   sourceSnapshot: JsonObject;
+  validation: JsonObject;
   version: number;
   validatedAt: string | null;
   createdAt: string;

@@ -1,3 +1,18 @@
+# DetailForge
+
+현재 PHASE 2 / TASK-010 Fact Validation을 구현했다. 상품 분석 다음 화면에서 기존 Product Facts와
+입력 근거의 일관성/충돌/근거 부족을 확인한다. AI는 Facts를 생성하거나 수정하지 않는다.
+supported는 입력 근거 안에서 일관된다는 뜻이며 외부 진위가 입증됐다는 뜻이 아니다.
+
+- 화면: `/projects/[projectId]/validation`
+- 환경 변수는 `.env.example`을 참고한다. 검증 모델 override는 서버 전용 `OPENAI_VALIDATION_MODEL`이다.
+- DB는 `0003_add_fact_validation.sql`까지 필요하다. 원격 migration은 dry-run으로 대상을 확인한 뒤 적용한다.
+- 상세 구현/검증/한계: [TASK-010](docs/tasks/TASK-010.md), [현재 작업](docs/tasks/README.md)
+- 자동 테스트: `node --conditions=react-server --import ./tests/register.mjs --test tests/*.test.mjs`
+- 필수 검사: `npx next typegen`, `npx tsc --noEmit`, `npm run lint`, `npm run build`
+
+아래는 프로젝트 생성 도구의 기본 안내다.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

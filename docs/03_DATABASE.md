@@ -74,7 +74,7 @@ facts/source_snapshot/validated_at, Project status는 변경하지 않는다. in
 
 ### product_facts
 
-Product당 하나만 존재하며 검증된 사실정보의 Source of Truth다. `facts`와 이를
+Product당 하나만 존재하며 입력된 사실정보의 Source of Truth다. 외부 진위가 검증됐음을 뜻하지 않는다. `facts`와 이를
 검증할 때 사용한 `source_snapshot`을 분리해 저장한다. `version`은 후속 확장을 위해
 유지하지만 이번 MVP에서는 별도 history나 immutable version 구조를 만들지 않는다.
 
@@ -88,6 +88,24 @@ source_snapshot에는 해당 저장의 manual raw_data를 그대로 복사한다
 있어도 입력 갱신 시 null로 해제한다. products/Facts는 별도 요청이며 Facts 실패 시
 신규 Product 정리 또는 기존 Product 복원으로 보상한다. 복구 실패/중단 시 부분 상태가
 남을 수 있다는 한계는 Architecture와 TASK-006 문서에 기록한다. schema/migration은 변경하지 않는다.
+
+#### TASK-010 product_facts.validation
+
+`0003_add_fact_validation.sql`은 `validation jsonb NOT NULL DEFAULT '{}'::jsonb`와
+`jsonb_typeof(validation) = 'object'` CHECK 하나만 추가한다. 기존 RLS와 다른 컬럼/데이터는 유지한다.
+
+초기 `{}`는 미검증이다. 실행 후 schemaVersion/attempt/latestResult를 저장한다.
+latestResult에는 schemaVersion, 전체 status, inputFingerprint, validatedAt, counts, warnings,
+provider/model, evidenceSnapshot, Fact별 factId/label/value/status/confidence/evidenceIds/reason을 둔다.
+상태는 supported/insufficient/conflict/needs_review이며 실패한 실행은 이전 latestResult를 보존한다.
+
+검증은 validation만 갱신한다. 기존 `validated_at`은 외부 진위 검증으로 오해되지 않도록 건드리지 않으며
+이번 실행 시각은 JSON 내부 `validatedAt`에만 저장한다. 기존 trigger에 의한 `updated_at` 변경은 유지한다.
+수동 Fact 저장도 validation을 초기화하지 않아 이전 결과를 보존하며 현재 입력과 fingerprint가 다르면 stale이다.
+원본 facts/source_snapshot/version, products.ai_analysis를 AI가 변경하지 않는다.
+
+사용자가 0003 적용, Local/Remote 0001·0002·0003 일치, linked 타입 재생성을 확인했다.
+생성 타입과 원격 읽기/저장 검증 및 migration 절차 기록은 `tasks/TASK-010.md`를 참고한다.
 
 ### assets
 
