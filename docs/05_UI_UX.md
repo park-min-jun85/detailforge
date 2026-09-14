@@ -202,3 +202,21 @@ restricted Fact는 접어서 현재 값을 확인할 수 있다. 실제 콘텐�
 입력이 바뀌면 '입력 정보가 변경되어 페이지 설계를 다시 생성하는 것을 권장합니다.'를 표시하며 이전 입력의 Plan임을 명시한다.
 실패한 재계획에서도 이전 성공 Plan과 성공 시각을 계속 보여준다. 새로고침/조회 polling은 AI를 실행하지 않는다.
 Neutral 패널과 semantic links/buttons/headings/status/alert를 재사용하며 작은 화면에서는 카드와 버튼을 줄바꿈한다.
+
+## PHASE 3 / TASK-012 상세페이지 생성
+
+/projects/[projectId]/sections는 제작 흐름의 마지막 '상세페이지' 단계다. Planner의
+'다음: 상세페이지 생성 →'에서 이동하며 기존 App Shell/Neutral 패널을 재사용한다.
+상품명, Plan 최신 여부, 설계/저장 Section 수, 콘텐츠 상태와 AI 생성/새로고침을 표시한다.
+
+기존 콘텐츠가 있으면 '전체 다시 생성' 뒤 전체 교체 확인/취소를 제공한다. 확인을 시작한 시점의 row revision을
+서버에 전달하여 그동안 다른 작업이 바꾼 결과를 새 확인 없이 교체하지 않는다.
+생성/실패에도 이전 콘텐츠를 유지한다. 복구가 필요하면 보관 snapshot을 표시하고 '기존 콘텐츠 복구'는 유료 AI 없이 복구만 한다.
+
+Plan이 없거나 오래되면 '최신 페이지 설계를 먼저 생성해 주세요.'와 Planner 링크/disabled 생성 버튼을 제공한다.
+기존 콘텐츠가 stale이면 '페이지 설계가 변경되었습니다. 상세페이지 콘텐츠를 다시 생성하는 것을 권장합니다.'를 표시한다.
+새로고침/polling은 GET만 사용하며 자동 생성하지 않는다.
+
+type별 headline/subheadline/body/items/specification rows를 읽기 전용 카드로 표시한다. 이미지가 있으면 기존 private
+미리보기 경로를 사용한다. 카드에 근거 ID/F와 V의 의미를 표시하고 provenance/style token은 details로 접는다.
+860px 시각 캔버스/드래그/스타일 편집/개별 재생성은 없다. 길이 제한/줄바꿈/작은 화면 카드 배치와 키보드 접근을 유지한다.

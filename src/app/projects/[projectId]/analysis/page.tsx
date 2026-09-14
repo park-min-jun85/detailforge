@@ -21,7 +21,7 @@ export default async function ProductAnalysisPage({ params }: PageProps<"/projec
     <ol aria-label="상세페이지 제작 단계" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-zinc-200 pb-5 text-sm">
       <li><Link href={`/projects/${projectId}`} className="text-link">1. 상품정보</Link></li>
       <li><Link href={`/projects/${projectId}/images`} className="text-link">2. 이미지</Link></li>
-      <li aria-current="step" className="font-semibold">3. 상품 분석</li><li><Link href={`/projects/${projectId}/validation`} className="text-link">4. Fact 검증</Link></li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li className="text-zinc-500">6. 상세페이지</li>
+      <li aria-current="step" className="font-semibold">3. 상품 분석</li><li><Link href={`/projects/${projectId}/validation`} className="text-link">4. Fact 검증</Link></li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li><Link href={`/projects/${projectId}/sections`} className="text-link">6. 상세페이지</Link></li>
     </ol>
     {result.ok ? <><ProductAnalysisManager initialView={result.view} /><div className="flex justify-end"><Link href={`/projects/${projectId}/validation`} className="button-primary">다음: Fact 검증 →</Link></div></>
       : result.error.code === "product_required" || result.error.code === "facts_required" ? <section className="panel space-y-4 p-8">

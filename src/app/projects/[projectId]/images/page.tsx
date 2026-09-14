@@ -35,7 +35,7 @@ export default async function ProductImagesPage({ params }: PageProps<"/projects
       <ol aria-label="상세페이지 제작 단계" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-zinc-200 pb-5 text-sm">
         <li><Link href={`/projects/${projectId}`} className="text-link">1. 상품정보</Link></li>
         <li aria-current="step" className="font-semibold text-zinc-950">2. 이미지</li>
-        <li className="text-zinc-500">3. 상품 분석</li><li className="text-zinc-500">4. Fact 검증</li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li className="text-zinc-500">6. 상세페이지</li>
+        <li className="text-zinc-500">3. 상품 분석</li><li className="text-zinc-500">4. Fact 검증</li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li><Link href={`/projects/${projectId}/sections`} className="text-link">6. 상세페이지</Link></li>
       </ol>
       {result.list ? <><AssetManager projectId={result.context.project.id} initialList={result.list} />
         <div className="flex justify-end"><Link href={`/projects/${projectId}/analysis`} className="button-primary">다음: 상품 분석 →</Link></div></> :

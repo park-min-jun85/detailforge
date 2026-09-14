@@ -169,3 +169,22 @@ TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 a
   DB project_id UNIQUE와 runId 조건으로 중복/늦은 저장을 막는다. 전역 비용 제한이나 background queue는 없다.
 - Facts/source_snapshot/Validation/Product Analysis/Asset/Project status/Sections는 Planner가 수정하지 않는다.
 - 기존 single-user/local-development 보안 전제와 RLS는 유지한다. Origin 검사는 인증을 대신하지 않는다.
+
+## PHASE 3 / TASK-012 Section Engine
+
+- /projects/[projectId]/sections, GET /api/projects/[projectId]/sections,
+  POST /api/projects/[projectId]/sections/generate를 제공한다.
+- features/section-engine: schemas(10종 content/style/row/journal), grounding(Plan 대응과 근거 검증),
+  config/prompts/provider, service, persistence, http/client, components의 책임을 분리한다.
+- getPlannerView와 기존 Plan schema/freshness를 재사용한다. 최신 Plan/Validation과 소속 검증을 통과해야 생성한다.
+- 전체 Section을 한 번의 text-only provider 호출로 생성하고 모두 검증한 뒤 저장한다. Plan을 재설계하지 않는다.
+- 기존 sections.content/style과 detail_pages.settings.sectionGeneration 복구 journal만 사용한다. migration/RPC 없음.
+- settings journal에 기존 row snapshot을 보관하고 새 행 전체를 batch INSERT한다. 기존 행을 ID/updated_at 조건으로
+  한 DELETE 요청에서 제거하고 완료 상태를 저장한다. 완료 후 실제 행은 Plan과 1:1이다.
+- 중간 실패는 기존 snapshot의 누락된 행을 복원하고 이번 실행의 새 행을 제거한다. 응답 유실은 실제 DB 재조회로 확인한다.
+  복구 실패에는 journal을 유지하고 GET은 보관된 기존 콘텐츠를 표시하며 복구 CTA는 AI 없이 복구만 수행한다.
+- 생성 중 GET은 journal의 기존 snapshot을 표시한다. 상태 읽기 전후를 재확인해 경쟁 중 혼합 조회를 거부한다.
+- 기존 row가 다른 작업에서 바뀌면 자동 덮어쓰지 않는다. 알 수 없는 행/수동 변경 충돌은 복구 필요 상태로 남긴다.
+- 이는 보상 처리이며 cross-row ACID transaction이 아니다. 직접 DB 조회자는 staging 중 중복/중간 상태를 볼 수 있다.
+  향후 Editor/Renderer도 이 조회 경계를 사용해야 한다. 다중 작성자/엄격한 원자성이 필요하면 RPC/transaction을 별도 설계한다.
+- Project/DetailPage status는 전환 의미가 명확하지 않아 유지한다. Facts/Validation/Product Analysis/Plan/Asset은 수정하지 않는다.

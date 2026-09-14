@@ -195,3 +195,27 @@ Sections row는 생성/수정하지 않는다. 실제 콘텐츠 저장은 TASK-0
 에이전트는 생성 타입의 plan Row/Insert/Update 매핑과 실제 원격 plan 저장/재조회를 검증했다.
 파일만 작성한 후 dry-run을 요청했으나 제공된 답변은 실제 push 완료 보고이므로 dry-run 성공 출력은 확인하지 못했다.
 원격 push를 에이전트가 재실행하지 않았다.
+
+## TASK-012 Section materialization
+
+새 migration은 없다. 기존 sections의 id/detail_page_id/type/sort_order/content/style/created_at/updated_at을 사용한다.
+기존 type CHECK, JSON object CHECK, DetailPage FK와 RLS를 유지한다. 별도 UNIQUE sort_order 제약은 없다.
+
+content는 type별 실제 문구와 evidenceIds/assetIds, meta를 가진다. meta에는 schemaVersion=1, plannerKey,
+sourcePlanFingerprint, sourceInputFingerprint, generationId, generatedAt, provider/model, origin=generated, warnings를 저장한다.
+style은 layout/textAlign/density/background/emphasis/imageFit의 enum object이며 자유 CSS는 없다. signed URL은 저장하지 않는다.
+
+Plan의 section 순서를 sort_order=0..N-1로 저장한다. 재생성은 새 UUID 세트를 사용하고 이전 행을 제거한다.
+향후 Editor는 성공 재생성 때 Section id가 바뀔 수 있다는 점과 plannerKey/generationId를 구분해야 한다.
+
+기존 detail_pages.settings.sectionGeneration에 schemaVersion/runId/status/startedAt/finishedAt/errorCode/backup/staged를 저장한다.
+status는 generating/completed/failed/recovery_required다. backup은 기존 원본 row snapshot, staged는 검증된 새 row 세트다.
+settings의 다른 key와 plan/width/status/theme은 유지한다. 완료나 복구 성공 후 backup/staged를 비워 history로 남기지 않는다.
+실패 복구에 필요한 snapshot은 DB에 지속 보관한다. 임의 수동 변경은 덮어쓰지 않는다.
+
+최대 기존 50행/새 12행과 journal 전체 크기 600,000자 제한을 둔다. 동기 호출/복구 중 프로세스 종료와
+다중 서버 경쟁은 transaction으로 보장되지 않는다. 직접 테이블 조회자는 stage 상태를 볼 수 있다.
+정확한 보상 순서/한계는 TASK-012와 ADR-010을 참고한다.
+
+2026-09-14 실제 linked DB에서 columns 읽기, 잘못된 type/content/style의 CHECK(23514),
+없는 DetailPage FK(23503)를 확인했다. 실제 5행 저장/순서/재조회와 commit 실패 후 snapshot 복원도 검증했다.

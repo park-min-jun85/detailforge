@@ -102,3 +102,24 @@ Product Facts는 Source of Truth이며 Product Analysis는 전략적 해석이�
 기존 products에 JSON object 제약을 가진 ai_analysis 컬럼 하나만 추가한다.
 attempt와 latestResult를 분리해 재분석 실패 시 마지막 성공을 보존한다.
 Facts/raw_data/Project status를 쓰지 않으며 Fact Validation은 TASK-010에서 별도 설계한다.
+
+## ADR-010
+
+**Section Engine은 기존 JSONB와 지속 복구 journal로 생성 세트를 교체**
+
+- Status: Accepted for single-user local MVP
+- Date: 2026-09-14
+
+Planner는 구조를 정하고 Section Engine은 해당 key/type/order에 대응하는 실제 콘텐츠를 만든다.
+Sections content/style은 Editor/Renderer의 원본이며 style은 서버의 제한된 enum 기본값이다. raw CSS/HTML은 저장하지 않는다.
+
+추가 migration/RPC 대신 detail_pages.settings.sectionGeneration에 기존 row snapshot과 새 staged rows를 보관한다.
+전체 응답을 검증한 뒤 새 세트를 batch INSERT하고 기존 행의 ID/revision을 조건으로 삭제한 뒤 완료를 기록한다.
+GET은 생성/복구 중 backup을 표시한다. 실패하면 누락된 기존 행을 복원하고 이번 실행의 새 행을 지운다.
+복구 성공 후 journal snapshot을 비우며 복구 실패/프로세스 중단 시에는 보관하고 명시적 복구를 제공한다.
+
+이는 ACID all-or-nothing transaction이 아니다. 직접 sections를 읽으면 staging 세트가 함께 보일 수 있다.
+조건부 쓰기/CAS는 전역 분산 lock이나 미래 Editor 동시 수정의 완전한 보호를 대신하지 않는다.
+알 수 없는 변경은 덮어쓰지 않고 복구 필요로 남긴다. 엄격한 원자성/다중 작성자가 필요한 단계에서
+DB RPC/transaction 또는 generation-set 테이블/active pointer를 별도 migration으로 설계해야 한다.
+이번 TASK에서 이를 위한 migration을 만들거나 push하지 않는다.
