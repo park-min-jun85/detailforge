@@ -41,6 +41,7 @@ export async function startSectionDb() {
       return field === "ai_analysis" ? isDeepStrictEqual(row.ai_analysis, JSON.parse(value.slice(3))) : String(row[field]) === value.slice(3);
     });
     if (request.method === "GET") {
+      if (state.beforeRead) await state.beforeRead(table);
       if (state.failure === `read-${table}`) return fail();
       const source = table === "projects" ? [state.project] : table === "products" ? [state.product] : table === "product_facts" ? [state.facts] : table === "assets" ? state.assets : table === "detail_pages" ? [state.page] : table === "sections" ? state.sections : null;
       if (!source) return fail();

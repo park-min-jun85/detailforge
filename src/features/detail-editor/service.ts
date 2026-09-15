@@ -5,7 +5,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAssetContext, listAssets } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope } from "@/features/assets/schemas";
 import { readPage, readRows, readGeneration } from "@/features/section-engine/persistence";
-import { claimEditLease, releaseEditLease } from "@/features/section-engine/edit-lease";
+import { claimEditLease, releaseEditLease, hasEditLease } from "@/features/section-engine/edit-lease";
+import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
 import { latestPlanSchema } from "@/features/page-planner/schemas";
 import { sourcePlanFingerprint } from "@/features/section-engine/grounding";
 import { sectionsAreStale } from "@/features/section-engine/schemas";
@@ -38,20 +39,24 @@ async function context(projectId: string) {
   const rows = page ? await readRows(client, page.id) : [];
   if (page) {
     const after = await readPage(client, projectId);
-    if (!after || after.id !== page.id || !isDeepStrictEqual(after.settings.sectionGeneration, page.settings.sectionGeneration) || !isDeepStrictEqual(after.plan, page.plan)) throw new EditorError("conflict");
+    if (!after || after.id !== page.id || after.updated_at !== page.updated_at || !isDeepStrictEqual(after.settings.sectionGeneration, page.settings.sectionGeneration)
+      || !isDeepStrictEqual(after.settings.sectionReorder, page.settings.sectionReorder) || !isDeepStrictEqual(after.plan, page.plan)) throw new EditorError("conflict");
   }
   return { client, scope, page, assets, rows, generation };
 }
 export async function getEditorView(projectId: string): Promise<EditorView> {
   try {
-    const ctx = await context(projectId), visible = ctx.generation?.backup ?? ctx.rows;
+    const ctx = await context(projectId), reorder = ctx.page ? readReorder(ctx.page.settings) : null;
+    if (reorder && reorder.detailPageId !== ctx.page?.id) throw new EditorError("not_found");
+    const visible = ctx.generation?.backup ?? visibleOrderRows(ctx.rows, reorder);
     const sections = visible.map(row => editorSectionSchema.parse(row));
     const plan = latestPlanSchema.safeParse(ctx.page?.plan.latestResult);
     let previewWarning = false;
     const previews = ctx.scope.product ? await listAssets(projectId).catch(() => { previewWarning = true; return null; }) : null;
-    return { projectId, projectName: ctx.scope.project.name, productName: ctx.scope.product?.name ?? "상품정보 없음", sections,
+    return { projectId, projectName: ctx.scope.project.name, productName: ctx.scope.product?.name ?? "상품정보 없음", detailPageId: ctx.page?.id ?? null, sections,
       stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success),
-      blocked: !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
+      blocked: !!reorder || !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
+      reorderRecovery: !!reorder && !!ctx.page && !hasEditLease(ctx.page), manualOrder: !!ctx.page && hasManualOrder(ctx.page.settings, ctx.rows),
       assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
   } catch (error) { throw safe(error); }
 }

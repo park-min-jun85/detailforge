@@ -233,3 +233,21 @@ page.updated_at CAS로 재생성 journal claim과 경쟁을 조정하고 저장 
 실패/프로세스 중단으로 남은 lease는 3분 후 만료된다. 기존 sectionGeneration journal을 덮어쓰거나 복구 snapshot을 지우지 않는다.
 이 저장은 새 migration이나 DB transaction이 아니며 강한 원자성/다중 작성자 설계는 후속 단계다.
 Project/DetailPage status, Facts/source_snapshot/Validation/Analysis/Plan/Asset 데이터는 수동 편집이 변경하지 않는다.
+
+## TASK-014 수동 Section 순서
+
+새 migration/RPC/타입 재생성 없음. 기존 sections.sort_order와 updated_at trigger를 재사용한다.
+2026-09-15 linked DB의 검증용 Section 두 행에 동일 sort_order를 저장한 후 원복하여 UNIQUE 부재를 확인했다.
+0001의 sections_detail_page_id_sort_order_idx는 일반 index다. offset 없이 순차 저장하고 최종 0..N-1을 검증한다.
+
+Page Plan 순서는 초기 설계이고 sections.sort_order가 현재 표시 순서다. 전체 ID/revision을 검증한 후
+기존 page edit lease와 row CAS로 sort_order만 바꾼다. content/style/type/meta/grounding은 불변이다.
+settings.sectionReorder는 원래 순서/revision/불변 row SHA-256, 현재 revision, pending write intent를 보관한다.
+부분 실패 시 sort_order만 복구한다. rollback도 updated_at을 갱신하므로 클라이언트에 최신 revision을 제공한다.
+복구 실패 시 journal 유지/편집 차단/명시적 복구를 사용한다. 직접 DB 읽기에 중간 순서가 노출될 수 있는 보상 처리다.
+
+settings.editor.manualOrder={edited:true,editedAt,runId,sourcePlanFingerprint,orderedSectionIds}를 merge한다.
+fingerprint는 기존 Section의 공통 원본 Plan fingerprint이며 혼합이면 null이다. 최신 Plan으로 덮어쓰지 않는다.
+settings의 다른 key/sectionGeneration/editor 속성을 최신 page CAS merge로 보존한다.
+전체 재생성으로 Section UUID 집합이 바뀌면 이전 manualOrder는 현재 순서로 판단하지 않는다.
+Facts/source_snapshot/Validation/Analysis/Plan/Asset 및 Project·DetailPage status는 변경하지 않는다.

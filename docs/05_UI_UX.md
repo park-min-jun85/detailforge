@@ -247,3 +247,24 @@ Plan fingerprint가 다르면 `페이지 설계가 변경되었습니다. 현재
 생성/복구 중에는 기존 snapshot을 읽기 전용으로 보여준다. Section이 없으면 `먼저 상세페이지를 생성해 주세요.`와 CTA를 제공한다.
 Header는 프로젝트/상품명, 저장 상태, stale 여부, 논리 폭을 표시한다.
 private 이미지 URL은 4분 간격과 탭 복귀에 갱신하고 DB에는 Asset ID만 유지한다.
+
+## PHASE 4 / TASK-014 Section 순서 변경
+
+Navigator 항목에 native drag와 위로/아래로 버튼을 제공한다. 첫 위로/마지막 아래로는 disabled이며
+순번·한국어 type·방향 aria-label과 keyboard alternative를 제공한다. 375px은 기존 섹션 탭에서 버튼으로 조작한다.
+drag 중 대상 opacity/drop outline만 사용하며 과도한 애니메이션이나 dependency를 추가하지 않는다.
+
+이동은 local orderDraft에만 반영한다. 선택된 Section ID는 유지되고 Navigator/Preview가 즉시 같은 순서를 표시한다.
+`저장되지 않은 순서 변경`, `섹션 순서가 변경되었습니다.`, [순서 저장], [순서 되돌리기]를 제공한다.
+순서 되돌리기는 마지막 서버 canonical order로 돌아간다. autosave는 없다.
+
+문구/style dirty 상태에서 버튼 이동은 저장 후 계속/버리기/취소 확인을 거친다. 이때 drag는 잠시 비활성화한다.
+order만 dirty이면 Section 선택은 가능하되 다른 페이지 이동/최신 재조회는 기존 확인 UI,
+문서 reload/종료는 beforeunload로 보호한다. 실패 시 orderDraft를 유지한다.
+409에는 `다른 변경사항이 먼저 저장되었습니다. 최신 섹션을 다시 불러온 뒤 순서를 변경해 주세요.`와
+[최신 섹션 다시 불러오기]를 제공한다. 복구 필요 시 편집을 막고 재조회 후 [이전 순서 복구]를 제공한다.
+
+stale 경고를 유지하면서 수동 reorder를 허용한다. 순서만 바꾸면 groundingStatus/manualEdit.textEdited는 그대로다.
+Page Plan은 원본 설계로 남으며 저장된 sort_order가 현재 페이지 표시 순서다.
+manualOrder가 있는 전체 재생성 확인에는 `직접 변경한 섹션 순서도 초기 설계 순서로 바뀔 수 있습니다.`를 추가한다.
+이 기능은 AI를 호출하지 않는다.

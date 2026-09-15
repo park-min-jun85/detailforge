@@ -8,4 +8,4 @@ export type SectionProvider = { readonly model: string; generate(input: SectionI
 export type SectionView = { projectId: string; projectName: string; productName: string; detailPageId: string | null;
   planReady: boolean; sourcePlanFingerprint: string | null; planSectionCount: number; sections: SectionRow[]; stale: boolean;
   generation: Pick<GenerationState, "status" | "startedAt" | "finishedAt" | "errorCode"> | null; recoveryNeeded: boolean;
-  assets: PlannerView["assets"]; revision: string };
+  assets: PlannerView["assets"]; revision: string; manualOrder: boolean };

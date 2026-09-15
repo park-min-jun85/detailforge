@@ -123,3 +123,23 @@ GET은 생성/복구 중 backup을 표시한다. 실패하면 누락된 기존 �
 알 수 없는 변경은 덮어쓰지 않고 복구 필요로 남긴다. 엄격한 원자성/다중 작성자가 필요한 단계에서
 DB RPC/transaction 또는 generation-set 테이블/active pointer를 별도 migration으로 설계해야 한다.
 이번 TASK에서 이를 위한 migration을 만들거나 push하지 않는다.
+
+## ADR-011
+
+**수동 순서는 Plan과 분리하고 기존 lease·지속 intent journal로 보상 저장한다**
+
+- Status: Accepted for single-user local MVP
+- Date: 2026-09-15
+
+Page Plan은 원본 AI 설계이며 수동 표시 순서는 sections.sort_order다. 전체 ID와 모든 updated_at을
+검증한 후 서버에서 canonical 0..N-1을 계산한다. 순서 변경은 content/style/grounding/상위 근거를 바꾸지 않는다.
+실제 DB에 sort_order UNIQUE가 없음을 전용 fixture로 확인했다. 기존 page edit lease를 Planner까지 조정하고
+settings.sectionReorder에 원래 순서·revision·불변 row hash/current/pending intent를 저장한다.
+응답 유실은 재조회로 확인하고 부분 실패는 sort_order만 복구한다. 복구 불가이면 journal/편집 차단을 유지한다.
+수동 순서 provenance는 settings.editor.manualOrder에 merge하며 다른 journal을 덮어쓰지 않는다.
+완료된 재생성의 새 ID 집합에는 이전 marker를 적용하지 않고 재생성 확인에서 초기화 가능성을 안내한다.
+
+local orderDraft/명시적 저장/실패 시 draft 보존을 사용한다. 기존 content dirty guard를 OR order dirty로 확장한다.
+stale Plan에서도 수동 순서 저장을 허용한다. AI 호출과 migration/RPC는 추가하지 않는다.
+이는 여러 row의 ACID 저장이 아니며 직접 DB 변경/장기 worker 정지까지 강한 원자성을 보장하지 않는다.
+엄격한 다중 작성자 요구가 생기면 별도 승인된 transaction/RPC 설계를 진행한다. 상세 복구 계약은 TASK-014를 따른다.

@@ -208,3 +208,21 @@ TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 a
 - draft/dirty state와 명시적 저장, Section/앱 링크 이동 확인, beforeunload를 제공한다. autosave는 없다.
 - preview는 bounded token의 deterministic CSS mapping이며 Editor 선택 outline은 wrapper에만 있다.
   full Renderer/export는 이후 단계다. private image URL은 기존 TASK-007 helper의 임시 DTO이며 DB에는 쓰지 않는다.
+
+## PHASE 4 / TASK-014 Section Reorder
+
+- Page Plan 순서는 원본 설계, sections.sort_order는 현재 수동 편집 결과다. Plan은 수정하지 않는다.
+- features/section-reorder는 strict 전체 집합·revision schema, local draft helper, server persistence/service/http,
+  client API를 분리한다. Navigator의 native drag/위아래 버튼은 local orderDraft만 바꾼다.
+  explicit 순서 저장 성공 시 canonical rows/새 updated_at을 적용한다. Preview는 저장 전 draft 순서에 맞춘다.
+- PATCH /api/projects/[projectId]/sections/reorder는 모든 ID/revision을 lease 전후 검증하고 서버에서 0..N-1을 계산한다.
+  각 row는 sort_order만 CAS UPDATE한다. content/style/type/meta/grounding/상위 데이터는 그대로 유지한다.
+- 기존 settings.sectionEdit lease를 재사용하고 Planner와도 상호 배제한다. Section Engine은 reorder journal이 남아 있으면 생성하지 않는다.
+- settings.sectionReorder에 순서 backup/current/pending intent와 불변 row fingerprint를 지속 저장한다.
+  부분 실패는 sort_order만 보상 복구하며 복구 실패 시 journal과 draft를 유지하고 추가 저장을 막는다.
+  조회는 마지막 완료 순서를 표시한다. 같은 endpoint의 명시적 recover 요청은 AI 없이 원래 순서를 복구한다.
+- 성공 시 settings.editor.manualOrder를 최신 settings와 CAS merge한다. 기존 generation journal/editor 속성은 보존한다.
+  재생성 후 새 UUID 집합에는 이전 manualOrder를 적용하지 않으며 재생성 확인 UI에서 순서 초기화 가능성을 알린다.
+- GET /api/projects/[projectId]/editor는 409 뒤 최신 재조회용이다. 기존 dirty/이탈 guard를 content OR order로 확장한다.
+- stale Plan에서도 수동 reorder를 허용한다. AI 호출, dependency/migration/RPC 추가 없음.
+  보상 처리는 ACID transaction이 아니며 한계와 복구 계약은 TASK-014/ADR-011을 따른다.

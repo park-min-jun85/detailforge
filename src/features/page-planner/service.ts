@@ -1,4 +1,6 @@
 import "server-only";
+import { hasEditLease } from "@/features/section-engine/edit-lease";
+import { readReorder } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -74,6 +76,7 @@ export async function getPlannerView(projectId: string): Promise<PlannerView> {
   try { return view(await loadContext(createSupabaseServerClient(), project)); } catch (error) { throw safe(error); }
 }
 async function saveState(client: Client, page: Page, state: PlannerState) {
+  if (hasEditLease(page) || readReorder(page.settings)) throw new PlannerError("busy");
   const value = plannerStateSchema.parse(state), before = readState(page.plan);
   let update = client.from("detail_pages").update({ plan: value }).eq("id", page.id).eq("project_id", page.project_id).eq("updated_at", page.updated_at);
   update = before ? update.eq("plan->attempt->>runId", before.attempt.runId).eq("plan->attempt->>status", before.attempt.status) : update.eq("plan", "{}");
@@ -132,6 +135,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
     if (initial.prerequisite !== "ready") throw new PlannerError(initial.prerequisite);
     if (!context.current) throw new PlannerError("invalid_input");
     if (isPlannerActive(context.state, Date.now())) throw new PlannerError("busy");
+    if (context.page && (hasEditLease(context.page) || readReorder(context.page.settings))) throw new PlannerError("busy");
     const provider = providerFactory();
     const { page, state } = await claim(client, project, context.page);
     try {

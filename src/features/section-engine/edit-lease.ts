@@ -3,6 +3,8 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { readPage, readGeneration, type Client, type PageRow } from "./persistence";
 import { SectionEngineError } from "./errors";
+import { readReorder } from "@/features/section-reorder/schemas";
+import { isPlannerActive, plannerStateSchema } from "@/features/page-planner/schemas";
 const leaseSchema = z.strictObject({ id: z.uuid(), startedAt: z.iso.datetime({ offset: true }) });
 export function hasEditLease(page: PageRow, now = Date.now()) {
   if (!page.settings.sectionEdit) return false;
@@ -10,9 +12,11 @@ export function hasEditLease(page: PageRow, now = Date.now()) {
   if (!lease.success) throw new SectionEngineError("invalid_input");
   return now - Date.parse(lease.data.startedAt) < 180000;
 }
-export async function claimEditLease(client: Client, page: PageRow) {
+export async function claimEditLease(client: Client, page: PageRow, recoveringReorderId?: string) {
   const generation = readGeneration(page);
-  if (hasEditLease(page) || generation?.backup || generation?.status === "generating") throw new SectionEngineError("busy");
+  const reorder = readReorder(page.settings);
+  const planner = plannerStateSchema.safeParse(page.plan);
+  if (hasEditLease(page) || (planner.success && isPlannerActive(planner.data, Date.now())) || generation?.backup || generation?.status === "generating" || (reorder && reorder.runId !== recoveringReorderId)) throw new SectionEngineError("busy");
   const lease = { id: randomUUID(), startedAt: new Date().toISOString() };
   const result = await client.from("detail_pages").update({ settings: { ...page.settings, sectionEdit: lease } })
     .eq("id", page.id).eq("project_id", page.project_id).eq("updated_at", page.updated_at).select("id").abortSignal(AbortSignal.timeout(10000)).maybeSingle();

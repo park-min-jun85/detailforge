@@ -1,5 +1,6 @@
 import "server-only";
 import { hasEditLease } from "./edit-lease";
+import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,8 +28,8 @@ async function load(client: Client, projectId: string) {
   const state = page ? readGeneration(page) : null, rows = page ? await readRows(client, page.id) : [];
   if (page) {
     const after = await readPage(client, projectId);
-    if (!after || after.id !== page.id || !isDeepStrictEqual(after.settings.sectionGeneration, page.settings.sectionGeneration)
-      || !isDeepStrictEqual(after.plan, page.plan)) throw new SectionEngineError("conflict");
+    if (!after || after.id !== page.id || after.updated_at !== page.updated_at || !isDeepStrictEqual(after.settings.sectionGeneration, page.settings.sectionGeneration)
+      || !isDeepStrictEqual(after.settings.sectionReorder, page.settings.sectionReorder) || !isDeepStrictEqual(after.plan, page.plan)) throw new SectionEngineError("conflict");
   }
   const latest = planner.state?.latestResult;
   const planReady = Boolean(page && latest && !planner.stale && planner.prerequisite === "ready" && planner.validationStatus === "ready");
@@ -36,10 +37,10 @@ async function load(client: Client, projectId: string) {
 }
 function view(context: Awaited<ReturnType<typeof load>>): SectionView & { revision: string } {
   const { planner, page, state, planReady, fingerprint } = context;
-  const rows = state?.backup ?? context.rows;
+  const rows = state?.backup ?? visibleOrderRows(context.rows, page ? readReorder(page.settings) : null);
   return { projectId: planner.projectId, projectName: planner.projectName, productName: planner.productName, detailPageId: page?.id ?? null,
     planReady, sourcePlanFingerprint: fingerprint, planSectionCount: context.latest?.plan.sections.length ?? 0, sections: rows,
-    stale: sectionsAreStale(rows, fingerprint, planReady), revision: validationFingerprint(rows),
+    stale: sectionsAreStale(rows, fingerprint, planReady), revision: validationFingerprint(rows), manualOrder: !!page && hasManualOrder(page.settings, rows),
     generation: state ? { status: state.status, startedAt: state.startedAt, finishedAt: state.finishedAt, errorCode: state.errorCode } : null,
     recoveryNeeded: Boolean(state?.backup && !isGenerationActive(state, Date.now())), assets: planner.assets };
 }
@@ -59,7 +60,7 @@ export async function generateSections(projectId: string, options: { replaceExis
   running.add(project);
   try {
     const client = createSupabaseServerClient(), context = await load(client, project), initial = view(context);
-    if (isGenerationActive(context.state, Date.now()) || (context.page && hasEditLease(context.page))) throw new SectionEngineError("busy");
+    if (isGenerationActive(context.state, Date.now()) || (context.page && (hasEditLease(context.page) || readReorder(context.page.settings)))) throw new SectionEngineError("busy");
     if (context.state?.backup && context.page) {
       // Recovery is explicit and costs no provider call. A subsequent user action can generate new content.
       await restoreGeneration(client, context.page, context.state.runId, "interrupted");
