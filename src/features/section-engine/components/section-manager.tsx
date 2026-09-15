@@ -59,6 +59,7 @@ export function SectionManager({ initialView }: { initialView: SectionView }) {
       {(busy || active || view.recoveryNeeded) && !!view.sections.length && <p className="text-sm text-zinc-600">보관된 기존 콘텐츠를 계속 표시합니다.</p>}
       {confirm && <div role="group" aria-label="전체 재생성 확인" className="space-y-3 rounded border border-amber-200 bg-amber-50 p-4"><p className="text-sm leading-6">기존 Section 콘텐츠 전체가 새 결과로 교체됩니다. AI 또는 검증 실패 시 기존 결과는 유지됩니다.</p><div className="flex flex-wrap gap-3"><button type="button" className="button-primary" onClick={() => generate(true, confirm)}>확인 후 전체 다시 생성</button><button type="button" className="button-secondary" onClick={() => setConfirm(null)}>취소</button></div></div>}
     </section>
+    {!!view.sections.length && <div className="flex justify-end"><Link href={`/projects/${view.projectId}/editor`} className="button-primary">상세페이지 편집 →</Link></div>}
     {previewError && <p className="text-sm text-amber-800">이미지 미리보기를 불러오지 못했습니다. 저장된 콘텐츠는 유지됩니다.</p>}
     {!!view.sections.length && <p className="text-xs leading-6 text-zinc-500">게시 전 실제 상품과 문구를 확인해 주세요. supported는 입력 근거 안의 일관성이며 외부 진위 증명이 아닙니다.</p>}
     {view.sections.length ? <SectionPreview rows={view.sections} previews={previews} /> : <section className="panel p-12 text-center text-sm text-zinc-500">아직 생성된 상세페이지 콘텐츠가 없습니다.</section>}

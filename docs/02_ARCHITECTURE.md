@@ -188,3 +188,23 @@ TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 a
 - 이는 보상 처리이며 cross-row ACID transaction이 아니다. 직접 DB 조회자는 staging 중 중복/중간 상태를 볼 수 있다.
   향후 Editor/Renderer도 이 조회 경계를 사용해야 한다. 다중 작성자/엄격한 원자성이 필요하면 RPC/transaction을 별도 설계한다.
 - Project/DetailPage status는 전환 의미가 명확하지 않아 유지한다. Facts/Validation/Product Analysis/Plan/Asset은 수정하지 않는다.
+
+## PHASE 4 / TASK-013 Detail Editor Foundation
+
+- `/projects/[projectId]/editor`는 기존 Sections를 사람이 편집하는 계층이다. OpenAI 호출은 없다.
+- `features/detail-editor`: type별 fields/form mapping, strict editable schemas, server service/http,
+  client explicit save, Editor/Inspector, 독립된 10종 preview renderer로 책임을 나눈다.
+- PATCH `/api/projects/[projectId]/sections/[sectionId]`는 revision/fields/assetIds/style만 받는다.
+  서버가 Project/Product/DetailPage/Section/Asset 소속을 확인하고 content/style만 조건부 UPDATE한다.
+  Section id/type/order와 Planner provenance는 불변이다.
+- 기존 updated_at을 낙관적 동시성 revision으로 사용하며 오래된 저장에는 409를 반환한다.
+  settings.sectionEdit의 짧은 page CAS lease로 전체 Section 재생성/복구와 수동 저장을 조정한다.
+  Section Engine은 해당 lease를 확인한다. 중단된 lease는 3분 후 만료되고 DB 요청은 10초로 제한한다.
+  여러 row/Asset 조회 전체의 ACID transaction은 아니며 장기 정지/직접 DB 변경의 한계는 TASK-013에 기록한다.
+- Editor도 generation journal의 backup을 표시하며 생성·복구 중에는 저장을 막는다.
+  Plan 결과 fingerprint가 다르면 경고하되 기존 콘텐츠 조회/수동 저장은 허용한다.
+- 문구 수정은 manualEdit와 groundingStatus=needs_review를 기록한다. style-only 수정은 grounding을 유지한다.
+  Facts/source_snapshot/Validation/Product Analysis/Plan/Asset 및 Project status는 변경하지 않는다.
+- draft/dirty state와 명시적 저장, Section/앱 링크 이동 확인, beforeunload를 제공한다. autosave는 없다.
+- preview는 bounded token의 deterministic CSS mapping이며 Editor 선택 outline은 wrapper에만 있다.
+  full Renderer/export는 이후 단계다. private image URL은 기존 TASK-007 helper의 임시 DTO이며 DB에는 쓰지 않는다.

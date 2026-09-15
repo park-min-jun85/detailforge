@@ -34,7 +34,9 @@ export function defaultSectionStyle(type: SectionType): z.infer<typeof sectionSt
 const fingerprint = z.string().regex(/^[a-f0-9]{64}$/);
 export const sectionMetaSchema = z.strictObject({ schemaVersion: z.literal(1), plannerKey: common.plannerKey, sourcePlanFingerprint: fingerprint,
   sourceInputFingerprint: fingerprint, generationId: z.uuid(), generatedAt: z.iso.datetime({ offset: true }), provider: z.literal("openai"), model: text(200),
-  origin: z.literal("generated"), warnings: z.array(z.enum(["option_evidence_missing", "hypothesis_not_fact", "review_copy_before_publish"])).max(3) });
+  origin: z.literal("generated"), warnings: z.array(z.enum(["option_evidence_missing", "hypothesis_not_fact", "review_copy_before_publish"])).max(3),
+  manualEdit: z.strictObject({ edited: z.literal(true), editedAt: z.iso.datetime({ offset: true }), textEdited: z.boolean(), assetsEdited: z.boolean() }).optional(),
+  groundingStatus: z.literal("needs_review").optional() });
 export const storedContentSchema = z.object({ meta: sectionMetaSchema }).catchall(z.unknown()).transform((value, ctx) => {
   const { meta, ...copy } = value; const parsed = sectionContentSchema.safeParse(copy);
   if (!parsed.success || parsed.data.plannerKey !== meta.plannerKey) { ctx.addIssue({ code: "custom", message: "Invalid stored section" }); return z.NEVER; }

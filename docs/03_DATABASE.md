@@ -219,3 +219,17 @@ settings의 다른 key와 plan/width/status/theme은 유지한다. 완료나 복
 
 2026-09-14 실제 linked DB에서 columns 읽기, 잘못된 type/content/style의 CHECK(23514),
 없는 DetailPage FK(23503)를 확인했다. 실제 5행 저장/순서/재조회와 commit 실패 후 snapshot 복원도 검증했다.
+
+## TASK-013 수동 Section 편집
+
+Migration/RPC/database.types.ts 변경 없음. 기존 sections.content/style JSONB와 updated_at trigger를 사용한다.
+PATCH는 content/style만 UPDATE하고 Section id/type/sort_order와 생성 provenance를 유지한다.
+content.meta에 선택적으로 manualEdit={edited:true,editedAt,textEdited,assetsEdited}, groundingStatus=needs_review를 둔다.
+텍스트 변경만 needs_review를 부여하며 스타일 변경은 기존 상태를 유지한다. Asset 변경 이력도 별도로 기록한다.
+공통 sectionMetaSchema는 기존 생성 행과 수동 편집 행 모두 읽을 수 있다. signed URL을 저장하지 않는다.
+
+기존 detail_pages.settings.sectionEdit에 {id,startedAt} 임시 쓰기 lease를 저장한다.
+page.updated_at CAS로 재생성 journal claim과 경쟁을 조정하고 저장 후 최신 settings와 merge하여 제거한다.
+실패/프로세스 중단으로 남은 lease는 3분 후 만료된다. 기존 sectionGeneration journal을 덮어쓰거나 복구 snapshot을 지우지 않는다.
+이 저장은 새 migration이나 DB transaction이 아니며 강한 원자성/다중 작성자 설계는 후속 단계다.
+Project/DetailPage status, Facts/source_snapshot/Validation/Analysis/Plan/Asset 데이터는 수동 편집이 변경하지 않는다.

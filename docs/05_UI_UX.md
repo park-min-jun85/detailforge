@@ -220,3 +220,30 @@ Plan이 없거나 오래되면 '최신 페이지 설계를 먼저 생성해 주�
 type별 headline/subheadline/body/items/specification rows를 읽기 전용 카드로 표시한다. 이미지가 있으면 기존 private
 미리보기 경로를 사용한다. 카드에 근거 ID/F와 V의 의미를 표시하고 provenance/style token은 details로 접는다.
 860px 시각 캔버스/드래그/스타일 편집/개별 재생성은 없다. 길이 제한/줄바꿈/작은 화면 카드 배치와 키보드 접근을 유지한다.
+
+## PHASE 4 / TASK-013 상세페이지 편집
+
+Sections 화면의 `상세페이지 편집 →`으로 `/projects/[projectId]/editor`를 연다.
+App Shell 안의 Desktop 3열: Navigator 240px / Preview 남은 공간 / Inspector 320px.
+Preview는 논리 860px을 영역 너비에 맞춰 축소하며 내부 스크롤을 사용한다.
+1200px 미만은 미리보기/섹션/속성 패널 탭이며 375px에서도 페이지 전체 가로 overflow가 없다.
+
+Navigator는 sort_order 순서/한국어 type/짧은 제목과 active를 표시하고 Preview 클릭/키보드 버튼으로도 선택한다.
+10종 type의 제목/본문/목록/장점 카드/스펙 표/이미지를 실제 세로 흐름으로 렌더링한다.
+Renderer와 공유 가능한 표현 경계를 두고 선택 outline은 Editor wrapper에만 둔다. export는 이번 범위가 아니다.
+Inspector는 type별 문구 form, bounded style select, 현재 상품의 기존 Asset checkbox를 제공한다.
+스펙/옵션 사실값과 evidenceIds/plannerKey/fingerprint/provider/model/generationId는 읽기 전용이다.
+기존 항목 개수/순서는 유지한다. 이미지 업로드는 기존 이미지 화면에서 한다.
+
+입력은 draft에만 반영하며 `저장되지 않은 변경사항`을 표시한다. [저장] 성공 후 canonical row/새 revision으로 교체한다.
+Section/앱 링크 이동 시 저장 후 이동/버리기/취소를 제공하고 확인 영역에 포커스한다.
+취소는 이전 컨트롤로 포커스를 돌리며 beforeunload로 문서 이탈을 보호한다. autosave/AI 호출은 없다.
+409 시 `다른 변경사항이 먼저 저장되었습니다. 최신 내용을 다시 불러와 주세요.`와 함께 draft를 유지한다.
+
+문구를 바꾸면 manual provenance와 needs_review를 기록하고
+`직접 수정한 문구입니다. 사실 표현을 한 번 확인해 주세요.`를 표시한다.
+스타일 변경만으로는 grounding 상태를 바꾸지 않는다. 기존 evidence가 새 문구를 보증하는 것처럼 표시하지 않는다.
+Plan fingerprint가 다르면 `페이지 설계가 변경되었습니다. 현재 상세페이지는 이전 설계를 기준으로 생성되었습니다.`를 표시하고 수동 편집은 허용한다.
+생성/복구 중에는 기존 snapshot을 읽기 전용으로 보여준다. Section이 없으면 `먼저 상세페이지를 생성해 주세요.`와 CTA를 제공한다.
+Header는 프로젝트/상품명, 저장 상태, stale 여부, 논리 폭을 표시한다.
+private 이미지 URL은 4분 간격과 탭 복귀에 갱신하고 DB에는 Asset ID만 유지한다.

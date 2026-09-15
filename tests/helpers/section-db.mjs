@@ -49,6 +49,12 @@ export async function startSectionDb() {
     }
     if (table === "sections") {
       if(state.beforeSections)await state.beforeSections(request.method,payload);
+      if(request.method==='PATCH'){
+        if(state.failure==='sections-patch')return fail();
+        const row=state.sections.find(matches);if(!row)return send([]);
+        Object.assign(row,structuredClone(payload),{updated_at:new Date(Math.max(Date.now(),Date.parse(row.updated_at)+1)).toISOString()});
+        if(state.ackLost==='sections-patch'){state.ackLost=null;return fail();}return send([row]);
+      }
       if(request.method==='POST'){
         const restoring=payload.some(row=>row.content.meta?.generationId!==state.page.settings.sectionGeneration.runId);
         if(state.failure===(restoring?'restore':'sections-insert'))return fail();

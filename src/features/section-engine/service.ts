@@ -1,4 +1,5 @@
 import "server-only";
+import { hasEditLease } from "./edit-lease";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -58,7 +59,7 @@ export async function generateSections(projectId: string, options: { replaceExis
   running.add(project);
   try {
     const client = createSupabaseServerClient(), context = await load(client, project), initial = view(context);
-    if (isGenerationActive(context.state, Date.now())) throw new SectionEngineError("busy");
+    if (isGenerationActive(context.state, Date.now()) || (context.page && hasEditLease(context.page))) throw new SectionEngineError("busy");
     if (context.state?.backup && context.page) {
       // Recovery is explicit and costs no provider call. A subsequent user action can generate new content.
       await restoreGeneration(client, context.page, context.state.runId, "interrupted");
