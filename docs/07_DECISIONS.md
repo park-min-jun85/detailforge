@@ -143,3 +143,18 @@ local orderDraft/명시적 저장/실패 시 draft 보존을 사용한다. 기�
 stale Plan에서도 수동 순서 저장을 허용한다. AI 호출과 migration/RPC는 추가하지 않는다.
 이는 여러 row의 ACID 저장이 아니며 직접 DB 변경/장기 worker 정지까지 강한 원자성을 보장하지 않는다.
 엄격한 다중 작성자 요구가 생기면 별도 승인된 transaction/RPC 설계를 진행한다. 상세 복구 계약은 TASK-014를 따른다.
+
+## ADR-012
+
+**개별 Section AI 재생성은 서명된 임시 후보와 명시적 content-only CAS 적용으로 분리한다**
+
+- Status: Accepted for single-user local MVP
+- Date: 2026-09-15
+
+AI 호출 중 DB write/긴 lease를 하지 않는다. 10분 후보를 서버 HMAC으로 서명하고 Client state로만 유지한다.
+기존 서버 전용 service-role key에서 별도 용도의 서명 키를 파생하므로 새 비밀 변수/테이블/migration은 필요 없다.
+명시적 적용 시 서명·소속·입력 fingerprint·기준 전체 row hash·revision을 재검사하고 기존 page lease 뒤 CAS 갱신한다.
+현재 style/이미지/Plan/type/order를 보존하고 content만 교체한다. manualEdit history와 Planner provenance를 지우지 않는다.
+stale Plan/Validation을 차단하고 stale 전략은 제외한다. 기존 schema/grounding을 재사용하며 Vision은 호출하지 않는다.
+후보 서명은 변조 방지 수단이며 사용자 인증이나 자연어 의미 보증은 아니다. 분산 lock/transaction 한계는 기존 ADR을 따른다.
+상세 계약은 [TASK-015](tasks/TASK-015.md)에 기록한다.

@@ -251,3 +251,14 @@ fingerprint는 기존 Section의 공통 원본 Plan fingerprint이며 혼합이�
 settings의 다른 key/sectionGeneration/editor 속성을 최신 page CAS merge로 보존한다.
 전체 재생성으로 Section UUID 집합이 바뀌면 이전 manualOrder는 현재 순서로 판단하지 않는다.
 Facts/source_snapshot/Validation/Analysis/Plan/Asset 및 Project·DetailPage status는 변경하지 않는다.
+
+## TASK-015 — 개별 AI 후보 적용
+
+migration/column/table/RPC/RLS 변경 없음. 후보는 DB에 저장하지 않고 서명된 10분 응답과 Client state로 유지한다.
+적용은 기존 sections.updated_at CAS와 settings.sectionEdit lease를 재사용하며 content만 UPDATE한다.
+content.meta.regeneration에 regenerated/regeneratedAt/provider/model/generationId/previousRevision을 추가한다.
+기존 manualEdit와 초기 Planner/생성 provenance는 유지한다. 성공한 새 grounding 검증은 기존 needs_review marker를 해제한다.
+id/type/plannerKey/sourcePlanFingerprint/sort_order/style/assetIds와 settings.editor.manualOrder를 보존한다.
+Facts/source_snapshot/Validation/Analysis/Plan/Project status/다른 Sections는 변경하지 않는다.
+lease 관리에 따른 detail_pages.updated_at 변화는 가능하지만 Plan/settings의 기존 내용은 유지한다.
+상세 동시성/응답 유실 정책은 [TASK-015](tasks/TASK-015.md)를 따른다.

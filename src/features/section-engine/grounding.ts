@@ -1,7 +1,7 @@
 import "server-only";
 import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { validatePagePlan, type LatestPlan } from "@/features/page-planner/schemas";
-import { sectionOutputSchema, type SectionOutput } from "./schemas";
+import { sectionOutputSchema, sectionContentSchema, type SectionOutput } from "./schemas";
 import type { SectionInput } from "./types";
 
 export function sourcePlanFingerprint(result: LatestPlan) { return validationFingerprint(result); }
@@ -13,13 +13,20 @@ export function buildSectionInput(latest: LatestPlan): SectionInput {
 }
 const codePattern = /<\/?[a-z!][^>]*>|javascript:|https?:\/\/|(?:class|style)\s*=|[{}]|@import|(?:color|font-size|margin|padding)\s*:|#[a-f\d]{3,8}\b|\b(?:bg|text|p|m|flex|grid)-(?:\d+|[a-z]+-\d+)\b/i;
 const numericTokens = (text: string) => [...text.matchAll(/\d+(?:[.,]\d+)*(?:\s*(?:%|cm|mm|kg|ml|mL|mAh|시간|개월|일|년|회|개|배|위|도|g|L|W|V))?/g)].map(match => match[0].replace(/\s/g, ""));
-const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성/g;
+const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성|반드시|모든\s*가정/g;
 export function validateSectionOutput(value: unknown, latest: LatestPlan): SectionOutput {
   const output = sectionOutputSchema.parse(value), input = buildSectionInput(latest);
   if (JSON.stringify(output).length > 180000) throw new Error("Output too large");
   if (output.sections.length !== input.plan.sections.length) throw new Error("Section count mismatch");
   if (new Set(output.sections.map(s => s.plannerKey)).size !== output.sections.length) throw new Error("Duplicate planner key");
-  const registry = new Map(input.evidenceSnapshot.map(e => [e.id, e]));
+  output.sections.forEach((section, index) => validateSectionContent(section, latest, input.plan.sections[index]));
+  return output;
+}
+// Shared claim/reference checks for full generation and one-section regeneration.
+// preservedAssets is only supplied after server ownership and exact-current-selection validation.
+export function validateSectionContent(value: unknown, latest: LatestPlan, plan: LatestPlan["plan"]["sections"][number], preservedAssets?: string[]) {
+  const section = sectionContentSchema.parse(value);
+  const registry = new Map(latest.evidenceSnapshot.map(e => [e.id, e]));
   const checkText = (text: string, ids: string[]) => {
     if (!text.trim() || codePattern.test(text)) throw new Error("Plain text required");
     const facts = ids.map(id => registry.get(id)).filter(e => e?.kind === "supported_fact");
@@ -32,16 +39,14 @@ export function validateSectionOutput(value: unknown, latest: LatestPlan): Secti
       if (fact.value.trim().length >= 2 && text.includes(fact.value) && !facts.some(f => f.value.includes(fact.value))) throw new Error("Restricted fact value");
     }
   };
-  output.sections.forEach((section, index) => {
-    const plan = input.plan.sections[index];
     if (section.plannerKey !== plan.key || section.type !== plan.type) throw new Error("Planner correspondence mismatch");
     const checkIds = (ids: string[], assetIds: string[]) => {
       if (new Set(ids).size !== ids.length || ids.some(id => !registry.has(id) || !plan.evidenceIds.includes(id))) throw new Error("Invalid evidence");
-      if (new Set(assetIds).size !== assetIds.length || assetIds.some(id => !plan.assetIds.includes(id) || !latest.assetSnapshot.some(a => a.assetId === id && a.analysis))) throw new Error("Invalid asset");
+      if (new Set(assetIds).size !== assetIds.length || assetIds.some(id => preservedAssets ? !preservedAssets.includes(id) : !plan.assetIds.includes(id) || !latest.assetSnapshot.some(a => a.assetId === id && a.analysis))) throw new Error("Invalid asset");
     };
     checkIds(section.evidenceIds, section.assetIds);
-    if (section.type === "hero" && latest.plan.heroAssetId && section.assetIds[0] !== latest.plan.heroAssetId) throw new Error("Hero must follow plan");
-    if (section.assetIds.some(id => !section.evidenceIds.some(ref => { const e = registry.get(ref); return e?.kind === "visual_observation" && e.assetId === id; }))) throw new Error("Missing image observation");
+    if (!preservedAssets && section.type === "hero" && latest.plan.heroAssetId && section.assetIds[0] !== latest.plan.heroAssetId) throw new Error("Hero must follow plan");
+    if (!preservedAssets && section.assetIds.some(id => !section.evidenceIds.some(ref => { const e = registry.get(ref); return e?.kind === "visual_observation" && e.assetId === id; }))) throw new Error("Missing image observation");
     const walk = (node: unknown, inherited: string[]) => {
       if (!node || typeof node !== "object") return;
       if (Array.isArray(node)) { node.forEach(item => walk(item, inherited)); return; }
@@ -71,8 +76,7 @@ export function validateSectionOutput(value: unknown, latest: LatestPlan): Secti
       }
     }
     if (section.type === "useCase") for (const item of section.items) {
-      if (!item.evidenceIds.some(id => registry.get(id)?.kind === "supported_fact") || !/고려|가정|예시|확인|검토/.test(item.description)) throw new Error("Hypothesis must be explicit");
+      if (!item.evidenceIds.some(id => registry.get(id)?.kind === "supported_fact") || !/고려|가정(?:한|하|해|할|하면)|예시|확인|검토/.test(item.description)) throw new Error("Hypothesis must be explicit");
     }
-  });
-  return output;
+  return section;
 }

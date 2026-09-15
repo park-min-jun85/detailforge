@@ -44,7 +44,8 @@ export function Inspector({ section, draft, assets, disabled, onChange }: { sect
       <dl className="mt-3 space-y-2 break-all"><div><dt>근거 ID (생성 당시)</dt><dd>{content.evidenceIds.join(", ") || "없음"}</dd></div>
         <div><dt>Planner key</dt><dd>{content.plannerKey}</dd></div><div><dt>Plan fingerprint</dt><dd>{content.meta.sourcePlanFingerprint}</dd></div>
         <div><dt>Provider / model</dt><dd>{content.meta.provider} / {content.meta.model}</dd></div><div><dt>Generation ID</dt><dd>{content.meta.generationId}</dd></div>
-        {content.meta.manualEdit && <div><dt>마지막 수동 문구·이미지 수정</dt><dd>{content.meta.manualEdit.editedAt}</dd></div>}</dl>
+        {content.meta.manualEdit && <div><dt>마지막 수동 문구·이미지 수정</dt><dd>{content.meta.manualEdit.editedAt}</dd></div>}
+        {content.meta.regeneration && <div><dt>개별 AI 재생성</dt><dd>{content.meta.regeneration.regeneratedAt} · {content.meta.regeneration.model}{content.meta.manualEdit ? " · 이전 수동 수정 이력 유지" : ""}</dd></div>}</dl>
       <p className="mt-3">기존 근거 ID가 수정된 문구를 자동으로 보증하지 않습니다.</p></details>
   </div>;
 }

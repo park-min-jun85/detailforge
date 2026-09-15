@@ -226,3 +226,13 @@ TASK-010에서도 Auth는 추가하지 않으며 product_facts JSONB 컬럼의 a
 - GET /api/projects/[projectId]/editor는 409 뒤 최신 재조회용이다. 기존 dirty/이탈 guard를 content OR order로 확장한다.
 - stale Plan에서도 수동 reorder를 허용한다. AI 호출, dependency/migration/RPC 추가 없음.
   보상 처리는 ACID transaction이 아니며 한계와 복구 계약은 TASK-014/ADR-011을 따른다.
+
+## PHASE 4 / TASK-015 Individual Section AI Regeneration
+
+features/section-regeneration은 input context/grounding/provider/config, 서명된 후보, apply service/http와 Client 비교 UI를 분리한다.
+POST sections/[sectionId]/regenerate는 현재 Section 한 개만 읽어 후보를 반환하며 DB에 쓰지 않는다.
+POST sections/[sectionId]/apply-candidate는 10분 HMAC 후보/입력 fingerprint/row revision을 확인하고 기존 page edit lease 안에서 content 한 행만 CAS 갱신한다.
+응답 유실은 재조회로 판별한다. type/Plan/order/style/images/다른 Section/상위 근거는 보존한다.
+기존 10종 schema와 claim guard를 공유하며 원본 이미지/Vision을 보내지 않는다.
+stale Plan/Validation은 차단하고 stale 전략은 제외한다. 후보는 Client state이며 명시적 적용 전 canonical 콘텐츠가 아니다.
+세부 계약/검증/분산·자연어 한계는 [TASK-015](tasks/TASK-015.md)를 따른다.
