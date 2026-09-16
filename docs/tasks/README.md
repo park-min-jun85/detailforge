@@ -2,9 +2,16 @@
 
 ## 현재 단계
 
-PHASE 5 / TASK-016 — Final Detail Renderer Foundation.
-브랜치: `feat/detail-renderer`. 구현·자동 테스트·실제 DB/브라우저 검증 완료. Git commit 없음.
-추가 dependency/migration 없음. 상세 정책·파일·검증·한계는 [TASK-016](./TASK-016.md)에 기록한다.
+PHASE 5 / TASK-017 — PNG/JPG Detail Page Export.
+브랜치: `feat/image-export`. 구현·자동 테스트·실제 DB/Chromium/다운로드 검증 완료. Git commit 없음.
+공식 playwright 1.63.0 추가, migration 없음. 상세 파일·정책·설치·검증은 [TASK-017](./TASK-017.md).
+
+- 기존 Final Render Surface만 PNG/JPG로 캡처, 저장된 canonical 입력만 사용.
+- 실제 긴 스펙 포함 PNG/JPG 860×7155px 검증. private no-store attachment.
+- trusted origin, image/font readiness, 75초 timeout, 크기 제한, server-only provider.
+- 전체332 tests/typegen/typecheck/lint/build 통과, DB 변경·AI 호출 없음, fixture 정리.
+
+## 완료된 TASK-016 기반
 
 - /projects/[projectId]/render와 독립 article capture boundary.
 - 저장된 canonical content/style/sort_order/width만 사용. draft/orderDraft/candidate 제외.
@@ -23,7 +30,7 @@ PHASE 5 / TASK-016 — Final Detail Renderer Foundation.
 
 ## 다음 단계와 운영 전제
 
-TASK-017 Export의 구체 범위는 별도 요청에 따른다. 캡처는 ready surface와 이미지/font 준비를 확인한 후 진행한다.
+TASK-017로 저장된 상세페이지의 PNG/JPG 다운로드까지 연결했다. 후속 cloud browser 배포·대형 페이지 분할·공개 운영은 별도 요청에 따른다.
 후속 기능은 전체 ID/revision, 기존 lease와 두 recovery journal을 존중한다.
 기존 content/style PATCH에서는 type/order를 변경할 수 없다. 순서 변경은 전용 endpoint만 사용한다.
 Renderer는 Plan 순서 대신 현재 sort_order와 복구 조회 경계를 사용한다. 미적용 후보는 export 대상이 아니다.

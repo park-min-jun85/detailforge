@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { RenderView } from "./model";
 import { RenderSurface } from "./surface";
+import { renderFingerprint } from "./fingerprint";
+import { ExportPanel } from "@/features/detail-export/components/export-panel";
 export function RenderReview({ view }: { view: RenderView }) {
   const { readiness: ready } = view;
   return <div className="page-content">
@@ -14,8 +16,9 @@ export function RenderReview({ view }: { view: RenderView }) {
         {ready.validation !== "ready" && <p role="status" className="text-sm text-amber-900">최신 사실 검증 상태를 확인해 주세요. <Link className="text-link" href={`/projects/${view.projectId}/validation`}>사실 검증 확인</Link></p>}
         {ready.unavailable && <p role="status" className="text-sm text-amber-900">준비 상태 일부를 확인하지 못했습니다. 저장된 내용은 아래에서 확인할 수 있습니다.</p>}
       </section>
+      <ExportPanel projectId={view.projectId} warning={ready.stalePlan || ready.needsReviewCount > 0 || ready.validation !== "ready" || ready.unavailable || ready.missingImageCount > 0} />
       <div className="min-w-0 overflow-x-auto border border-zinc-200 bg-zinc-100" tabIndex={0} role="region" aria-label="최종 상세페이지 보기 · 좁은 화면에서는 가로 스크롤">
-        <RenderSurface width={view.width!} sections={view.sections} assets={view.assets} />
+        <RenderSurface width={view.width!} sections={view.sections} assets={view.assets} fingerprint={renderFingerprint(view)} />
       </div>
     </> : <section className="panel space-y-4 p-8 text-center"><h2 className="font-semibold">{view.state === "busy" ? "저장·생성·복구가 진행 중입니다." : view.state === "product_missing" ? "먼저 상품정보를 입력해 주세요." : "먼저 상세페이지를 생성해 주세요."}</h2>
       <p className="text-sm text-zinc-600">{view.state === "busy" ? "작업이 완료된 뒤 최종 미리보기를 다시 열어 주세요." : "저장된 상세페이지가 준비되면 최종 결과를 확인할 수 있습니다."}</p>

@@ -61,3 +61,15 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 변경 후 `npx tsc --noEmit`, `npm run lint`, `npm run build`를 실행한다. DB 실행 환경이
 준비되지 않은 TASK에서는 SQL을 정적으로 검토하고 실제 적용 여부를 완료 보고에
 명시한다.
+
+## Export 규칙 (TASK-017)
+
+- Final Renderer의 단일 article surface를 캡처한다. 별도 HTML/CSS나 DOM canvas 대체를 만들지 않는다.
+- browser/provider/service는 server-only. trusted origin을 서버 설정으로 제한하고 사용자 URL/Host로 구성하지 않는다.
+- deviceScaleFactor=1/scale=css, persisted width와 실제 PNG/JPEG header dimensions를 검증한다.
+- document.fonts.ready와 이미지 complete/naturalWidth/decode를 bounded timeout으로 확인한다.
+- 전체 timeout, 실제 DOM 크기 상한, 요청당 browser finally close, 동시 실행 제한을 유지한다.
+- canonical 입력 fingerprint를 전후 비교한다. Export는 Facts/Sections/Plan 등 DB·Storage에 쓰지 않으며 AI를 호출하지 않는다.
+- signed URL은 임시 사용만 한다. UI/로그에 provider 오류·서비스키를 노출하지 않는다.
+- 단위 테스트는 capture provider mock 사용; 실제 브라우저 파일 signature/폭/높이/한글·이미지 확인은 통합 검증에서 수행한다.
+- 브라우저 버전/OS 글꼴/배포 메모리·실행시간 차이를 문서화한다. PNG/JPG 이외 범위는 별도 TASK로 처리한다.

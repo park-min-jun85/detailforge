@@ -299,3 +299,13 @@ Editor [최종 미리보기] → /projects/[projectId]/render → [편집기로 
 4:3 이미지 frame에서 contain/cover를 적용하고 실패 시 위치별 fallback을 표시한다.
 생성·복구·저장 중 final은 busy 안내만 표시한다. stale 콘텐츠는 경고와 함께 검토할 수 있다.
 Renderer는 읽기 전용이고 PNG/JPG 다운로드는 TASK-017에서 제공한다. 상세는 [TASK-016](tasks/TASK-016.md).
+
+## TASK-017 이미지 다운로드
+
+Final review의 준비 상태와 render article 사이에 Export panel을 제공한다.
+PNG/JPG radio, JPG 품질60–100(기본90), 다운로드 버튼과 live status를 제공한다.
+출력 중 중복 클릭/형식 변경은 잠그고 완료 시 브라우저 파일 다운로드를 시작한다.
+Facts/Plan/manual grounding 경고는 검토 안내이며 출력 금지 조건은 아니다. 이미지 누락은 오류로 안내한다.
+review 경고/내비게이션/버튼은 이미지에 포함하지 않는다. 저장된 내용만 원본 폭으로 출력한다.
+너무 큰 페이지/이미지·폰트 실패/미설치 Chromium/timeout은 한국어 오류로 표시한다.
+파일을 서버에 보관하지 않으며 긴 페이지 자동 분할은 지원하지 않는다. [TASK-017](tasks/TASK-017.md).

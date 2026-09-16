@@ -248,3 +248,15 @@ SectionRenderer/SectionCopy/CSS를 Editor와 Final이 공유한다. 선택 UI·�
 10종/고정 bounded 스타일/860px 실제 폭, 임시 signed URL/누락 이미지 fallback, review 밖 warning을 제공한다.
 OpenAI/Vision/DB mutation/migration/dependency 추가 없음. 캡처·파일 생성은 TASK-017 책임이다.
 구체 데이터/이미지/동시성 한계와 검증은 [TASK-016](tasks/TASK-016.md)을 따른다.
+
+### TASK-017 Export Layer
+
+`POST /api/projects/[projectId]/export`는 server-only detail-export service/provider를 사용한다.
+canonical read model → 기존 `article[data-detail-render-surface="1"]` → Chromium locator screenshot → binary attachment.
+별도 상세 HTML/CSS는 없다. preflight/DOM/postflight fingerprint 비교로 출력 중 변경을 거부한다.
+renderer는 레이아웃·이미지 표시를, export는 브라우저 생명주기·readiness·크기·파일·응답을 책임진다.
+trusted server origin만 방문하며 사용자 URL/Host를 캡처 origin으로 쓰지 않는다. 현재 참조 asset/static 요청만 허용한다.
+deviceScaleFactor=1/scale=css로 persisted width를 physical px로 보존하고 header로 재검사한다.
+폰트/이미지 준비, 75초 timeout, 16,000px/1,600만 px 제한, 프로세스당 1건을 적용한다.
+signed URL은 임시이며 output/URL/history를 DB·Storage에 저장하지 않는다. AI 호출·migration 없음.
+로컬 Node/Chromium 설치가 필요하며 serverless provider는 별도 검증 과제다. [TASK-017](tasks/TASK-017.md).
