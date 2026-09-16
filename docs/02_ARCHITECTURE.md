@@ -236,3 +236,15 @@ POST sections/[sectionId]/apply-candidate는 10분 HMAC 후보/입력 fingerprin
 기존 10종 schema와 claim guard를 공유하며 원본 이미지/Vision을 보내지 않는다.
 stale Plan/Validation은 차단하고 stale 전략은 제외한다. 후보는 Client state이며 명시적 적용 전 canonical 콘텐츠가 아니다.
 세부 계약/검증/분산·자연어 한계는 [TASK-015](tasks/TASK-015.md)를 따른다.
+
+## PHASE 5 / TASK-016 Final Detail Renderer
+
+/projects/[projectId]/render는 검토 화면이고 article[data-detail-render-surface="1"]이 별도 캡처 경계다.
+서버 전용 features/detail-renderer/service가 Project/Product/Page/Section 소속과 JSONB를 검증하고
+저장된 sort_order ASC와 detail_pages.width로 camelCase read model을 만든다. draft/orderDraft/AI candidate는 받지 않는다.
+기존 generation/reorder journal·edit lease 중에는 중간 상태를 final로 표시하지 않고 busy 안내를 제공한다.
+읽기 전후 page/rows를 비교하며 GET 복구/lease/상태 변경은 하지 않는다. 여러 테이블의 ACID snapshot은 아니다.
+SectionRenderer/SectionCopy/CSS를 Editor와 Final이 공유한다. 선택 UI·클릭·draft·zoom은 Editor wrapper에만 있다.
+10종/고정 bounded 스타일/860px 실제 폭, 임시 signed URL/누락 이미지 fallback, review 밖 warning을 제공한다.
+OpenAI/Vision/DB mutation/migration/dependency 추가 없음. 캡처·파일 생성은 TASK-017 책임이다.
+구체 데이터/이미지/동시성 한계와 검증은 [TASK-016](tasks/TASK-016.md)을 따른다.

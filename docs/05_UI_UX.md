@@ -284,3 +284,18 @@ content/style/order dirty는 먼저 저장 또는 되돌린 뒤 실행한다. �
 stale Plan/Validation은 AI를 차단하며 페이지 설계/사실 검증 확인 링크를 제공한다.
 Inspector에는 이전 manual edit 이력을 남긴 마지막 AI 재생성 provenance를 표시한다.
 검증과 수동 확인 항목은 [TASK-015](tasks/TASK-015.md)를 따른다.
+
+## PHASE 5 / TASK-016 최종 상세페이지 검토
+
+Editor [최종 미리보기] → /projects/[projectId]/render → [편집기로 돌아가기]를 제공한다.
+미저장 content/order와 AI candidate는 기존 이탈 guard로 보호하고 최종 화면에는 저장된 값만 표시한다.
+검토 화면 상단에 Section 수, 수동 문구 needs_review 수, 누락 이미지 수, 저장 폭, stale 경고를 둔다.
+본문 캡처 경계인 data-detail-render-surface 안에는 관리 UI/경고/선택 표시가 없다.
+
+저장 폭(기본 860px)을 scale 없이 표시한다. 좁은 화면은 검토 shell을 유지하고 본문만 가로 스크롤한다.
+10종 공유 Renderer는 Hero 제목, Benefits 카드, split 이미지/텍스트, Gallery grid, useCase,
+고정 표 레이아웃과 Notice 구분을 코드에 정의한다. Editor도 같은 renderer를 사용한다.
+빈 optional 요소는 생략하고 긴 한국어/모델명은 keep-all/overflow-wrap으로 감싼다.
+4:3 이미지 frame에서 contain/cover를 적용하고 실패 시 위치별 fallback을 표시한다.
+생성·복구·저장 중 final은 busy 안내만 표시한다. stale 콘텐츠는 경고와 함께 검토할 수 있다.
+Renderer는 읽기 전용이고 PNG/JPG 다운로드는 TASK-017에서 제공한다. 상세는 [TASK-016](tasks/TASK-016.md).

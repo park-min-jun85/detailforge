@@ -161,6 +161,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
       <div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><Link className="text-link text-xs" href={`/projects/${initialView.projectId}/sections`}>← 상세페이지 생성</Link>
         <h1 className="mt-3 text-xl font-semibold">상세페이지 편집</h1><p className="mt-1 break-words text-sm text-zinc-500">{initialView.projectName} · {initialView.productName}</p></div>
         <div className="flex flex-wrap items-center gap-3"><p role="status" className="text-sm text-zinc-600">{aiAction === "generate" ? "AI가 이 섹션을 다시 작성하고 있습니다." : busy ? "저장 중…" : dirty ? "저장되지 않은 변경사항" : orderDirty ? "저장되지 않은 순서 변경" : message || "저장된 상태"}</p>
+          <Link prefetch={false} className="button-secondary" href={`/projects/${view.projectId}/render`}>최종 미리보기</Link>
           <button type="button" className="button-primary" disabled={!dirty || busy || view.blocked} onClick={() => save()}>저장</button>
           <button type="button" className="button-secondary" disabled={busy || !!candidate} onClick={() => needsDraftGuard(dirty, orderDirty, "leave") ? ask({ refresh: true }) : refresh()}>최신 섹션 다시 불러오기</button></div></div>
       {!!sections.length && <div className="flex flex-wrap items-center gap-3"><p role="status" className="text-sm text-zinc-600">{orderDirty ? "저장되지 않은 순서 변경 · 섹션 순서가 변경되었습니다." : "저장된 섹션 순서"}</p>

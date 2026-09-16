@@ -42,14 +42,15 @@ async function exclusive<T>(productId: string, operation: () => Promise<T>) {
   try { return await operation(); } finally { mutations.delete(productId); }
 }
 
-export async function listAssets(projectId: string): Promise<AssetList> {
+export async function listAssets(projectId: string, onlyIds?: readonly string[]): Promise<AssetList> {
   const client = createSupabaseServerClient();
   const scope = await requireProduct(projectId, client);
   const result = await client.from("assets").select("*").eq("project_id", scope.projectId).eq("product_id", scope.productId)
     .order("sort_order").order("created_at").order("id").abortSignal(timeout());
   if (result.error) throw new AssetError(503, "이미지 목록을 불러오지 못했습니다.");
-  const assets = result.data.map((row) => assetRowSchema.parse(row));
-  assets.forEach((asset) => assertAssetScope(asset, scope.projectId, scope.productId));
+  const owned = result.data.map((row) => assetRowSchema.parse(row));
+  owned.forEach((asset) => assertAssetScope(asset, scope.projectId, scope.productId));
+  const assets = onlyIds ? owned.filter(asset => onlyIds.includes(asset.id)) : owned;
   const expiresAt = Date.now() + SIGNED_URL_SECONDS * 1000;
   if (!assets.length) return { items: [], expiresAt };
   const signed = await client.storage.from(BUCKET).createSignedUrls(assets.map((asset) => asset.storagePath), SIGNED_URL_SECONDS);

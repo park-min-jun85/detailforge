@@ -158,3 +158,19 @@ AI 호출 중 DB write/긴 lease를 하지 않는다. 10분 후보를 서버 HMA
 stale Plan/Validation을 차단하고 stale 전략은 제외한다. 기존 schema/grounding을 재사용하며 Vision은 호출하지 않는다.
 후보 서명은 변조 방지 수단이며 사용자 인증이나 자연어 의미 보증은 아니다. 분산 lock/transaction 한계는 기존 ADR을 따른다.
 상세 계약은 [TASK-015](tasks/TASK-015.md)에 기록한다.
+
+## ADR-013
+
+**최종 Renderer는 canonical read model과 Editor 공유 표현을 사용하고 Export와 분리한다**
+
+- Status: Accepted for single-user local MVP
+- Date: 2026-09-15
+
+DB 저장 content/style/sort_order/width가 final source다. Planner 순서나 Editor draft/candidate는 사용하지 않는다.
+Editor와 Final의 Section JSX/CSS를 공유하며 선택/클릭/zoom은 wrapper에만 둔다.
+review route 하나와 명시적인 article capture boundary를 제공해 root App Shell 변경이나 중복 route를 피한다.
+generation/reorder journal/활성 edit lease 중에는 중간 row/backup을 final로 오인하지 않도록 busy로 처리한다.
+Renderer GET은 복구나 DB write를 하지 않으며 stale 경고는 capture boundary 밖에 둔다.
+이미지는 참조한 현재 Product Asset만 임시 서명한다. 고정 frame/contain/cover/fallback으로 안정적으로 표시한다.
+서명 URL이 만료되면 새 조회가 필요하며 OS별 system font의 픽셀 차이는 향후 Export 환경 고정으로 다룬다.
+이번 단계는 브라우저 표현까지이고 PNG/JPG 캡처·파일 생성·도구 선정은 TASK-017 책임이다.
