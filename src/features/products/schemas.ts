@@ -37,6 +37,11 @@ const productFields = {
 
 export const productFormSchema = z.object(productFields);
 export const manualSourceSchema = z.object({ inputMethod: z.literal("manual"), ...productFields });
+export const wholesaleProvenanceSchema = z.object({ sourceUrl: z.url().max(2048), sourceHost: z.string().max(253), fetchedAt: z.iso.datetime(),
+  importedAt: z.iso.datetime(), extractionMethod: z.enum(["json_ld","metadata","dom","browser","mixed"]), importedImageUrls: z.array(z.url().max(2048)).max(30),
+  extracted: z.object({ name:z.string().max(200).nullable(),brand:z.string().max(100).nullable(),category:z.string().max(100).nullable(),description:z.string().max(5000).nullable(),specifications:z.array(z.object({name:z.string().max(100),value:z.string().max(500)})).max(50) }) }).strict();
+export const wholesaleSourceSchema = z.object({ inputMethod:z.literal("wholesale_url"), ...productFields, provenance:wholesaleProvenanceSchema });
+export const productSourceSchema = z.union([manualSourceSchema,wholesaleSourceSchema]);
 export const manualFactsSchema = z.object({
   productName: z.string().min(1).max(200),
   brand: z.string().min(1).max(100).optional(),

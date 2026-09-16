@@ -63,13 +63,24 @@ async function removeObject(client: Client, path: string) {
   try { return !(await client.storage.from(BUCKET).remove([path])).error; } catch { return false; }
 }
 
-export async function uploadAsset(projectId: string, file: { name: string; mime: string; bytes: Uint8Array }): Promise<Asset> {
+export async function uploadAsset(projectId: string, file: { name: string; mime: string; bytes: Uint8Array }, options?: {
+  expectedProductId: string; source: { type:"wholesale_url"; url:string; pageUrl:string; importedAt:string };
+}): Promise<Asset> {
   const name = normalizeFilename(file.name);
   const mime = validateFile(file.mime, file.bytes.byteLength);
   validateSignature(file.bytes, mime);
   const client = createSupabaseServerClient();
   const scope = await requireProduct(projectId, client);
+  if (options && scope.productId !== options.expectedProductId) throw new AssetError(409,"상품 연결이 변경되었습니다. 다시 확인해 주세요.");
   return exclusive(scope.productId, async () => {
+    if (options) {
+      const duplicate = await client.from("assets").select("*").eq("product_id",scope.productId).eq("project_id",scope.projectId).abortSignal(timeout());
+      if (duplicate.error) throw new AssetError(503,"이미지 중복 여부를 확인하지 못했습니다.");
+      const found = duplicate.data.map(row=>assetRowSchema.parse(row)).find(asset=>{
+        const source=asset.metadata.source; return source && typeof source==="object" && "url" in source && source.url===options.source.url;
+      });
+      if (found) { assertAssetScope(found,scope.projectId,scope.productId);return found; }
+    }
     const existing = await client.from("assets").select("sort_order", { count: "exact" }).eq("product_id", scope.productId)
       .order("sort_order", { ascending: false }).limit(1).abortSignal(timeout());
     if (existing.error || existing.count === null) throw new AssetError(503, "등록된 이미지 수를 확인하지 못했습니다.");
@@ -86,7 +97,7 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
     }
     const row = { id, project_id: scope.projectId, product_id: scope.productId, storage_path: path,
       original_filename: name, mime_type: mime, size_bytes: file.bytes.byteLength, asset_type: "unclassified",
-      sort_order: sortOrder, width: null, height: null, metadata: {} };
+      sort_order: sortOrder, width: null, height: null, metadata: options ? {source:options.source} : {} };
     try {
       const inserted = await client.from("assets").insert(row).select("*").abortSignal(timeout()).single();
       if (!inserted.error) return assetRowSchema.parse(inserted.data);

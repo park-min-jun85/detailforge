@@ -5,6 +5,9 @@ import Link from "next/link";
 import { saveProductAction } from "../actions";
 import { MAX_SPECIFICATIONS, type ProductInput } from "../schemas";
 import type { ProductSaveState } from "../types";
+import { ImportPanel, type ImportPreview } from "@/features/wholesale-import/components/import-panel";
+import { saveConfirmedImport } from "@/features/wholesale-import/client";
+import { readProductFormData } from "../mappers";
 
 type TextField = "productName" | "brand" | "category" | "description" | "sourceUrl";
 const emptyValues: ProductInput = {
@@ -27,16 +30,22 @@ export function ProductForm({ projectId, initialValues, revision }: {
 }) {
   const [values, setValues] = useState(() => formValues(initialValues));
   const [showFeedback, setShowFeedback] = useState(true);
+  const [importPreview,setImportPreview]=useState<ImportPreview|null>(null),[selectedImages,setSelectedImages]=useState<string[]>([]);
+  const [importBusy,setImportBusy]=useState(false),[imageResults,setImageResults]=useState<string[]>([]);
+  const beforeImport=useRef(values);
   const submitting = useRef(false);
   const nextRowKey = useRef(values.specifications.length);
   const [state, formAction, pending] = useActionState<ProductSaveState, FormData>(
     async (previous, formData) => {
       try {
-        const result = await saveProductAction(projectId, previous, formData);
+        const result = importPreview ? await saveConfirmedImport(projectId,{token:importPreview.token,revision:formData.get("revision"),values:readProductFormData(formData),selectedImageUrls:selectedImages},setImageResults) : await saveProductAction(projectId, previous, formData);
         if (result.status === "success" && result.values) {
           const normalized = formValues(result.values);
           setValues(normalized);
           nextRowKey.current = normalized.specifications.length;
+          if(importPreview){
+            setImportPreview(null);setSelectedImages([]);beforeImport.current=normalized;
+          }
         }
         setShowFeedback(true);
         return result;
@@ -46,7 +55,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
       } finally { submitting.current = false; }
     }, { status: "idle" },
   );
-  const blocked = pending || state.status === "recovery-required";
+  const blocked = pending || importBusy || state.status === "recovery-required";
   const hasSavedProduct = Boolean(state.revision ?? revision);
   const errors = showFeedback && !pending ? state.fieldErrors : undefined;
   const changeField = (field: TextField, value: string) => {
@@ -60,6 +69,9 @@ export function ProductForm({ projectId, initialValues, revision }: {
   };
 
   return (
+    <div className="space-y-6"><ImportPanel projectId={projectId} disabled={pending||state.status==="recovery-required"} preview={importPreview} selected={selectedImages} onSelection={setSelectedImages} onBusy={setImportBusy}
+      onReady={preview=>{if(!importPreview)beforeImport.current=values;setImportPreview(preview);const product=preview.candidate.product;const normalized=formValues({productName:product.name??"",brand:product.brand??"",category:product.category??"",description:product.description??"",sourceUrl:preview.candidate.sourceUrl,specifications:product.specifications});setValues(normalized);nextRowKey.current=normalized.specifications.length;setSelectedImages(preview.candidate.images.filter(image=>image.selected).map(image=>image.url));setShowFeedback(false);setImageResults([]);}}
+      onDiscard={()=>{setValues(beforeImport.current);nextRowKey.current=Math.max(0,...beforeImport.current.specifications.map(row=>row.rowKey+1));setImportPreview(null);setSelectedImages([]);setShowFeedback(false);}}/>
     <form action={formAction} aria-busy={pending} className="space-y-6" onSubmit={(event) => {
       if (blocked || submitting.current) event.preventDefault();
       else submitting.current = true;
@@ -78,6 +90,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
                 </label>
                 <input id={field.name} name={field.name} type={field.name === "sourceUrl" ? "url" : "text"}
                   required={field.name === "productName"} maxLength={field.max} placeholder={field.placeholder}
+                  readOnly={field.name === "sourceUrl" && !!importPreview}
                   value={values[field.name]} onChange={(event) => changeField(field.name, event.target.value)}
                   aria-invalid={Boolean(errors?.[field.name])}
                   aria-describedby={errors?.[field.name] ? `${field.name}-error` : undefined}
@@ -145,7 +158,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
 
       <div className="panel form-actions">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-          <button type="submit" disabled={blocked} className="button-primary">{pending ? "저장 중…" : "상품정보 저장"}</button>
+          <button type="submit" disabled={blocked} className="button-primary">{pending ? "저장·이미지 가져오는 중…" : importPreview ? "확인한 정보로 저장" : "상품정보 저장"}</button>
           {pending && <p role="status" className="text-sm text-zinc-600">상품정보와 사실정보를 저장하고 있습니다.</p>}
           {!pending && showFeedback && state.message && (
             <p role={state.status === "success" ? "status" : "alert"}
@@ -153,12 +166,13 @@ export function ProductForm({ projectId, initialValues, revision }: {
           )}
           {state.status === "recovery-required" && <a className="text-link" href={`/projects/${projectId}`}>저장 내용 다시 확인</a>}
         </div>
-        {hasSavedProduct && state.status !== "recovery-required" ? (
+        {hasSavedProduct && state.status !== "recovery-required" && !pending ? (
           <Link href={`/projects/${projectId}/images`} className="button-secondary shrink-0">다음: 이미지 등록 →</Link>
         ) : !hasSavedProduct ? (
           <p className="text-xs leading-5 text-zinc-500">상품정보를 저장하면 이미지 등록 단계로 이동할 수 있습니다.</p>
         ) : null}
       </div>
-    </form>
+      {imageResults.length>0&&<ul aria-label="이미지 가져오기 결과" className="panel space-y-2 p-5 text-sm">{imageResults.map((message,index)=><li key={index}>{message}</li>)}</ul>}
+    </form></div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Product } from "@/types/domain";
-import { manualFactsSchema, manualSourceSchema, productFormSchema,
+import { manualFactsSchema, manualSourceSchema, productSourceSchema, productFormSchema,
   type ProductInput, type ProductRow } from "./schemas";
 
 export function toManualSource(input: ProductInput) {
@@ -27,7 +27,7 @@ export function toProduct(row: ProductRow): Product {
 export function toProductInput(product: Product): ProductInput {
   // 초기 schema 기본값 {}만 이전 형식으로 허용한다. 모르는 원본 JSON을 조용히 덮어쓰지 않는다.
   const source = Object.keys(product.rawData).length === 0
-    ? null : manualSourceSchema.parse(product.rawData);
+    ? null : productSourceSchema.parse(product.rawData);
   return productFormSchema.parse({
     productName: product.name, brand: product.brand ?? "", category: product.category ?? "",
     description: product.description ?? "", sourceUrl: product.sourceUrl ?? "",

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { productFormSchema, projectIdSchema, productRevisionSchema, productRowSchema,
-  productFactsRowSchema, type ProductRow, type ProductFactsRow } from "./schemas";
+  productFactsRowSchema, wholesaleProvenanceSchema, wholesaleSourceSchema, type ProductRow, type ProductFactsRow } from "./schemas";
 import { toManualSource, toManualFacts } from "./mappers";
 import type { ProductSaveState } from "./types";
 
@@ -60,11 +60,13 @@ async function restoreProduct(client: Client, before: ProductRow | null, written
 
 export async function saveProductInformation(
   projectId: string, revision: unknown, input: unknown,
+  provenance?: unknown,
 ): Promise<ProductSaveState> {
   if (!projectIdSchema.safeParse(projectId).success || !productRevisionSchema.safeParse(revision).success) {
     return { status: "error", message: "프로젝트 정보를 확인할 수 없습니다. 목록에서 다시 열어 주세요." };
   }
   const parsed = productFormSchema.safeParse(input);
+  if (provenance !== undefined && !wholesaleProvenanceSchema.safeParse(provenance).success) return failed();
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) fieldErrors[issue.path.join(".")] ??= issue.message;
@@ -86,10 +88,13 @@ export async function saveProductInformation(
     };
     const previousFacts = before ? await readFacts(client, before.id) : null;
     const productId = before?.id ?? randomUUID();
-    const source = toManualSource(parsed.data);
+    const source = provenance !== undefined
+      ? wholesaleSourceSchema.parse({ ...parsed.data, inputMethod:"wholesale_url", provenance })
+      : before?.raw_data.inputMethod === "wholesale_url"
+        ? wholesaleSourceSchema.parse({ ...before.raw_data, ...parsed.data }) : toManualSource(parsed.data);
     const payload = { name: source.productName, brand: source.brand || null,
       category: source.category || null, description: source.description || null,
-      source_type: "manual", source_url: source.sourceUrl || null, raw_data: source };
+      source_type: source.inputMethod, source_url: source.sourceUrl || null, raw_data: source };
     writeStarted = true;
     const productWrite = before
       ? await client.from("products").update(payload).eq("id", productId)

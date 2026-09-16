@@ -73,3 +73,14 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - signed URL은 임시 사용만 한다. UI/로그에 provider 오류·서비스키를 노출하지 않는다.
 - 단위 테스트는 capture provider mock 사용; 실제 브라우저 파일 signature/폭/높이/한글·이미지 확인은 통합 검증에서 수행한다.
 - 브라우저 버전/OS 글꼴/배포 메모리·실행시간 차이를 문서화한다. PNG/JPG 이외 범위는 별도 TASK로 처리한다.
+
+## Wholesale Import 규칙 (TASK-018)
+
+- Preview-first. Candidate는 Fact가 아니며 사용자의 명시적 확인 저장만 기존 Product/Facts persistence로 전달한다.
+- 사이트별 코드는 Adapter에 둔다. Generic deterministic extraction부터 사용하고 AI 추측을 추가하지 않는다.
+- URL 입력은 public IP/DNS/redirect/연결 IP 고정 경계를 통과해야 한다. 이미지와 모든 browser subresource도 동일하다.
+- HTTP-first, 필요 시에만 server-only browser fallback. Export provider에 DOM 추출을 섞지 않는다.
+- MIME/timeout/압축 전후 크기/요청 수를 제한한다. 로그인/CAPTCHA/anti-bot/rate-limit 우회를 구현하지 않는다.
+- raw HTML/DOM을 Client/DB에 반환·저장하지 않는다. normalized source provenance와 confirmed Facts를 분리한다.
+- 상품 저장 성공 후에만 선택 이미지를 기존 Asset service로 가져온다. 미분류, UUID 경로, metadata 보존, 중복 검사, INSERT 실패 cleanup을 유지한다.
+- 자동 테스트는 HTML fixture/mock network를 사용하고, 실제 공개 URL·Supabase 검증 자료는 작업 후 정리한다.

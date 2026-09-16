@@ -2,9 +2,17 @@
 
 ## 현재 단계
 
-PHASE 5 / TASK-017 — PNG/JPG Detail Page Export.
-브랜치: `feat/image-export`. 구현·자동 테스트·실제 DB/Chromium/다운로드 검증 완료. Git commit 없음.
-공식 playwright 1.63.0 추가, migration 없음. 상세 파일·정책·설치·검증은 [TASK-017](./TASK-017.md).
+TASK-018 — Wholesale Product URL Import.
+브랜치: `feat/wholesale-url-import`. Preview-first/사용자 확인 저장/선택 이미지 Import 구현. Git commit 없음.
+parse5 8.0.1 추가, 기존 Playwright 재사용, migration 없음. 상세 파일·정책·검증은 [TASK-018](./TASK-018.md).
+
+- Generic Adapter: JSON-LD → metadata → product DOM → 필요한 경우 Chromium.
+- DNS/사설 IP 차단·연결 IP 고정·redirect 재검증·크기/시간 제한.
+- Product/Facts CAS·보상 저장과 Asset 업로드 재사용. 원본 provenance 보존, imported Asset=unclassified.
+- 실제 공개 테스트 상품 UI/DB/Storage/새로고침, 내부 주소 및 로그인 차단 검증. AI 호출 없음.
+- 기존332 + 신규30 = 전체362 tests, typegen/tsc/lint/build/diff 검사 통과. 실제 Chromium fallback과 secret 검사 완료, fixture 정리.
+
+## 완료된 TASK-017 기반
 
 - 기존 Final Render Surface만 PNG/JPG로 캡처, 저장된 canonical 입력만 사용.
 - 실제 긴 스펙 포함 PNG/JPG 860×7155px 검증. private no-store attachment.
@@ -30,7 +38,7 @@ PHASE 5 / TASK-017 — PNG/JPG Detail Page Export.
 
 ## 다음 단계와 운영 전제
 
-TASK-017로 저장된 상세페이지의 PNG/JPG 다운로드까지 연결했다. 후속 cloud browser 배포·대형 페이지 분할·공개 운영은 별도 요청에 따른다.
+TASK-018로 URL 후보 확인·상품 저장·이미지 가져오기를 연결했다. 후속 특정 도매사이트 Adapter·cloud browser 배포·대형 페이지 분할·공개 운영은 별도 요청에 따른다.
 후속 기능은 전체 ID/revision, 기존 lease와 두 recovery journal을 존중한다.
 기존 content/style PATCH에서는 type/order를 변경할 수 없다. 순서 변경은 전용 endpoint만 사용한다.
 Renderer는 Plan 순서 대신 현재 sort_order와 복구 조회 경계를 사용한다. 미적용 후보는 export 대상이 아니다.

@@ -260,3 +260,13 @@ deviceScaleFactor=1/scale=css로 persisted width를 physical px로 보존하고 
 폰트/이미지 준비, 75초 timeout, 16,000px/1,600만 px 제한, 프로세스당 1건을 적용한다.
 signed URL은 임시이며 output/URL/history를 DB·Storage에 저장하지 않는다. AI 호출·migration 없음.
 로컬 Node/Chromium 설치가 필요하며 serverless provider는 별도 검증 과제다. [TASK-017](tasks/TASK-017.md).
+
+### TASK-018 Wholesale Import
+
+URL → Resolver/Generic Adapter → normalized ImportCandidate → 기존 Product form draft → 명시적 확인 저장 → 선택 이미지별 Import.
+Preview는 DB를 쓰지 않는다. products persistence의 CAS/보상 흐름을 재사용하며, source provenance와 user-confirmed Facts를 구분한다.
+HTTP-first, 정보 부족 시에만 별도 server-only Import Chromium provider를 사용한다. Export capture와 책임을 섞지 않는다.
+URL/DNS public IP 검사 + 연결 IP 고정 + redirect 매 hop 재검증을 페이지·이미지·browser subresource 모두에 적용한다.
+20분 Project-bound process ticket으로 후보/선택 이미지 범위를 제한한다. raw HTML proxy를 만들지 않는다.
+이미지는 기존 Asset service의 upload/cleanup/30개 제한을 사용하고 unclassified로 저장한다. AI 실행 없음.
+특정 사이트 Adapter/분산 운영은 후속 과제다. [TASK-018](tasks/TASK-018.md).

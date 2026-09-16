@@ -262,3 +262,14 @@ id/type/plannerKey/sourcePlanFingerprint/sort_order/style/assetIds와 settings.e
 Facts/source_snapshot/Validation/Analysis/Plan/Project status/다른 Sections는 변경하지 않는다.
 lease 관리에 따른 detail_pages.updated_at 변화는 가능하지만 Plan/settings의 기존 내용은 유지한다.
 상세 동시성/응답 유실 정책은 [TASK-015](tasks/TASK-015.md)를 따른다.
+
+## TASK-018 — Wholesale URL 원본
+
+Migration/RLS/컬럼/DB 타입 변경 없음. Preview는 DB/Storage 저장 없이 만료되는 process ticket으로만 보관한다.
+명시적 확인 저장 시 products.source_type=wholesale_url, source_url=상품 URL을 기록한다.
+raw_data/source_snapshot은 confirmed Product fields와 provenance(sourceUrl/sourceHost/fetchedAt/importedAt/extractionMethod/importedImageUrls/extracted)를 보존한다. HTML은 저장하지 않는다.
+provenance.extracted는 원래 추출 후보, Facts는 사용자가 확인한 상품명·브랜드·카테고리·스펙이다. 설명은 Facts에 들어가지 않는다.
+importedImageUrls는 선택한 URL 목록이며 성공 이력 테이블이 아니다. 실제 성공한 Asset의 metadata.source에 type/url/pageUrl/importedAt을 기록한다.
+Asset은 기존 private product-assets UUID 경로와 asset_type=unclassified를 사용한다. 기존 metadata/AI 결과는 보존한다.
+동일 source URL 재Import는 기존 row를 재사용한다. Content hash/DB unique 제약을 통한 다중 서버 중복 방지는 없다.
+TASK-006 Product/Facts 보상과 TASK-007 파일별 Storage cleanup을 그대로 따른다. [TASK-018](tasks/TASK-018.md).
