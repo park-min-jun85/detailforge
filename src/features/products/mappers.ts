@@ -1,4 +1,5 @@
 import type { Product } from "@/types/domain";
+import { filterFactualSpecifications, normalizeFactValue } from "./fact-normalization";
 import { manualFactsSchema, manualSourceSchema, productSourceSchema, productFormSchema,
   type ProductInput, type ProductRow } from "./schemas";
 
@@ -8,11 +9,12 @@ export function toManualSource(input: ProductInput) {
 
 export function toManualFacts(input: ProductInput) {
   const source = toManualSource(input);
+  const brand = normalizeFactValue(source.brand), category = normalizeFactValue(source.category);
   return manualFactsSchema.parse({
     productName: source.productName,
-    ...(source.brand ? { brand: source.brand } : {}),
-    ...(source.category ? { category: source.category } : {}),
-    specifications: source.specifications,
+    ...(brand ? { brand } : {}),
+    ...(category ? { category } : {}),
+    specifications: filterFactualSpecifications(source.specifications),
   });
 }
 

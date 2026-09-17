@@ -273,3 +273,11 @@ importedImageUrls는 선택한 URL 목록이며 성공 이력 테이블이 아�
 Asset은 기존 private product-assets UUID 경로와 asset_type=unclassified를 사용한다. 기존 metadata/AI 결과는 보존한다.
 동일 source URL 재Import는 기존 row를 재사용한다. Content hash/DB unique 제약을 통한 다중 서버 중복 방지는 없다.
 TASK-006 Product/Facts 보상과 TASK-007 파일별 Storage cleanup을 그대로 따른다. [TASK-018](tasks/TASK-018.md).
+
+## TASK-019 — 원본과 Facts 정규화
+
+Migration/컬럼/RLS/type 변경 없음. 수동·Import 확인 저장 모두 `toManualFacts`에서 placeholder spec pair와 optional brand/category를 제외한다.
+raw_data/source_snapshot의 confirmed input과 provenance.extracted의 원래 후보에는 placeholder를 보존한다. value:null pair를 만들지 않는다.
+사용자가 실제 값으로 수정하면 최종 값은 Facts에 들어가고 원래 추출값은 provenance에 남는다. 상품 설명은 계속 source에만 저장한다.
+실제 값끼리의 충돌은 삭제·병합하지 않는다. 기존 Facts는 읽기만으로 변경되지 않으며 다음 명시적 저장에 적용한다.
+analysis/validation JSON과 기존 CAS/보상 정책은 유지한다. 상세 규칙/실제 DB 검증은 [TASK-019](tasks/TASK-019.md).

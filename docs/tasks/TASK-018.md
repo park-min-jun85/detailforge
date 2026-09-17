@@ -110,6 +110,46 @@ node --env-file=.env.local --conditions=react-server --import ./tests/register.m
 
 ## 후속 / 직접 확인
 
+### 공개 상품의 부분 가격 제한 오탐 수정 (2026-09-16)
+
+- 공통 로그인 폼의 password input이 있으면서 JSON-LD/Product scope 제목이 없으면 OG 상품명·공개 본문을 무시하고 restricted로 처리하던 문제를 수정했다.
+- Generic 추출 후 상품 제목 + 본문 스펙/설명/이미지, Product JSON-LD/OG 신호를 종합한다. 공통 로그인/회원 구매 문구는 공개 상품을 차단하지 않는다. 상품 본문 없는 로그인·인증 URL, CAPTCHA/challenge 주 콘텐츠와 명확한 제한 페이지는 계속 거부한다.
+- OG 제목과 일치하는 본문 제목은 서비스명 접두어 없이 사용한다. 무관한 일반 heading은 기존 metadata 우선순위를 덮어쓰지 않는다. 사이트별 ID/상품번호/URL을 production 코드에 하드코딩하지 않았다.
+- Generic breadcrumb의 현재 경로만 추출하고 dropdown 선택지는 제외한다. 알려진 상품 속성의 table/label-div 쌍과 명시적 상품번호 텍스트를 읽는다. 설명이 없고 가격이 제한되면 공개 스펙을 상품정보 후보 텍스트로 조합하며 가격 metadata 광고는 사용하지 않는다.
+- 상품 상세 영역의 inert textarea HTML을 parse5로만 읽어 외부 이미지 후보를 추출한다. script 실행/iframe 추가 요청 없이 최대20개·256KiB·10,000 nodes 제한을 둔다. 기존 URL/30개 제한과 UI 아이콘·작은 이미지 필터를 유지·보강했다.
+- bounded warnings에 `상품정보는 가져왔지만 가격은 로그인한 사업자회원에게만 공개됩니다.`를 추가한다. 가격 필드/추측/인증 우회는 없다.
+
+실제 `https://domeme.domeggook.com/s/67399861`를 HTTP와 브라우저에서 검증했다. 최적화 빌드의 UI에서 URL 입력 → Import Preview 성공, 저장 전 후보만 표시한다.
+
+- 상품명: 냄새잡는 대나무숯 애견 배변패드 40매(60x60cm)
+- 원본 URL: 위 HTTPS URL, 추출 방식 metadata + Generic DOM 보완 (schema 표시값 `metadata`)
+- 카테고리: 취미/도서 > 반려동물 > 강아지배변용품 > 배변패드
+- 스펙7개: 원산지 `수입산 / /`(원문 구분자 보존), 모델명 `별도표기`, 제조사 `별도표기`, 상품포장 부피/무게 `X / X`, 품명 및 모델명 `ON241125403`, 제조국 또는 원산지 `중국`, 상품번호 `67399861`. 브랜드는 null. 설명은 이 공개 상품정보의 조합이며 새 사실을 생성하지 않는다.
+- 이미지 후보2개: OG 대표 이미지 + `https://www.dometopia.com/data/goods/goods_img/GDI/1364769/1364769.jpg`. 상세 JPEG는 1,976,196 bytes로 MIME/signature 검사 및 UI 미리보기 성공. 대표 이미지 CDN은 HTTP200이지만 `application/octet-stream`으로 응답하여 기존 MIME 정책에 따라 미리보기 실패를 표시한다. 후보 추출 성공과 바이너리 Import 가능 여부를 구분한다.
+- 신규 회귀10개: 공통 로그인/부분 가격 제한, JSON-LD/OG 신호, metadata 없는 공개 본문, 로그인 wall, CAPTCHA, 잔존 metadata가 있는 wall, auth redirect, inert 상세 이미지/UI·사설주소 제외, fragment 상한, Preview 불변·가격 추측 없음.
+- 기존362 + 신규10 = 전체372 tests, next typegen / tsc --noEmit / lint / build / git diff --check 모두 통과. SSRF/DNS pinning/redirect/HTTP status/MIME/용량/browser sandbox 정책은 변경하지 않았다. 실제 Chromium fixture도 private request 차단을 유지한다.
+- 최종 빌드 UI에서 상세 이미지 complete=true, naturalWidth=860, naturalHeight=12900 확인. 실제 검증은 Preview까지만 실행했으며 Product/Asset 0행을 확인했다. Product/Facts/Assets/Storage 저장 및 유료 AI 호출 없음. 검증용 빈 Project 삭제 후 관련 레코드 잔여0건 확인. 실제 서비스키의 client bundle/source 노출0건.
+
 Cursor에서 실제 공급처 URL의 원문과 추출값, 썸네일, 스펙 중복/필드 의미, 기존 입력 복원, 30개 상한/부분 실패를 확인한다.
 향후 사이트별 Adapter는 실제 공급처의 합법적인 공개 접근 범위와 fixture를 확보한 뒤 추가한다. Generic selector/JSON-LD 구조/JS dependency가 다른 사이트는 현재 실패할 수 있다.
 Auth/분산 rate limiter/대량 crawler/로그인·CAPTCHA·anti-bot 우회/AI extraction/상품 사실 추측/이미지 자동 분류/새 migration은 구현하지 않았다.
+
+### 최종 실사용 보완: octet-stream 이미지와 원산지 (2026-09-16)
+
+앞선 검증에서 대표 이미지가 거부된 원인은 공급처 CDN이 JPEG bytes를 `application/octet-stream`으로 응답한 것이다. 다음 보완으로 해결했다.
+
+- `remote-image.ts`의 공통 `validateRemoteImage`를 HTTP image 응답과 `loadRemoteImage`가 사용한다. Preview proxy와 실제 Import 모두 `loadRemoteImage`를 거치며 동일 정책이다.
+- 명시적 `image/jpeg`, `image/png`, `image/webp`는 기존대로 선언 MIME과 signature 일치를 검사한다. `application/octet-stream`일 때만 JPEG `FF D8 FF`, PNG 8-byte signature, WebP `RIFF` + offset8의 `WEBP`를 확인하여 실제 MIME으로 정규화한다. 미지원·부족한 signature/실행파일/HTML/SVG/빈 파일, 잘못 선언된 MIME은 거부한다. URL/파일 확장자로 허용하지 않는다. magic 검사이며 전체 이미지 디코더 검사는 아니다.
+- octet-stream은 image 요청에서만 다운로드 후보로 허용하고, bytes 검증 성공 전에는 반환하지 않는다. DNS pinning/private IP/redirect/status/timeout/압축 전후 10MiB/상품30개 제한은 변경하지 않았다.
+- 표시용 original_filename과 기존 UUID Storage 경로를 분리한다. Storage 확장자·contentType·Asset mime_type은 검증된 실제 MIME을 사용한다. original_filename이 `.jpg`인 실제 PNG도 Storage는 `.png`로 저장함을 회귀 검증했다. proxy/signed URL은 DB에 저장하지 않는다.
+- Generic 스펙 값에서 공백으로 분리된 앞/뒤 `/`, `|`만 제거한다. `수입산 / /` → `수입산`; `ABS / PC`, `가로 / 세로`, `1/2`, `cm/s`, `MODEL-A/`, 음수는 유지한다. 상품 전용 값은 production 코드에 없다.
+
+실제 브라우저에서 `https://domeme.domeggook.com/s/67399861`로 Preview → 두 이미지 선택 → 확인 저장 → Images → 페이지 새로고침까지 실행했다.
+
+- 상품명·카테고리 경로 정상, 상품번호67399861/품명 및 모델명ON241125403/제조국중국 확인. 원산지 최종 값은 `수입산`이며 저장된 Facts/source_snapshot에서도 확인했다.
+- 대표 이미지: JPEG, 18,216 bytes, 330×330. Preview/Storage Import/Images 표시 성공.
+- 상세 `1364769.jpg`: JPEG, 1,976,196 bytes, 860×12,900. 기존10MiB 이하이며 제한 변경 없이 Preview/Storage Import/Images 표시 성공.
+- private `product-assets` bucket 확인, Asset2개 모두 `unclassified`, JPEG MIME/UUID `.jpg` 경로/원본 source URL metadata 확인. private signed URL로 두 파일을 다시 읽고 JPEG signature/byte 수 일치를 검증했다. DB에 signed/proxy URL 없음.
+- 신규12개 포함 전체384 tests 통과. 정상 JPEG, octet JPEG/PNG/WebP, 미지원/실행/부족한 bytes, `.jpg` 위장/MIME 불일치, explicit octet 예외 범위, declared/stream/gzip 10MiB, redirect/abort, Storage 실제 확장자, 구분자 정리/내부 보존을 검사한다.
+- next typegen, tsc --noEmit, lint, build, git diff --check 통과. 실제 Chromium fixture의 private 요청 차단도 통과. dependency/migration 추가 없음, Git commit 없음, 유료 AI 호출 없음.
+- 검증용 Project/Product/Facts/Assets와 두 Storage 파일은 검증 후 정리했고 잔여0건을 확인했다. 실제 서비스키의 client bundle/source 노출0건. 기존 사용자 데이터는 변경하지 않았다.

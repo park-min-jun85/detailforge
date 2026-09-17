@@ -2,6 +2,14 @@
 
 ## 현재 단계
 
+TASK-019 — Wholesale Fact Normalization & Placeholder Filtering 완료.
+브랜치: `feat/fact-normalization`. 공통 저장 mapper에서 placeholder를 Facts에서만 제외하고 raw/source/provenance를 보존한다.
+수동 입력·Import Preview의 사용자 최종 값에 적용하며 실제 값 override를 허용한다. 충돌 가능한 실제 값은 그대로 유지한다.
+두 도매매 URL 실제 Import/DB/Facts Summary·override 확인, AI 호출 0회, migration/dependency 없음.
+신규55 포함 전체439 tests와 typegen/tsc/lint/build/diff·secret 검사 통과. 상세 정책/검증/후속 범위는 [TASK-019](./TASK-019.md).
+
+## 완료된 TASK-018 기반
+
 TASK-018 — Wholesale Product URL Import.
 브랜치: `feat/wholesale-url-import`. Preview-first/사용자 확인 저장/선택 이미지 Import 구현. Git commit 없음.
 parse5 8.0.1 추가, 기존 Playwright 재사용, migration 없음. 상세 파일·정책·검증은 [TASK-018](./TASK-018.md).
@@ -11,6 +19,7 @@ parse5 8.0.1 추가, 기존 Playwright 재사용, migration 없음. 상세 파�
 - Product/Facts CAS·보상 저장과 Asset 업로드 재사용. 원본 provenance 보존, imported Asset=unclassified.
 - 실제 공개 테스트 상품 UI/DB/Storage/새로고침, 내부 주소 및 로그인 차단 검증. AI 호출 없음.
 - 기존332 + 신규30 = 전체362 tests, typegen/tsc/lint/build/diff 검사 통과. 실제 Chromium fallback과 secret 검사 완료, fixture 정리.
+- TASK-018 실사용 보완: 공개 상품 본문과 가격 제한을 구분하고, octet-stream 이미지의 실제 signature를 검증·정규화한다. 원산지 끝 구분자를 보수적으로 정리한다. 실제 도매매 대표/상세 이미지2개 Preview·private Storage Import·미분류·새로고침 유지 확인. 추가 회귀12개 포함 전체384 tests 통과. 세부 결과는 TASK-018의 최종 실사용 보완 기록을 따른다.
 
 ## 완료된 TASK-017 기반
 

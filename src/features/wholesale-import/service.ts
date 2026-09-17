@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { getAssetContext, uploadAsset } from "@/features/assets/service";
-import { validateFile, validateSignature, normalizeFilename, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS } from "@/features/assets/schemas";
+import { normalizeFilename, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS } from "@/features/assets/schemas";
 import { saveProductInformation } from "@/features/products/persistence";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchResource, decodeHtml } from "./fetcher";
@@ -11,6 +11,7 @@ import { sufficient } from "./extractor";
 import { importSaveSchema, previewRequestSchema } from "./schemas";
 import { ImportError } from "./errors";
 import { importExclusive, issueTicket, readTicket, thumbnailSlot } from "./tickets";
+import { validateRemoteImage } from "./remote-image";
 export async function previewImport(projectId:string,input:unknown,dependencies:{fetch?:typeof fetchResource;render?:typeof renderedHtml}={}) {
   const parsed=previewRequestSchema.safeParse(input);if(!parsed.success)throw new ImportError("invalid_url");
   await getAssetContext(projectId);
@@ -38,7 +39,7 @@ export async function saveImport(projectId:string,input:unknown) {
     return result;
   });
 }
-export async function loadRemoteImage(url:string,signal?:AbortSignal,fetcher=fetchResource){const result=await fetcher(url,"image",{signal});const mime=validateFile(result.mime,result.bytes.length);validateSignature(result.bytes,mime);return {...result,mime};}
+export async function loadRemoteImage(url:string,signal?:AbortSignal,fetcher=fetchResource){const result=await fetcher(url,"image",{signal});const mime=validateRemoteImage(result.mime,result.bytes);return {...result,mime};}
 export async function previewImage(projectId:string,token:string,index:number){
   const ticket=readTicket(projectId,token);if(!Number.isInteger(index)||!ticket.candidate.images[index])throw new ImportError("invalid_input");
   return thumbnailSlot(()=>loadRemoteImage(ticket.candidate.images[index].url));

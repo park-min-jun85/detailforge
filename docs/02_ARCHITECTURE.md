@@ -270,3 +270,10 @@ URL/DNS public IP 검사 + 연결 IP 고정 + redirect 매 hop 재검증을 페�
 20분 Project-bound process ticket으로 후보/선택 이미지 범위를 제한한다. raw HTML proxy를 만들지 않는다.
 이미지는 기존 Asset service의 upload/cleanup/30개 제한을 사용하고 unclassified로 저장한다. AI 실행 없음.
 특정 사이트 Adapter/분산 운영은 후속 과제다. [TASK-018](tasks/TASK-018.md).
+
+### TASK-019 Fact normalization
+
+Candidate → 최종 확인 입력 → products persistence → `toManualFacts` → `fact-normalization.ts` 순서다.
+수동과 Import가 동일한 순수 helper를 사용하고, UI는 제외 예정 안내에만 재사용한다. 원본 Adapter/provider에 필터를 넣지 않는다.
+raw/source snapshot/provenance는 원문과 사용자 확인값을 보존하고 Facts에는 실제 값인 pair만 저장한다. 값의 진위 판단은 여기서 하지 않는다.
+기존 downstream은 저장 Facts에서 F/targets/supported spec을 구성한다. 원본 source evidence와 fingerprint 정책은 유지한다. [TASK-019](tasks/TASK-019.md).

@@ -8,6 +8,7 @@ import type { ProductSaveState } from "../types";
 import { ImportPanel, type ImportPreview } from "@/features/wholesale-import/components/import-panel";
 import { saveConfirmedImport } from "@/features/wholesale-import/client";
 import { readProductFormData } from "../mappers";
+import { isFactualSpecification, isNonFactualPlaceholder } from "../fact-normalization";
 
 type TextField = "productName" | "brand" | "category" | "description" | "sourceUrl";
 const emptyValues: ProductInput = {
@@ -93,9 +94,10 @@ export function ProductForm({ projectId, initialValues, revision }: {
                   readOnly={field.name === "sourceUrl" && !!importPreview}
                   value={values[field.name]} onChange={(event) => changeField(field.name, event.target.value)}
                   aria-invalid={Boolean(errors?.[field.name])}
-                  aria-describedby={errors?.[field.name] ? `${field.name}-error` : undefined}
+                  aria-describedby={[errors?.[field.name] ? `${field.name}-error` : "", (field.name === "brand" || field.name === "category") && values[field.name].trim() && isNonFactualPlaceholder(values[field.name]) ? `${field.name}-fact-hint` : ""].filter(Boolean).join(" ") || undefined}
                   className="product-input" />
                 {errors?.[field.name] && <p id={`${field.name}-error`} className="mt-2 text-sm text-red-700">{errors[field.name]}</p>}
+                {(field.name === "brand" || field.name === "category") && values[field.name].trim() && isNonFactualPlaceholder(values[field.name]) && <p id={`${field.name}-fact-hint`} className="mt-2 text-xs text-zinc-500">원문은 보존되며 사실정보에는 포함되지 않음</p>}
               </div>
             ))}
             <div className="sm:col-span-2">
@@ -137,7 +139,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
                         maxLength={field === "name" ? 100 : 500} value={row[field]}
                         placeholder={field === "name" ? "예: 재질" : "예: ABS"}
                         onChange={(event) => changeSpecification(row.rowKey, field, event.target.value)}
-                        aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined}
+                        aria-invalid={Boolean(error)} aria-describedby={[error ? `${id}-error` : "", row.name.trim() && row.value.trim() && !isFactualSpecification(row) ? `spec-${row.rowKey}-fact-hint` : ""].filter(Boolean).join(" ") || undefined}
                         className="product-input" />
                       {error && <p id={`${id}-error`} className="mt-2 text-sm text-red-700">{error}</p>}
                     </div>
@@ -148,6 +150,7 @@ export function ProductForm({ projectId, initialValues, revision }: {
                     setShowFeedback(false);
                     setValues((current) => ({ ...current, specifications: current.specifications.filter((item) => item.rowKey !== row.rowKey) }));
                   }}>삭제</button>
+                {row.name.trim() && row.value.trim() && !isFactualSpecification(row) && <p id={`spec-${row.rowKey}-fact-hint`} className="text-xs leading-5 text-zinc-500 sm:col-span-3">원문은 보존되며 사실정보에는 포함되지 않음 · 실제 값을 입력하면 사실정보로 저장됩니다.</p>}
               </div>
             ))}
             {values.specifications.length === 0 && <p className="text-sm text-zinc-500">입력된 스펙이 없습니다. 필요한 항목을 추가하세요.</p>}

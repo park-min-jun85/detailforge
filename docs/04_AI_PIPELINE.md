@@ -258,3 +258,11 @@ V/strategy는 사실이 아니다. spec/option 원문 행, 현재 style/실제 �
 stale Plan/Validation은 차단하며 stale Product Analysis는 TASK-011처럼 전략 입력에서 제외한다.
 AI 실패는 기존 Section을 바꾸지 않는다. 범위 검사는 자연어 목적/주장의 완전한 증명이 아니므로 사람의 검토가 필요하다.
 세부 정책과 실제 호출 1회/자동 테스트 결과는 [TASK-015](tasks/TASK-015.md)를 따른다.
+
+## TASK-019 — AI 이전의 deterministic Fact 정규화
+
+Product 저장 시 placeholder를 Facts에서만 제외한다. AI enrichment/OCR/새 사실 추론은 없다.
+Product Analysis F registry와 Fact Validation targets는 정규화된 저장 Facts를 사용한다. 원본 description/source_snapshot의 S evidence에는 placeholder가 남을 수 있으나 Fact로 승격하지 않는다.
+Validation fingerprint는 targets와 source evidence를 계속 포함한다. Facts가 같아도 source-only 수정은 stale이 될 수 있다. Analysis는 실제 사용 evidence 변경 여부에 따른다.
+Planner의 supported F와 Section specification exact-grounding 경계는 유지한다. 충돌 가능한 실제 값은 Validation/사람이 검토하며 normalization이 한쪽을 삭제하지 않는다.
+자동 테스트는 mock Validation/Plan/Section으로 입력·출력 경계를 확인했다. 이번 TASK 실제 OpenAI 호출 0회이며 실제 provider 품질 검증은 수행하지 않았다. [TASK-019](tasks/TASK-019.md).

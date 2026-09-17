@@ -5,11 +5,13 @@ import type { IncomingMessage } from "node:http";
 import { createBrotliDecompress, createGunzip, createInflate } from "node:zlib";
 import { resolvePublic, type Resolver } from "./security";
 import { ImportError } from "./errors";
+import { validateRemoteImage } from "./remote-image";
 export type ResourceKind = "html" | "image" | "script" | "style" | "json";
 export type FetchedResource = { url: string; mime: string; bytes: Buffer; charset?: string };
 export const RESOURCE_LIMITS = {html:2*1024*1024,image:10*1024*1024,script:1024*1024,style:512*1024,json:512*1024};
 export function acceptsMime(kind: ResourceKind, mime: string) {
-  return kind === "html" ? ["text/html","application/xhtml+xml"].includes(mime) : kind === "image" ? ["image/png","image/jpeg","image/webp"].includes(mime) : kind === "script" ? /^(text|application)\/(javascript|x-javascript|ecmascript)$/.test(mime) : kind === "style" ? mime === "text/css" : mime === "application/json";
+  // octet-stream is provisional: image bytes must pass validateRemoteImage below.
+  return kind === "html" ? ["text/html","application/xhtml+xml"].includes(mime) : kind === "image" ? ["image/png","image/jpeg","image/webp","application/octet-stream"].includes(mime) : kind === "script" ? /^(text|application)\/(javascript|x-javascript|ecmascript)$/.test(mime) : kind === "style" ? mime === "text/css" : mime === "application/json";
 }
 export type Transport = (target: Awaited<ReturnType<typeof resolvePublic>>, signal: AbortSignal) => Promise<IncomingMessage>;
 export const pinnedTransport: Transport = ({url,address},signal) => new Promise((resolve,reject) => {
@@ -41,7 +43,8 @@ export async function fetchResource(value: string, kind: ResourceKind, options: 
       const stream=decoder?response.pipe(decoder):response;
       try { for await(const chunk of stream){size+=chunk.length;if(size>limit)throw new ImportError("too_large");chunks.push(Buffer.from(chunk));} }
       finally {response.destroy();decoder?.destroy();}
-      return {url:target.url.href,mime,bytes:Buffer.concat(chunks),charset:response.headers["content-type"]?.match(/charset\s*=\s*["']?([^\s;"']+)/i)?.[1]};
+      const bytes=Buffer.concat(chunks);
+      return {url:target.url.href,mime:kind==="image"?validateRemoteImage(mime,bytes):mime,bytes,charset:response.headers["content-type"]?.match(/charset\s*=\s*["']?([^\s;"']+)/i)?.[1]};
     }
     throw new ImportError("blocked");
   } catch(error){if(signal.aborted)throw new ImportError("timeout");throw error instanceof ImportError?error:new ImportError("unavailable");}

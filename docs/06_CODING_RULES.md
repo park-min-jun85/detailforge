@@ -84,3 +84,13 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - raw HTML/DOM을 Client/DB에 반환·저장하지 않는다. normalized source provenance와 confirmed Facts를 분리한다.
 - 상품 저장 성공 후에만 선택 이미지를 기존 Asset service로 가져온다. 미분류, UUID 경로, metadata 보존, 중복 검사, INSERT 실패 cleanup을 유지한다.
 - 자동 테스트는 HTML fixture/mock network를 사용하고, 실제 공개 URL·Supabase 검증 자료는 작업 후 정리한다.
+
+## Fact normalization 규칙 (TASK-019)
+
+- 원문 추출과 Fact 저장은 별개다. Candidate/raw_data/source_snapshot/provenance에서 placeholder를 삭제하지 않는다.
+- 최종 사용자 입력 → `toManualFacts` 경계에서 공통 `products/fact-normalization.ts` helper를 사용한다. 수동/Import/UI에 dictionary를 복제하지 않는다.
+- bounded 목록은 정규화 후 전체 값으로 비교한다. substring 제거, OCR/AI 보충, 유사 label 병합, 충돌 실제 값 삭제를 하지 않는다.
+- 빈 값·구두점만 있는 값·명시 placeholder는 spec pair 전체를 제외한다. 0/0W와 의미 있는 내부 slash·문장은 유지한다.
+- 원래 placeholder라도 최종 override가 실제 값이면 Fact로 저장한다. 원래 추출값은 provenance에 유지한다.
+- legacy row는 읽기만으로 수정하지 않는다. source-only 수정이 Validation fingerprint를 바꾸는 기존 stale 정책을 보존한다.
+- 목록 확장은 실제 source 사례와 회귀 테스트로 제한한다. UI는 공통 helper의 판정만 표시한다.
