@@ -277,3 +277,11 @@ Candidate → 최종 확인 입력 → products persistence → `toManualFacts` 
 수동과 Import가 동일한 순수 helper를 사용하고, UI는 제외 예정 안내에만 재사용한다. 원본 Adapter/provider에 필터를 넣지 않는다.
 raw/source snapshot/provenance는 원문과 사용자 확인값을 보존하고 Facts에는 실제 값인 pair만 저장한다. 값의 진위 판단은 여기서 하지 않는다.
 기존 downstream은 저장 Facts에서 F/targets/supported spec을 구성한다. 원본 source evidence와 fingerprint 정책은 유지한다. [TASK-019](tasks/TASK-019.md).
+
+### TASK-020 Product Options
+
+Product 저장 후 별도 Options 저장 경계를 사용한다. product_options 하나의 row를 version CAS로 저장하며 Product/Facts 보상 흐름에 세 번째 테이블을 결합하지 않는다.
+features/product-options가 strict schema/조회/persistence/HTTP/client/UI를 담당한다. GET/PUT options endpoint는 서버 전용 Supabase와 Project→Product 소속 검사를 사용한다.
+Options와 Specifications는 독립적이며 option source_snapshot도 Product raw_data와 분리한다. stable UUID와 배열 순서를 보존한다.
+getConfirmedProductOptions는 Planner/Section용 server read model이며 buildOptionSectionSource는 정확한 문자열/ID의 deterministic source mapping이다.
+기존 F 기반 Section v1 content/AI/Editor를 변경하지 않는다. 실제 option 콘텐츠 연결과 stale/version 참조 확장은 후속 계약이다. [TASK-020](tasks/TASK-020.md).

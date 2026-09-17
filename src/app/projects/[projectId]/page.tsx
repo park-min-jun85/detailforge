@@ -7,6 +7,9 @@ import { ProjectStatusBadge } from "@/features/projects/components/project-statu
 import { ProjectLoadError } from "@/features/projects/components/project-load-error";
 import { ProductForm } from "@/features/products/components/product-form";
 import { getProductDetail } from "@/features/products/queries";
+import { getProductOptions } from "@/features/product-options/queries";
+import { OptionsManager } from "@/features/product-options/components/options-manager";
+import { OPTION_ERRORS } from "@/features/product-options/errors";
 
 export const metadata: Metadata = { title: "상품정보" };
 
@@ -15,6 +18,8 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
   const { projectId } = await params;
   const result = await getProductDetail(projectId);
   if (result.status === "not-found") notFound();
+  const options = result.status === "ready" ? await getProductOptions(projectId)
+    .then(view => ({ view, error: undefined })).catch(() => ({ view: null, error: OPTION_ERRORS.unavailable.message })) : null;
 
   return (
     <div className="page-content">
@@ -36,6 +41,7 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
             <li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li><Link href={`/projects/${projectId}/sections`} className="text-link">6. 상세페이지</Link></li>
           </ol>
           <ProductForm projectId={result.project.id} initialValues={result.values} revision={result.product?.updatedAt ?? ""} />
+          <OptionsManager key={result.product?.id ?? "no-product"} projectId={projectId} initialView={options?.view ?? null} initialError={options?.error} />
         </>
       )}
     </div>

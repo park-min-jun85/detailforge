@@ -2,6 +2,14 @@
 
 ## 현재 단계
 
+TASK-020 — Product Options Foundation 구현·검증 완료.
+브랜치: `feat/product-options`. 독립 Options row/명시적 저장, stable UUID/version CAS, confirmed read model과 Section source mapping, Adapter 후보 boundary.
+사용자가 0005 단독 dry-run→remote push→Local/Remote 0001~0005 일치→linked 타입 재생성을 확인했다. 적용된 migration은 수정·재적용하지 않았다.
+새 dependency와 AI 호출 없음. 상태와 후속 범위는 [TASK-020](./TASK-020.md).
+전체485 tests/typegen/tsc/lint/build/diff/secret 검사 통과. 실제 Supabase/브라우저 저장·재조회·수정·삭제·두 탭 conflict, UUID/version/제약·trigger·cascade와 Facts 분리 검증 완료. 임시 데이터 잔여0건, Git commit 없음.
+
+## 완료된 TASK-019 기반
+
 TASK-019 — Wholesale Fact Normalization & Placeholder Filtering 완료.
 브랜치: `feat/fact-normalization`. 공통 저장 mapper에서 placeholder를 Facts에서만 제외하고 raw/source/provenance를 보존한다.
 수동 입력·Import Preview의 사용자 최종 값에 적용하며 실제 값 override를 허용한다. 충돌 가능한 실제 값은 그대로 유지한다.

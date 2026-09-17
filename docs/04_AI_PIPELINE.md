@@ -266,3 +266,10 @@ Product Analysis F registry와 Fact Validation targets는 정규화된 저장 Fa
 Validation fingerprint는 targets와 source evidence를 계속 포함한다. Facts가 같아도 source-only 수정은 stale이 될 수 있다. Analysis는 실제 사용 evidence 변경 여부에 따른다.
 Planner의 supported F와 Section specification exact-grounding 경계는 유지한다. 충돌 가능한 실제 값은 Validation/사람이 검토하며 normalization이 한쪽을 삭제하지 않는다.
 자동 테스트는 mock Validation/Plan/Section으로 입력·출력 경계를 확인했다. 이번 TASK 실제 OpenAI 호출 0회이며 실제 provider 품질 검증은 수행하지 않았다. [TASK-019](tasks/TASK-019.md).
+
+## TASK-020 — Options는 별도 confirmed input
+
+Options CRUD는 AI를 호출하지 않는다. Options를 Fact specifications/F registry/Fact Validation targets에 자동 복사하지 않는다.
+schema 검증과 사용자 확인이 적용된 groups만 getConfirmedProductOptions로 읽는다. source_snapshot과 ImportCandidate는 원문 후보이지 확정 선택값이 아니다.
+Planner 존재 확인 helper와 Section deterministic source mapping을 제공한다. 실제 label/value를 AI가 재작성하지 않는다.
+기존 Section v1의 F 기반 option items와 새 source는 별도 계약이다. prompt/provider/Plan/Editor integration은 후속 단계에서 Options snapshot/version/stale과 전용 참조를 함께 설계한다. [TASK-020](tasks/TASK-020.md).

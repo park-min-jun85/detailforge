@@ -165,6 +165,44 @@ export type Database = {
           },
         ]
       }
+      product_options: {
+        Row: {
+          created_at: string
+          groups: Json
+          id: string
+          product_id: string
+          source_snapshot: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          groups?: Json
+          id?: string
+          product_id: string
+          source_snapshot?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          groups?: Json
+          id?: string
+          product_id?: string
+          source_snapshot?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_options_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           ai_analysis: Json

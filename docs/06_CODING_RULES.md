@@ -94,3 +94,13 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - 원래 placeholder라도 최종 override가 실제 값이면 Fact로 저장한다. 원래 추출값은 provenance에 유지한다.
 - legacy row는 읽기만으로 수정하지 않는다. source-only 수정이 Validation fingerprint를 바꾸는 기존 stale 정책을 보존한다.
 - 목록 확장은 실제 source 사례와 회귀 테스트로 제한한다. UI는 공통 helper의 판정만 표시한다.
+
+## Product Options 규칙 (TASK-020)
+
+- Options는 Specifications/Facts와 분리한다. source_snapshot과 confirmed groups를 구분하며 AI로 선택값을 발명하지 않는다.
+- Product가 존재하고 Project/Product 관계가 일치해야 저장한다. UI의 ID만 신뢰하지 않는다.
+- Product당 row1개 UNIQUE와 version CAS를 사용한다. 전체 삭제는 빈 groups UPDATE이며 오래된 revision을 재사용하지 않는다.
+- group/value는 stable UUID, 배열 순서는 표시 순서다. index를 영구 식별자로 쓰지 않는다.
+- schema bounds/중복/placeholder 규칙은 공통 계층에서 검사한다. Fact helper의 없음/X를 옵션에서 무조건 삭제하지 않는다. slash를 자동 분할하지 않는다.
+- Product 저장과 별도 explicit Options save를 사용하며 실패 시 draft를 보존한다. 내부 DB 오류와 service-role 키는 비공개다.
+- Adapter options는 optional 후보 boundary일 뿐 자동 저장하지 않는다. 후속 명시적 확인·출처·CAS 계약을 통해 연결한다.

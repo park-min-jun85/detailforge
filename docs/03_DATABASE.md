@@ -281,3 +281,12 @@ raw_data/source_snapshot의 confirmed input과 provenance.extracted의 원래 �
 사용자가 실제 값으로 수정하면 최종 값은 Facts에 들어가고 원래 추출값은 provenance에 남는다. 상품 설명은 계속 source에만 저장한다.
 실제 값끼리의 충돌은 삭제·병합하지 않는다. 기존 Facts는 읽기만으로 변경되지 않으며 다음 명시적 저장에 적용한다.
 analysis/validation JSON과 기존 CAS/보상 정책은 유지한다. 상세 규칙/실제 DB 검증은 [TASK-019](tasks/TASK-019.md).
+
+## TASK-020 — product_options
+
+0005는 product_id UNIQUE/FK cascade를 가진 Options 테이블을 추가한다. UUID PK/default와 timestamps는 기존 convention, updated_at은 기존 helper trigger를 재사용한다.
+groups는 `{schemaVersion:1,groups:[{id,name,values:[{id,label}]}]}` JSON object, source_snapshot은 원문 출처 object다. DB는 두 object CHECK와 version>0만 검사하고 상세 bounds는 앱 Zod에서 검증한다.
+RLS 활성화, anon/authenticated revoke, service_role grant. 신규 허용 policy 없음. 원격 적용 여부는 TASK-020 migration 기록을 따른다.
+Options는 Product당 최대1행이며 version0은 미생성 read model, INSERT1/UPDATE+1 CAS를 사용한다. 그룹/값 삭제는 JSON 배열 수정이고 모두 삭제해도 빈 groups row와 revision을 유지한다.
+수동 snapshot은 현재 제출의 inputMethod/manual·schemaVersion·원문 groups이며 placeholder가 남을 수 있다. confirmed groups만 실제 선택값이다.
+옵션 저장은 products/raw_data/product_facts/Validation/Analysis/Assets에 쓰지 않는다. 가격/재고/SKU 조합/이력 테이블은 없다. [TASK-020](tasks/TASK-020.md).
