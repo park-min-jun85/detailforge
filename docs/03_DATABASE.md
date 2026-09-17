@@ -290,3 +290,7 @@ RLS 활성화, anon/authenticated revoke, service_role grant. 신규 허용 poli
 Options는 Product당 최대1행이며 version0은 미생성 read model, INSERT1/UPDATE+1 CAS를 사용한다. 그룹/값 삭제는 JSON 배열 수정이고 모두 삭제해도 빈 groups row와 revision을 유지한다.
 수동 snapshot은 현재 제출의 inputMethod/manual·schemaVersion·원문 groups이며 placeholder가 남을 수 있다. confirmed groups만 실제 선택값이다.
 옵션 저장은 products/raw_data/product_facts/Validation/Analysis/Assets에 쓰지 않는다. 가격/재고/SKU 조합/이력 테이블은 없다. [TASK-020](tasks/TASK-020.md).
+
+TASK-021B는 migration 없이 기존 source_snapshot에 `domeme_api` source를 지원한다. supplier/productNo/sourceUrl/API 버전/조회시각/fingerprint/최소 원본 groups/UUID bindings를 서버가 구성한다.
+이후 수동 수정도 해당 source를 보존하며 confirmed groups와 원본이 분리된다. legacy manual/빈 객체/wholesale_url도 읽는다. 최신 원본100값, 삭제 보호 매핑200값 상한이며 전체 응답/HTML/무제한 history는 저장하지 않는다.
+조회/후보 반영은 쓰기0회. 명시적 저장에서 groups/source_snapshot/version을 같은 row의 product_id/version 조건 UPDATE 또는 UNIQUE INSERT로 처리한다. 소속 검사는 사용자 인증을 대신하지 않는다. [TASK-021B](tasks/TASK-021B.md).

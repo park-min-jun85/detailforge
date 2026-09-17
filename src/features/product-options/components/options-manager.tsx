@@ -2,13 +2,16 @@
 import { useEffect, useRef, useState } from "react";
 import { MAX_GROUP_VALUES, MAX_OPTION_GROUPS, MAX_OPTION_VALUES, emptyOptionView, isOptionPlaceholder, type OptionGroup, type OptionView } from "../schemas";
 import { requestOptions } from "../client";
+import { OptionImportPanel } from "./option-import-panel";
 
-export function OptionsManager({ projectId, initialView, initialError }: { projectId: string; initialView: OptionView | null; initialError?: string }) {
+export function OptionsManager({ projectId, initialView, initialError, sourceUrl = null }: { projectId: string; initialView: OptionView | null; initialError?: string; sourceUrl?: string | null }) {
   const [saved, setSaved] = useState(initialView ?? emptyOptionView(null));
   const [groups, setGroups] = useState(initialView?.options.groups ?? []);
-  const [busy, setBusy] = useState(false), [error, setError] = useState(initialError ?? ""), [message, setMessage] = useState("");
+  const [saving, setBusy] = useState(false), [error, setError] = useState(initialError ?? ""), [message, setMessage] = useState("");
+  const [importBusy, setImportBusy] = useState(false), [importToken, setImportToken] = useState<string | undefined>();
+  const busy = saving || importBusy;
   const locked = useRef(false);
-  const dirty = JSON.stringify(groups) !== JSON.stringify(saved.options.groups);
+  const dirty = Boolean(importToken) || JSON.stringify(groups) !== JSON.stringify(saved.options.groups);
   const totalValues = groups.reduce((sum, group) => sum + group.values.length, 0);
   useEffect(() => {
     if (!dirty) return;
@@ -19,13 +22,13 @@ export function OptionsManager({ projectId, initialView, initialError }: { proje
   const change = (next: OptionGroup[]) => { setGroups(next); setMessage(""); setError(""); };
   const updateGroup = (id: string, update: (group: OptionGroup) => OptionGroup) => change(groups.map(group => group.id === id ? update(group) : group));
   const perform = async (save: boolean) => {
-    if (locked.current || (save && !saved.productId)) return;
+    if (locked.current || importBusy || (save && !saved.productId)) return;
     if (!save && dirty && !window.confirm("저장하지 않은 옵션 변경을 버리고 최신 옵션을 불러올까요?")) return;
     locked.current = true; setBusy(true); setError(""); setMessage("");
     try {
-      const result = await requestOptions(projectId, save ? { productId: saved.productId!, expectedVersion: saved.version, options: { schemaVersion: 1, groups } } : undefined);
+      const result = await requestOptions(projectId, save ? { productId: saved.productId!, expectedVersion: saved.version, options: { schemaVersion: 1, groups }, ...(importToken ? { importToken } : {}) } : undefined);
       if (!result.ok) { setError(result.message); return; }
-      setSaved(result.data); setGroups(result.data.options.groups);
+      setSaved(result.data); setGroups(result.data.options.groups); setImportToken(undefined);
       setMessage(save ? "옵션을 저장했습니다." : "최신 옵션을 불러왔습니다.");
     } finally { locked.current = false; setBusy(false); }
   };
@@ -34,6 +37,8 @@ export function OptionsManager({ projectId, initialView, initialError }: { proje
     <p className="mt-2 text-sm leading-6 text-zinc-500">색상·사이즈 등 구매자가 선택할 값을 입력하세요. 상품정보·스펙과 별도로 저장되며 사실정보에 추가되지 않습니다.</p>
     <p className="mt-1 text-xs leading-5 text-zinc-500">최대 10개 그룹 · 그룹당 30개 값 · 전체 100개 값. 빈 입력과 참조 안내문은 제외하며 각 그룹에는 실제 선택값이 필요합니다.</p>
     {!saved.productId && <p className="mt-5 text-sm text-zinc-600">먼저 상품정보를 저장해 주세요. 저장 후 최신 옵션을 불러오면 입력할 수 있습니다.</p>}
+    <OptionImportPanel key={`${saved.productId}:${saved.version}:${sourceUrl}`} projectId={projectId} saved={saved} sourceUrl={sourceUrl} disabled={saving} dirty={dirty}
+      onBusy={setImportBusy} onApply={(options, token) => { change(options.groups); setImportToken(token); setMessage("후보를 입력란에 반영했습니다. 아직 저장되지 않았습니다. 옵션 저장을 눌러 주세요."); }} />
     <form className="mt-6 space-y-5" aria-busy={busy} onSubmit={event => { event.preventDefault(); void perform(true); }}>
       <fieldset disabled={busy || !saved.productId} className="space-y-5">
         <legend className="sr-only">상품 옵션 편집</legend>
@@ -66,7 +71,8 @@ export function OptionsManager({ projectId, initialView, initialError }: { proje
       <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-5">
         <button type="submit" className="button-primary" disabled={busy || !saved.productId || !dirty}>{busy ? "처리 중…" : "옵션 저장"}</button>
         <button type="button" className="button-secondary" disabled={busy} onClick={() => void perform(false)}>최신 옵션 불러오기</button>
-        <button type="button" className="button-secondary" disabled={busy || !dirty} onClick={() => change(saved.options.groups)}>옵션 변경 취소</button>
+        <button type="button" className="button-secondary" disabled={busy || !dirty} onClick={() => { change(saved.options.groups); setImportToken(undefined); }}>옵션 변경 취소</button>
+        {importToken && <button type="button" className="button-secondary" disabled={busy} onClick={() => { if (window.confirm("새 후보의 출처 확인을 해제하고 현재 입력을 수동 값으로 유지할까요? 기존에 저장된 출처는 보존됩니다. 이후 옵션 저장을 별도로 눌러 주세요.")) { setImportToken(undefined); setError(""); setMessage("새 후보 출처 확인을 해제했습니다. 수동 입력으로 별도 저장해 주세요."); } }}>후보 출처 해제 · 수동 저장으로 전환</button>}
         <span className="text-xs text-zinc-500">{dirty ? "저장하지 않은 옵션 변경이 있습니다." : "옵션 변경 없음"}</span>
       </div>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}

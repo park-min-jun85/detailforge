@@ -62,6 +62,8 @@ TASK-019 helper를 재사용하되 옵션 의미의 예외 `없음`, `해당없�
 
 ## Source snapshot
 
+후속 [TASK-021B](./TASK-021B.md)에서 `domeme_api` 원본/UUID 매핑을 추가했다. 해당 출처가 있는 Options의 수동 수정은 기존 원본을 보존한다. 아래 manual 교체 설명은 수동 입력만 있는 기존 데이터의 계약이며 계속 지원한다.
+
 수동 저장: `{ inputMethod: "manual", schemaVersion: 1, groups: [...] }`에 해당 제출의 bounded 원문 draft를 저장한다. trim 전 문자열과 제외된 placeholder/빈 행도 남을 수 있다.
 confirmed groups는 사용자가 제출한 실제 선택값 subset이다. source에서 AI가 추가 옵션을 확정하지 않는다.
 다음 명시적 저장은 현재 입력 snapshot으로 교체한다. 버전 history/이전 원문 영구 이력 저장소는 아니다.

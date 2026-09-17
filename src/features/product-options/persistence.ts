@@ -2,7 +2,9 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { normalizeOptionDraft, optionSaveSchema, optionRowSchema } from "./schemas";
+import { importedOptionSourceSchema, normalizeOptionDraft, optionSaveSchema, optionRowSchema } from "./schemas";
+import { readOptionImportScope } from "./import-service";
+import { readOptionTicket } from "./import-tickets";
 import { optionProductScope, readOptionRow, toOptionView } from "./queries";
 import { OptionError } from "./errors";
 
@@ -17,7 +19,15 @@ export async function saveProductOptions(projectId: string, input: unknown) {
     const before = await readOptionRow(client, productId);
     if ((before?.version ?? 0) !== request.data.expectedVersion) throw new OptionError("conflict");
     const id = before?.id ?? randomUUID();
-    const payload = { groups: normalized.confirmed, source_snapshot: normalized.sourceSnapshot, version: request.data.expectedVersion + 1 };
+    const previousSource = importedOptionSourceSchema.safeParse(before?.source_snapshot);
+    let sourceSnapshot = previousSource.success ? previousSource.data : normalized.sourceSnapshot;
+    if (request.data.importToken) {
+      const scope = await readOptionImportScope(client, projectId, productId, request.data.expectedVersion);
+      const ticket = readOptionTicket(request.data.importToken, scope, "prepared");
+      if (!ticket.preparedSource) throw new OptionError("expired");
+      sourceSnapshot = importedOptionSourceSchema.parse(ticket.preparedSource);
+    }
+    const payload = { groups: normalized.confirmed, source_snapshot: sourceSnapshot, version: request.data.expectedVersion + 1 };
     const result = before
       ? await client.from("product_options").update(payload).eq("id", id).eq("product_id", productId).eq("version", before.version)
         .select("*").abortSignal(AbortSignal.timeout(10000)).maybeSingle()

@@ -2,6 +2,20 @@
 
 ## 현재 단계
 
+TASK-021B — 도매매 옵션 후보 표시·확인·저장 연결 완료. 브랜치 `feat/domeme-option-import`.
+공식 API 명시적 조회 → 비교/선택 → 미저장 입력 반영 → 별도 Options CAS 저장. 출처·UUID·사용자 수정/삭제 보존, ticket/URL/version 검증.
+기존514 + 신규33 = 전체547 tests와 typegen/tsc/lint/build 통과. 실제 API3회로 양성 저장/재가져오기와 제한 후보 차단 확인. 상세 [TASK-021B](./TASK-021B.md).
+dependency/migration/AI/Section 출력 연결/commit/main merge 없음.
+
+## 완료된 TASK-021A 기반
+
+TASK-021A — 공식 API 연결 및 실제 옵션 응답 확인 완료. 브랜치 `feat/domeme-option-import`, 기준 `4a7b8ad`.
+서버 전용 읽기 전용 진단과 mock 테스트를 추가했다. 지정된 상품3개를 각1회 조회하여 복수 옵션 양성 사례(67695797)와 판매 종료 조합(62191078)을 확인했다.
+UI/옵션 저장/DB mutation/dependency/migration/AI 호출 없음. 상세 결과와 후속 경계는 [TASK-021A](./TASK-021A.md).
+신규 mock 29개 포함 전체 514 tests, typegen/tsc/lint/build/diff/secret 검사 통과. Git commit/main merge 없음.
+
+## 완료된 TASK-020 기반
+
 TASK-020 — Product Options Foundation 구현·검증 완료.
 브랜치: `feat/product-options`. 독립 Options row/명시적 저장, stable UUID/version CAS, confirmed read model과 Section source mapping, Adapter 후보 boundary.
 사용자가 0005 단독 dry-run→remote push→Local/Remote 0001~0005 일치→linked 타입 재생성을 확인했다. 적용된 migration은 수정·재적용하지 않았다.

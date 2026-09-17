@@ -41,7 +41,7 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
             <li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li><Link href={`/projects/${projectId}/sections`} className="text-link">6. 상세페이지</Link></li>
           </ol>
           <ProductForm projectId={result.project.id} initialValues={result.values} revision={result.product?.updatedAt ?? ""} />
-          <OptionsManager key={result.product?.id ?? "no-product"} projectId={projectId} initialView={options?.view ?? null} initialError={options?.error} />
+          <OptionsManager key={result.product?.id ?? "no-product"} projectId={projectId} initialView={options?.view ?? null} initialError={options?.error} sourceUrl={result.values?.sourceUrl ?? null} />
         </>
       )}
     </div>

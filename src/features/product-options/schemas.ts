@@ -60,7 +60,19 @@ export function normalizeOptionDraft(input: unknown) {
 // Future Adapter candidate only: no IDs, no confirmation and no slash splitting.
 export const optionCandidateSchema = z.array(z.strictObject({ name: z.string().max(100), values: z.array(z.string().max(200)).max(MAX_GROUP_VALUES) }))
   .max(MAX_OPTION_GROUPS).refine(groups => groups.reduce((sum, group) => sum + group.values.length, 0) <= MAX_OPTION_VALUES);
+export const importedOptionSourceSchema = z.strictObject({
+  inputMethod: z.literal("domeme_api"), schemaVersion: z.literal(1), supplier: z.literal("domeme"),
+  productNo: z.string().regex(/^[1-9]\d{0,14}$/), sourceUrl: z.url().max(2048),
+  apiVersion: z.literal("4.6"), fetchedAt: z.iso.datetime(), fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  groups: optionCandidateSchema,
+  // Keep bounded tombstones as well: deleting a confirmed value must not resurrect it on import.
+  bindings: z.array(z.strictObject({ name: z.string().max(100), id: z.uuid(),
+    values: z.array(z.strictObject({ label: z.string().max(200), id: z.uuid() })).max(200),
+  })).max(20).refine(groups => groups.reduce((sum, group) => sum + group.values.length, 0) <= 200),
+});
+export type ImportedOptionSource = z.infer<typeof importedOptionSourceSchema>;
 export const optionSourceSchema = z.union([
+  importedOptionSourceSchema,
   z.strictObject({ inputMethod: z.literal("manual"), schemaVersion: z.literal(1), groups: optionDraftSchema.shape.groups }),
   z.strictObject({ inputMethod: z.literal("wholesale_url"), sourceUrl: z.url().max(2048), groups: optionCandidateSchema }),
   z.strictObject({}),
@@ -71,7 +83,8 @@ export const optionRowSchema = z.object({ id: z.uuid(), product_id: z.uuid(), gr
 export const optionViewSchema = z.strictObject({ productId: z.uuid().nullable(), id: z.uuid().nullable(),
   version: z.number().int().nonnegative(), options: optionGroupsSchema, updatedAt: z.iso.datetime({ offset: true }).nullable() });
 export type OptionView = z.infer<typeof optionViewSchema>;
-export const optionSaveSchema = z.strictObject({ productId: z.uuid(), expectedVersion: z.number().int().min(0).max(2147483646), options: optionDraftSchema });
+export const optionSaveSchema = z.strictObject({ productId: z.uuid(), expectedVersion: z.number().int().min(0).max(2147483646), options: optionDraftSchema,
+  importToken: z.string().max(128).optional() });
 export function emptyOptionView(productId: string | null): OptionView {
   return { productId, id: null, version: 0, options: { schemaVersion: 1, groups: [] }, updatedAt: null };
 }

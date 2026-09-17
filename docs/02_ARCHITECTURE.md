@@ -285,3 +285,10 @@ features/product-options가 strict schema/조회/persistence/HTTP/client/UI를 �
 Options와 Specifications는 독립적이며 option source_snapshot도 Product raw_data와 분리한다. stable UUID와 배열 순서를 보존한다.
 getConfirmedProductOptions는 Planner/Section용 server read model이며 buildOptionSectionSource는 정확한 문자열/ID의 deterministic source mapping이다.
 기존 F 기반 Section v1 content/AI/Editor를 변경하지 않는다. 실제 option 콘텐츠 연결과 stale/version 참조 확장은 후속 계약이다. [TASK-020](tasks/TASK-020.md).
+
+### TASK-021B 도매매 옵션 후보
+
+domeme-api 고정 endpoint client → product-options/import-service의 저장 Product 소속/URL/version 검증 → 후보 비교/서명 ticket → 읽기 전용 prepare → 기존 Options CAS persistence 순서다.
+조회 버튼 외에는 공급처 API를 호출하지 않는다. Import UI는 OptionsManager의 draft를 재사용한다. 제한/미지원/미확인 후보는 반영 ticket이 없다.
+import-merge는 원본명/값↔UUID 출처 매핑으로 기존 표시값/추가/삭제를 유지하며 선택한 신규 값만 append한다. 불명확한 이름 변경/재매핑은 추론하지 않는다.
+20분/50개 process-local ticket은 재시작 시 무효이며 다중 서버/외부 공개 서비스 전제가 아니다. 현재 single-user와 기존 인증 부재를 유지한다. [TASK-021B](tasks/TASK-021B.md).
