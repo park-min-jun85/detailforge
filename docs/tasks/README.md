@@ -2,6 +2,13 @@
 
 ## 현재 단계
 
+TASK-023 — 실제 도매상품 End-to-End MVP QA 완료. 브랜치 `feat/e2e-mvp-qa`.
+67695797 실제 Import/API 옵션/AI/Planner/Section/Editor/Renderer/PNG·JPG 검증. 기능 흐름은 완료했으나 긴 상세 이미지와 Hero 품질은 판매용 기준 미달이다.
+Planner provider의 confirmedOptions 인자 누락 blocker만 최소 수정했다. 전체586 tests/typegen/tsc/lint/build/diff 통과. QA DB/Storage 정리, 기존 데이터 해시 일치. 상세 문제·우선순위는 [TASK-023](./TASK-023.md).
+dependency/migration/commit/main merge 없음.
+
+## 완료된 TASK-022 기반
+
 TASK-022 — Confirmed Options → Section → Editor → Export 통합 완료. 브랜치 `feat/options-section-integration`.
 새 Plan의 별도 옵션 계약과 결정적 Section 매핑, 기존 option 명시적 비교/반영/CAS, snapshot 출력과 stale를 연결했다.
 전체585 tests(기존547+신규38)/typegen/tsc/lint/build/diff 통과. 실제 Chromium PNG/JPG 860×2865px 및 옵션 UI 수정/취소/반영/F5/불변성 검증 완료. AI·도매 API 0회, 테스트 DB/Storage 정리 완료.

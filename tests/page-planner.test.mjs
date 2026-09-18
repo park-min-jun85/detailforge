@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { confirmedSource } from '../src/features/product-options/confirmed-source.ts';
 import { buildPlannerInput } from '../src/features/page-planner/evidence.ts';
 import { pagePlanSchema, validatePagePlan, isPlanStale, plannerStateSchema, isHeroCandidate } from '../src/features/page-planner/schemas.ts';
 import { buildPlannerMessages, PLANNER_POLICY } from '../src/features/page-planner/prompts.ts';
@@ -168,6 +170,24 @@ test('provider uses strict text-only output, no retries/store; malformed/refused
     await assert.rejects(bad.plan(input,new AbortController().signal),e=>['invalid_response','provider'].includes(e.code)&&!/PRIVATE|secret body/.test(e.message));
   }
 }));
+test('provider validates confirmed option sections separately from Fact evidence',()=>fixture(async state=>{
+  const input=buildPlannerInput(context(state)).input;
+  input.confirmedOptions=confirmedSource({id:randomUUID(),productId:state.product.id,version:1,
+    options:{schemaVersion:1,groups:[{id:randomUUID(),name:'옵션',values:[{id:randomUUID(),label:'아이보리 90'}]}]}});
+  const output=planResult(input);
+  output.sections[2]={key:'options',type:'option',purpose:'확정 옵션 표시',contentBrief:'서버의 확정 선택값을 표시한다.',evidenceIds:[],assetIds:[],priority:'supporting'};
+  const provider=createPlannerProvider({apiKey:'test-key',model:'mock'},async()=>Response.json(responseBody(output)));
+  const result=await provider.plan(input,new AbortController().signal);
+  assert.deepEqual(result.sections[2],output.sections[2]);
+  for(const invalid of [
+    {...output,sections:output.sections.map(s=>s.type==='option'?{...s,type:'detail'}:s)},
+    {...output,sections:output.sections.map(s=>s.type==='option'?{...s,evidenceIds:[input.evidence[0].id]}:s)},
+  ]) {
+    const bad=createPlannerProvider({apiKey:'test-key',model:'mock'},async()=>Response.json(responseBody(invalid)));
+    await assert.rejects(bad.plan(input,new AbortController().signal),e=>e.code==='invalid_response');
+  }
+}));
+
 test('model default/override and required secret config',()=>{
   const key=process.env.OPENAI_API_KEY,model=process.env.OPENAI_PLANNER_MODEL;
   try{process.env.OPENAI_API_KEY='test-key';delete process.env.OPENAI_PLANNER_MODEL;assert.equal(getPlannerConfig().model,'gpt-5.6-terra');process.env.OPENAI_PLANNER_MODEL='override';assert.equal(getPlannerConfig().model,'override');delete process.env.OPENAI_API_KEY;assert.throws(()=>getPlannerConfig(),e=>e.code==='not_configured');}

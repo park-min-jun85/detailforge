@@ -14,7 +14,7 @@ export function createPlannerProvider(config: { apiKey: string; model: string },
       const response = await client.responses.parse({ model: config.model, input: buildPlannerMessages(input), store: false,
         max_output_tokens: 10000, text: { format: zodTextFormat(pagePlanSchema, "detail_page_plan") } }, { signal });
       if (response.status !== "completed" || !response.output_parsed) throw new PlannerError("invalid_response");
-      try { return validatePagePlan(response.output_parsed, input.evidence, input.assets); } catch { throw new PlannerError("invalid_response"); }
+      try { return validatePagePlan(response.output_parsed, input.evidence, input.assets, input.confirmedOptions); } catch { throw new PlannerError("invalid_response"); }
     } catch (error) {
       if (error instanceof PlannerError) throw error;
       if (signal.aborted || error instanceof OpenAI.APIConnectionTimeoutError) throw new PlannerError("timeout");
