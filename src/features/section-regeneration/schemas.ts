@@ -1,8 +1,11 @@
 import { z } from "zod";
-import { sectionContentSchema, sectionStyleSchema, storedContentSchema } from "@/features/section-engine/schemas";
+import { aiSectionContentSchema, sectionContentSchema, sectionStyleSchema, storedContentSchema } from "@/features/section-engine/schemas";
 import type { SectionType } from "@/types/domain";
 const timestamp = z.iso.datetime({ offset: true }), fingerprint = z.string().regex(/^[a-f0-9]{64}$/);
 export const regenerateRequestSchema = z.strictObject({ revision: timestamp });
+export function regenerationProviderSchema(type: SectionType) {
+  return z.strictObject({ schemaVersion: z.literal(1), content: aiSectionContentSchema.options.find(schema => schema.shape.type.value === type)! });
+}
 export function regenerationOutputSchema(type: SectionType) {
   const content = sectionContentSchema.options.find(schema => schema.shape.type.value === type)!;
   return z.strictObject({ schemaVersion: z.literal(1), content });

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { fetchAssets } from "@/features/assets/client";
 import { draftOf, isDirty, previewContent, type EditDraft, type EditorSection } from "../schemas";
@@ -10,16 +10,19 @@ import { moveSection, orderIsDirty, needsDraftGuard } from "@/features/section-r
 import { sameIds } from "@/features/section-reorder/schemas";
 import { SectionNavigator } from "./section-navigator";
 import type { EditorView } from "../types";
+import { OptionInspector } from "./option-inspector";
 import { Inspector } from "./inspector";
 import { SectionPreview } from "../preview/section-preview";
 import styles from "./editor.module.css";
 import { requestCandidate, requestApplyCandidate } from "@/features/section-regeneration/client";
 import { MANUAL_REGEN_WARNING, type SignedCandidate } from "@/features/section-regeneration/schemas";
 import { CandidateComparison } from "@/features/section-regeneration/components/candidate-comparison";
-type Pending = { sectionId: string } | { href: string } | { move: { from: string; to: string } } | { saveOrder: true } | { refresh: true };
+type Pending = { sectionId: string } | { href: string } | { move: { from: string; to: string } } | { saveOrder: true } | { refresh: true } | { options: true };
 
 export function DetailEditor({ initialView }: { initialView: EditorView }) {
+  const [optionOpen, setOptionOpen] = useState(0);
   const [view, setView] = useState(initialView);
+  const onPlanStale = useCallback((stale: boolean) => setView(previous => previous.stale === stale ? previous : { ...previous, stale }), []);
   const [sections, setSections] = useState(initialView.sections);
   const [orderDraft, setOrderDraft] = useState(initialView.sections.map(section => section.id));
   const orderDirty = orderIsDirty(sections.map(section => section.id), orderDraft);
@@ -85,12 +88,13 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
   }
   function proceed(target: Pending, discard = false) {
     setPending(null); setError("");
+    if ("options" in target) { if (discard) { if (selected) setDraft(draftOf(selected)); setOrderDraft(sections.map(row => row.id)); } setOptionOpen(value => value + 1); return; }
     if ("href" in target) { guard.current = false; window.location.assign(target.href); return; }
     if ("refresh" in target) { void refresh(); return; }
     if ("move" in target) { if (discard && selected) setDraft(draftOf(selected)); setOrderDraft(current => moveSection(current, target.move.from, target.move.to)); setMessage("섹션 순서가 변경되었습니다."); return; }
     if ("saveOrder" in target) { if (discard && selected) setDraft(draftOf(selected)); return; }
     const section = sections.find(item => item.id === target.sectionId);
-    if (section) { setSelectedId(section.id); setDraft(draftOf(section)); setMessage(""); }
+    if (section) { setOptionOpen(0); setSelectedId(section.id); setDraft(draftOf(section)); setMessage(""); }
   }
   function ask(target: Pending) { returnFocus.current = document.activeElement as HTMLElement | null; setPending(target); }
   function move(from: string, to: string) {
@@ -112,7 +116,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
         current = sections.map(section => section.id === result.section.id ? result.section : section);
         setSections(current); setDraft(draftOf(result.section)); setMessage("저장되었습니다.");
       }
-      if (orderDirty && next && ("saveOrder" in next || "href" in next || "refresh" in next) && view.detailPageId) {
+      if (orderDirty && next && ("saveOrder" in next || "href" in next || "refresh" in next || "options" in next) && view.detailPageId) {
         const result = await requestReorder(view.projectId, { detailPageId: view.detailPageId, orderedSectionIds: orderDraft, expectedSections: current.map(row => ({ id: row.id, updatedAt: row.updated_at })) });
         if (!result.ok) {
           if (result.sections && sameIds(result.sections.map(row => row.id), orderDraft)) canonicalRows(result.sections);
@@ -168,6 +172,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
         <button type="button" className="button-primary" disabled={!orderDirty || busy || view.blocked} onClick={() => dirty ? ask({ saveOrder: true }) : save({ saveOrder: true })}>순서 저장</button>
         <button type="button" className="button-secondary" disabled={!orderDirty || busy} onClick={() => { setOrderDraft(sections.map(section => section.id)); setMessage("마지막 저장 순서로 되돌렸습니다."); }}>순서 되돌리기</button></div>}
       <p className="text-xs text-zinc-500">미리보기 860px · 명시적 저장 · AI 재생성은 버튼 실행 시에만 호출</p>
+      {!sections.some(section => section.type === "option") && <p role="status" className="text-sm text-zinc-600">현재 상세페이지에 옵션 섹션이 없습니다. 페이지 설계와 상세페이지 생성에서 옵션을 포함해 주세요. <Link className="text-link" href={`/projects/${view.projectId}/planner`}>페이지 설계</Link></p>}
       {view.stale && <p role="status" className="rounded bg-amber-50 p-3 text-sm leading-6 text-amber-900">페이지 설계가 변경되었습니다. 현재 상세페이지는 이전 설계를 기준으로 생성되었습니다.</p>}
       {view.blocked && <p role="status" className="text-sm text-amber-900">저장·생성·복구 상태를 확인해야 합니다. 최신 섹션을 다시 불러온 뒤 순서 복구 또는 상세페이지 생성 화면의 복구를 진행해 주세요.</p>}
       {view.reorderRecovery && <button type="button" className="button-secondary" disabled={busy} onClick={recover}>이전 순서 복구</button>}
@@ -200,7 +205,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
           </div></div></div>
         </section>
         <aside className={styles.inspector} aria-label="Property Inspector"><h2 className={styles.panelTitle}>속성 <span className="font-normal text-zinc-500">{selected && SECTION_LABELS[selected.type]}</span></h2>
-          {selected && draft && <div className="p-4"><Inspector section={selected} draft={draft} assets={assets} disabled={busy || !!candidate || view.blocked} onChange={next => { setDraft(next); setMessage(""); }} /></div>}
+          {selected && draft && <div className="p-4">{selected.type === "option" && <OptionInspector key={selected.id} projectId={view.projectId} section={selected} disabled={busy || !!candidate || view.blocked} onPlanStale={onPlanStale} hasUnsaved={dirty || orderDirty} openRequest={optionOpen} onOpen={() => needsDraftGuard(dirty, orderDirty, "leave") ? ask({ options: true }) : proceed({ options: true })} onBusy={value => { saving.current = value; setBusy(value); }} onSaved={(row, text) => { setOptionOpen(0); canonicalRows(sections.map(section => section.id === row.id ? row : section)); setMessage(text); }} />}<Inspector section={selected} draft={draft} assets={assets} disabled={busy || !!candidate || view.blocked} onChange={next => { setDraft(next); setMessage(""); }} /></div>}
         </aside>
       </div>
     </>}

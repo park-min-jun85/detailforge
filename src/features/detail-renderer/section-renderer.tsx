@@ -5,6 +5,7 @@ import { SectionCopy } from "./section-copy";
 import { RenderImage } from "./render-image";
 import styles from "./renderer.module.css";
 export function SectionRenderer({ content, style, assets }: { content: GeneratedSection; style: z.infer<typeof sectionStyleSchema>; assets: RenderAsset[] }) {
+  if (content.type === "option" && !(content.optionSnapshot ? content.optionSnapshot.confirmed.groups.length : content.items?.length)) return null;
   const nested = content.type === "useCase" ? content.items.flatMap(item => item.assetIds) : [];
   const ids = [...new Set(content.assetIds)].filter(id => !nested.includes(id));
   const hasCopy = content.type !== "gallery" || !!content.title || !!content.intro;

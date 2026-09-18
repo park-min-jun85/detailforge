@@ -2,6 +2,7 @@ import type { AssetPreview } from "@/features/assets/types";
 import { AssetThumbnail } from "@/features/page-planner/components/plan-result";
 import { storedContentSchema, sectionStyleSchema, type SectionRow, type GeneratedSection } from "../schemas";
 function Copy({ content }: { content: GeneratedSection }) {
+  if (content.type === "option" && content.optionSnapshot) return <div className="space-y-4"><h3>{content.title}</h3>{content.optionSnapshot.confirmed.groups.map(group => <div key={group.id}><h4>{group.name}</h4><ul>{group.values.map(value => <li key={value.id}>{value.label}</li>)}</ul></div>)}</div>;
   const points = content.type === "hero" ? content.highlights : content.type === "feature" ? content.bullets : content.type === "detail" ? content.points : content.type === "notice" ? content.items : [];
   return <div className="space-y-4 break-words text-sm leading-7 text-zinc-700">
     {content.type === "hero" ? <><p className="text-xl font-semibold text-zinc-900">{content.headline}</p>{content.subheadline && <p>{content.subheadline}</p>}</> : content.title && <p className="text-lg font-semibold text-zinc-900">{content.title}</p>}
@@ -10,8 +11,8 @@ function Copy({ content }: { content: GeneratedSection }) {
     {!!points.length && <ul className="list-disc space-y-2 pl-5">{points.map((point, index) => <li key={index}>{point.text}<span className="ml-2 text-xs text-zinc-500">{point.evidenceIds.join(", ")}</span></li>)}</ul>}
     {(content.type === "keyBenefits" || content.type === "useCase") && <ul className="space-y-4">{content.items.map((item, index) => <li key={index} className="rounded border border-zinc-200 p-4">
       <p className="font-semibold">{item.title}</p><p>{item.description}</p><p className="text-xs text-zinc-500">{item.evidenceIds.join(", ")}{"confidence" in item ? ` · 가설 신뢰도 ${Math.round(Number(item.confidence) * 100)}% · 사실 확정 아님` : ""}</p></li>)}</ul>}
-    {(content.type === "specification" || content.type === "option") && <dl className="divide-y divide-zinc-200">{(content.type === "specification" ? content.rows : content.items).map((row, index) => <div key={index} className="grid gap-1 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"><dt className="font-medium">{row.label}</dt><dd>{row.value}<span className="ml-2 text-xs text-zinc-500">{row.evidenceIds.join(", ")}</span></dd></div>)}</dl>}
-    {content.type === "option" && !content.items.length && <p className="text-amber-800">지원되는 옵션 근거가 없어 항목을 생성하지 않았습니다.</p>}
+    {(content.type === "specification" || content.type === "option") && <dl className="divide-y divide-zinc-200">{(content.type === "specification" ? content.rows : content.items ?? []).map((row, index) => <div key={index} className="grid gap-1 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"><dt className="font-medium">{row.label}</dt><dd>{row.value}<span className="ml-2 text-xs text-zinc-500">{row.evidenceIds.join(", ")}</span></dd></div>)}</dl>}
+    {content.type === "option" && !content.optionSnapshot && !content.items?.length && <p className="text-amber-800">지원되는 옵션 근거가 없어 항목을 생성하지 않았습니다.</p>}
   </div>;
 }
 export function SectionPreview({ rows, previews }: { rows: SectionRow[]; previews: AssetPreview[] }) {

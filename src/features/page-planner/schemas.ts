@@ -1,3 +1,4 @@
+import { confirmedOptionsSchema, type ConfirmedOptions } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
 import { SECTION_TYPES, DETAIL_PAGE_STATUSES } from "@/types/domain";
 import { analysisResultSchema, type AnalysisResult } from "@/features/asset-analysis/schemas";
@@ -33,8 +34,9 @@ export function isHeroCandidate(analysis: AnalysisResult | null): boolean {
     && analysis.composition.productVisibility >= 0.5 && analysis.composition.subjectClarity >= 0.5
     && analysis.composition.textDensity !== "high" && !analysis.warnings.some((warning) => ["blurry", "cropped", "low_visibility", "heavy_text", "ambiguous_subject"].includes(warning)));
 }
-export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], assets: PlannerAsset[]): PagePlan {
+export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], assets: PlannerAsset[], options?: ConfirmedOptions): PagePlan {
   const plan = pagePlanSchema.parse(value);
+  if (options && plan.sections.filter(section => section.type === "option").length !== (options.state === "present" ? 1 : 0)) throw new Error("Confirmed option section count");
   const registry = new Map(evidence.map((item) => [item.id, item]));
   const available = new Map(assets.filter((asset) => asset.analysis).map((asset) => [asset.assetId, asset]));
   if (registry.size !== evidence.length || new Set(assets.map((asset) => asset.assetId)).size !== assets.length) throw new Error("Duplicate input IDs");
@@ -49,7 +51,8 @@ export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], as
     if (new Set(section.evidenceIds).size !== section.evidenceIds.length || section.evidenceIds.some((id) => !registry.has(id))) throw new Error("Invalid evidence ID");
     if (section.assetIds.some((id) => !available.has(id))) throw new Error("Invalid asset ID");
     // Visual evidence cannot stand in for factual benefits/specifications/options/use cases.
-    if (["keyBenefits", "feature", "useCase", "specification", "option"].includes(section.type)
+    if (options && section.type === "option" && (section.evidenceIds.length || section.assetIds.length)) throw new Error("Options are separate from Facts and visual evidence");
+    if (!(options && section.type === "option") && ["keyBenefits", "feature", "useCase", "specification", "option"].includes(section.type)
       && !section.evidenceIds.some((id) => registry.get(id)?.kind === "supported_fact")) throw new Error("Supported fact required");
     if (section.evidenceIds.some((id) => { const item = registry.get(id); return item?.kind === "visual_observation" && !section.assetIds.includes(item.assetId); })) throw new Error("Visual evidence asset mismatch");
     if (section.assetIds.some((id) => !section.evidenceIds.some((ref) => { const item = registry.get(ref); return item?.kind === "visual_observation" && item.assetId === id; }))) throw new Error("Missing visual evidence");
@@ -68,10 +71,10 @@ export type PlannerErrorCode = (typeof PLANNER_ERROR_CODES)[number];
 export const latestPlanSchema = z.strictObject({ provider: z.literal("openai"), model: text(200), plannedAt: z.iso.datetime({ offset: true }),
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/), evidenceSnapshot: z.array(plannerEvidenceSchema).max(83),
   factPolicySnapshot: plannerFactPolicySchema, assetSnapshot: z.array(plannerAssetSchema).max(30),
-  strategySnapshot: productAnalysisSchema.nullable(), plan: pagePlanSchema,
+  strategySnapshot: productAnalysisSchema.nullable(), optionsSnapshot: confirmedOptionsSchema.optional(), plan: pagePlanSchema,
 }).superRefine((result, ctx) => {
   try {
-    validatePagePlan(result.plan, result.evidenceSnapshot, result.assetSnapshot);
+    validatePagePlan(result.plan, result.evidenceSnapshot, result.assetSnapshot, result.optionsSnapshot);
     const policy = result.factPolicySnapshot;
     if (policy.supported.some((fact) => fact.status !== "supported") || policy.restricted.some((fact) => fact.status === "supported")) throw new Error("Invalid policy");
     if (new Set([...policy.supported, ...policy.restricted].map((fact) => fact.factId)).size !== policy.supported.length + policy.restricted.length) throw new Error("Duplicate policy facts");

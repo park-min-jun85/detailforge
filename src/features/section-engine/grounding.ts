@@ -1,4 +1,5 @@
 import "server-only";
+import { confirmedOptionsFingerprint } from "@/features/product-options/confirmed-source";
 import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { validatePagePlan, type LatestPlan } from "@/features/page-planner/schemas";
 import { sectionOutputSchema, sectionContentSchema, type SectionOutput } from "./schemas";
@@ -6,8 +7,8 @@ import type { SectionInput } from "./types";
 
 export function sourcePlanFingerprint(result: LatestPlan) { return validationFingerprint(result); }
 export function buildSectionInput(latest: LatestPlan): SectionInput {
-  validatePagePlan(latest.plan, latest.evidenceSnapshot, latest.assetSnapshot);
-  return { plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
+  validatePagePlan(latest.plan, latest.evidenceSnapshot, latest.assetSnapshot, latest.optionsSnapshot);
+  return { optionsSnapshot: latest.optionsSnapshot, plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
     validation: { supported: latest.factPolicySnapshot.supported.map(fact => fact.factId),
       restricted: latest.factPolicySnapshot.restricted.map(({ factId, status }) => ({ factId, status })) } };
 }
@@ -60,12 +61,21 @@ export function validateSectionContent(value: unknown, latest: LatestPlan, plan:
         if (typeof item === "string") checkText(item, ids); else walk(item, ids);
       }
     };
+    if (section.type === "option" && section.optionSnapshot) {
+      if (confirmedOptionsFingerprint(section.optionSnapshot.confirmed) !== section.optionSnapshot.confirmed.fingerprint) throw new Error("Invalid options fingerprint");
+      checkText(section.title, section.evidenceIds);
+      return section;
+    }
     walk(section, section.evidenceIds);
+    if (section.type === "option" && latest.optionsSnapshot) {
+      if (latest.optionsSnapshot.state !== "present" || section.items?.length || section.evidenceIds.length) throw new Error("AI cannot author confirmed choices");
+      return section;
+    }
     const claims = section.type === "hero" ? section.highlights : section.type === "feature" ? section.bullets : section.type === "keyBenefits" ? section.items : [];
     if (claims.some(item => !item.evidenceIds.some(id => registry.get(id)?.kind === "supported_fact"))) throw new Error("Claim item requires supported fact");
     if (["keyBenefits", "feature", "specification", "option"].includes(section.type) && !section.evidenceIds.some(id => registry.get(id)?.kind === "supported_fact")) throw new Error("Supported facts required");
     if (section.type === "specification" || section.type === "option") {
-      const rows = section.type === "specification" ? section.rows : section.items;
+      const rows = section.type === "specification" ? section.rows : section.items ?? [];
       const seen = new Set<string>();
       for (const row of rows) {
         if (row.evidenceIds.length !== 1) throw new Error("Exact specification source required");

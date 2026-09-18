@@ -1,4 +1,5 @@
 export const OPTION_ERRORS = {
+  invalid_schema: { status: 503, message: "저장된 옵션 형식을 확인할 수 없습니다." },
   source_url: { status: 400, message: "상품정보에 저장된 도매매 원본 URL을 확인해 주세요. https://domeme.domeggook.com/s/상품번호 형식을 지원합니다." },
   expired: { status: 409, message: "후보가 만료되었거나 더 이상 유효하지 않습니다. 입력은 유지됩니다. 다시 조회하거나 출처 확인 없이 수동 저장을 선택해 주세요." },
   source_changed: { status: 409, message: "저장된 원본 URL이 변경되었습니다. 입력은 유지됩니다. 새 원본으로 다시 조회해 주세요." },

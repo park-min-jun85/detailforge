@@ -10,7 +10,7 @@ const options = {
 const labels = { layout: "레이아웃", textAlign: "텍스트 정렬", density: "여백", background: "배경", emphasis: "제목 강조", imageFit: "이미지 맞춤" };
 export function Inspector({ section, draft, assets, disabled, onChange }: { section: EditorSection; draft: EditDraft; assets: EditorAsset[]; disabled: boolean; onChange: (draft: EditDraft) => void }) {
   const content = section.content;
-  const rows = content.type === "specification" ? content.rows : content.type === "option" ? content.items : [];
+  const rows = content.type === "specification" ? content.rows : content.type === "option" ? content.items ?? [] : [];
   const manuallyChanged = textFields(content).some(field => draft.fields[field.path] !== field.value) || content.meta.groundingStatus === "needs_review";
   return <div className="space-y-6">
     {manuallyChanged && <p role="status" className="rounded bg-amber-50 p-3 text-sm leading-6 text-amber-900">직접 수정한 문구입니다. 사실 표현을 한 번 확인해 주세요.</p>}
@@ -21,7 +21,7 @@ export function Inspector({ section, draft, assets, disabled, onChange }: { sect
         <span className="mt-1 block text-right text-xs font-normal text-zinc-500">{draft.fields[field.path]?.length ?? 0} / {field.max}</span>
       </label>)}
     </fieldset>
-    {(content.type === "specification" || content.type === "option") && <section className="space-y-3 text-sm"><h3 className="font-semibold">사실값 · 읽기 전용</h3>
+    {(content.type === "specification" || (content.type === "option" && !content.optionSnapshot)) && <section className="space-y-3 text-sm"><h3 className="font-semibold">사실값 · 읽기 전용</h3>
       <p className="text-xs leading-5 text-zinc-500">원본 Fact에서 가져온 값입니다. 입력 근거의 일관성을 뜻하며 외부 진위 증명은 아닙니다.</p>
       <dl>{rows.map((row, i) => <div key={i} className="border-b border-zinc-200 py-3"><dt className="font-medium">{row.label}</dt><dd className="mt-1 break-words text-zinc-600">{row.value}</dd></div>)}</dl>
       {!rows.length && <p className="text-zinc-500">등록된 사실값이 없습니다.</p>}</section>}

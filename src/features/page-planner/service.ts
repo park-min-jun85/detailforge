@@ -1,4 +1,5 @@
 import "server-only";
+import { getConfirmedProductOptions } from "@/features/product-options/queries";
 import { hasEditLease } from "@/features/section-engine/edit-lease";
 import { readReorder } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
@@ -55,9 +56,10 @@ async function loadContext(client: Client, projectId: string) {
   const facts = productFactsRowSchema.parse(factsResult.data);
   if (facts.product_id !== product.id) throw new PlannerError("ownership");
   const assets = assetsResult.data.map((row) => assetRowSchema.parse(row));
+  const confirmed = await getConfirmedProductOptions(projectId, product.id);
   let current: PlannerContextInput | null = null;
   try { current = buildPlannerInput({ projectId, productId: product.id, facts: facts.facts, sourceSnapshot: facts.source_snapshot,
-    validation: facts.validation, productAnalysis: product.ai_analysis, description: product.description, assets }); }
+    validation: facts.validation, productAnalysis: product.ai_analysis, description: product.description, assets, confirmedOptions: confirmed.snapshot }); }
   catch (error) { if (!(error instanceof PlannerError) || error.code !== "invalid_input") throw error; }
   return { project, product, facts, page, current, state: page ? readState(page.plan) : null };
 }
@@ -66,8 +68,8 @@ function view(context: Awaited<ReturnType<typeof loadContext>>): PlannerView {
   const prerequisite = !current ? "invalid_input" : current.validationStatus !== "ready" ? "validation_required"
     : !current.factPolicy.supported.length && !current.input.assets.length ? "content_required" : "ready";
   return { projectId: context.project.id, projectName: context.project.name, productName: context.product.name,
-    detailPageId: context.page?.id ?? null, state, prerequisite, inputFingerprint: current?.inputFingerprint ?? null,
-    stale: isPlanStale(state, current?.inputFingerprint ?? null), validationStatus: current?.validationStatus ?? "invalid",
+    detailPageId: context.page?.id ?? null, state, prerequisite, optionsVersion: current?.input.confirmedOptions?.version, inputFingerprint: current?.inputFingerprint ?? null,
+    stale: Boolean(state?.latestResult && !state.latestResult.optionsSnapshot) || isPlanStale(state, current?.inputFingerprint ?? null), validationStatus: current?.validationStatus ?? "invalid",
     productAnalysisStatus: current?.productAnalysisStatus ?? "invalid", factPolicy: current?.factPolicy ?? { supported: [], restricted: [] },
     assets: current?.assetSnapshot ?? [], coverage: current?.coverage ?? { total: 0, completed: 0, invalid: 0 } };
 }
@@ -141,7 +143,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
     try {
       const output = await invoke(provider, context.current.input);
       let plan;
-      try { plan = validatePagePlan(output, context.current.input.evidence, context.current.input.assets); }
+      try { plan = validatePagePlan(output, context.current.input.evidence, context.current.input.assets, context.current.input.confirmedOptions); }
       catch { throw new PlannerError("invalid_response"); }
       plan.warnings = [...new Set([...plan.warnings, ...context.current.input.warnings.filter((warning): warning is typeof PLANNER_WARNINGS[number] => PLANNER_WARNINGS.includes(warning as typeof PLANNER_WARNINGS[number]))])];
       const latest = await loadContext(client, project);
@@ -150,7 +152,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
       await finish(client, project, page.id, { schemaVersion: 1, attempt: { ...state.attempt, status: "completed", finishedAt, errorCode: null },
         latestResult: { provider: "openai", model: provider.model, plannedAt: finishedAt, inputFingerprint: context.current.inputFingerprint,
           evidenceSnapshot: context.current.input.evidence, factPolicySnapshot: context.current.factPolicy, assetSnapshot: context.current.assetSnapshot,
-          strategySnapshot: context.current.input.strategy, plan } });
+          strategySnapshot: context.current.input.strategy, optionsSnapshot: context.current.input.confirmedOptions, plan } });
     } catch (error) {
       const failure = safe(error);
       // A failed final save may be uncertain; finish rechecks the run rather than erasing a completed result.

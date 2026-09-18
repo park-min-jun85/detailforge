@@ -2,6 +2,13 @@
 
 ## 현재 단계
 
+TASK-022 — Confirmed Options → Section → Editor → Export 통합 완료. 브랜치 `feat/options-section-integration`.
+새 Plan의 별도 옵션 계약과 결정적 Section 매핑, 기존 option 명시적 비교/반영/CAS, snapshot 출력과 stale를 연결했다.
+전체585 tests(기존547+신규38)/typegen/tsc/lint/build/diff 통과. 실제 Chromium PNG/JPG 860×2865px 및 옵션 UI 수정/취소/반영/F5/불변성 검증 완료. AI·도매 API 0회, 테스트 DB/Storage 정리 완료.
+dependency/migration/commit/main merge 없음. 상세 [TASK-022](./TASK-022.md).
+
+## 완료된 TASK-021B 기반
+
 TASK-021B — 도매매 옵션 후보 표시·확인·저장 연결 완료. 브랜치 `feat/domeme-option-import`.
 공식 API 명시적 조회 → 비교/선택 → 미저장 입력 반영 → 별도 Options CAS 저장. 출처·UUID·사용자 수정/삭제 보존, ticket/URL/version 검증.
 기존514 + 신규33 = 전체547 tests와 typegen/tsc/lint/build 통과. 실제 API3회로 양성 저장/재가져오기와 제한 후보 차단 확인. 상세 [TASK-021B](./TASK-021B.md).

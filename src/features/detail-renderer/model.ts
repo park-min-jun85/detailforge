@@ -7,7 +7,7 @@ export type RenderView = {
   projectId: string; projectName: string; productName: string | null; detailPageId: string | null; width: number | null;
   state: "ready" | "product_missing" | "page_missing" | "empty" | "busy";
   sections: RenderSection[]; assets: RenderAsset[];
-  readiness: { sectionCount: number; needsReviewCount: number; missingImageCount: number; stalePlan: boolean; validation: "ready" | "missing" | "stale" | "invalid" | "unknown"; unavailable: boolean };
+  readiness: { optionWarnings?: string[]; sectionCount: number; needsReviewCount: number; missingImageCount: number; stalePlan: boolean; validation: "ready" | "missing" | "stale" | "invalid" | "unknown"; unavailable: boolean };
 };
 export function referencedAssetIds(sections: { content: GeneratedSection }[]) {
   return [...new Set(sections.flatMap(({ content }) => [...content.assetIds, ...(content.type === "useCase" ? content.items.flatMap(item => item.assetIds) : [])]))];

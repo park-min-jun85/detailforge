@@ -1,4 +1,6 @@
 import "server-only";
+import { readOptionFreshness } from "@/features/detail-editor/option-application";
+import { optionFreshness, OPTION_FRESHNESS_LABELS } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -31,6 +33,11 @@ export async function getRenderView(projectId: string): Promise<RenderView> {
     if (hasEditLease(page) || generation?.backup || generation?.status === "generating" || reorder) return { ...view, state: "busy" };
     const rows = await readRows(client, page.id), mapped = mapCanonicalSections(rows, page.id);
     view.sections = mapped.sections; view.readiness.sectionCount = rows.length; view.readiness.needsReviewCount = mapped.needsReviewCount;
+    const optionSections = view.sections.filter(section => section.content.type === "option");
+    if (optionSections.length) {
+      const source = await readOptionFreshness(projectId, scope.product.id);
+      view.readiness.optionWarnings = [...new Set(optionSections.map(section => source.current ? optionFreshness(section.content.type === "option" ? section.content.optionSnapshot : undefined, source.current) : source.failure!).filter(status => status !== "current").map(status => OPTION_FRESHNESS_LABELS[status]))];
+    }
     const ids = referencedAssetIds(view.sections);
     if (ids.length) {
       const previews = await listAssets(projectId, ids).catch(() => null);

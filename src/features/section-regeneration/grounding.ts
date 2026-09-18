@@ -14,7 +14,12 @@ export function validateRegeneration(value: unknown, context: RegenerationContex
   if (content.type === "useCase" && current.type === "useCase" && current.items.some(item => item.assetIds.length)
     && !isDeepStrictEqual(content.items.map(item => item.assetIds), current.items.map(item => item.assetIds))) throw new RegenError("invalid_evidence");
   if (content.type === "specification" && current.type === "specification" && !isDeepStrictEqual(content.rows, current.rows)) throw new RegenError("invalid_evidence");
-  if (content.type === "option" && current.type === "option" && !isDeepStrictEqual(content.items, current.items)) throw new RegenError("invalid_evidence");
+  if (content.type === "option" && current.type === "option") {
+    if (current.optionSnapshot) {
+      if (content.items?.length || (content.optionSnapshot && !isDeepStrictEqual(content.optionSnapshot, current.optionSnapshot))) throw new RegenError("invalid_evidence");
+      delete content.items; content.optionSnapshot = structuredClone(current.optionSnapshot);
+    } else if (content.optionSnapshot || !isDeepStrictEqual(content.items, current.items)) throw new RegenError("invalid_evidence");
+  }
   try { return validateSectionContent(content, context.latest, context.target, current.assetIds); }
   catch { throw new RegenError("invalid_evidence"); }
 }

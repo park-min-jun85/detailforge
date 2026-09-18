@@ -7,6 +7,7 @@ import { AssetError, assetRowSchema, assertAssetScope } from "@/features/assets/
 import { readPage, readRows, readGeneration } from "@/features/section-engine/persistence";
 import { claimEditLease, releaseEditLease, hasEditLease } from "@/features/section-engine/edit-lease";
 import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
+import { getPlannerView } from "@/features/page-planner/service";
 import { latestPlanSchema } from "@/features/page-planner/schemas";
 import { sourcePlanFingerprint } from "@/features/section-engine/grounding";
 import { sectionsAreStale } from "@/features/section-engine/schemas";
@@ -22,7 +23,7 @@ function safe(error: unknown): EditorError {
   if (error instanceof SectionEngineError && ["busy", "conflict", "ownership"].includes(error.code)) return new EditorError(error.code as "busy" | "conflict" | "ownership");
   return new EditorError("unexpected");
 }
-async function context(projectId: string) {
+export async function editorContext(projectId: string) {
   if (!z.uuid().safeParse(projectId).success) throw new EditorError("not_found");
   const client = createSupabaseServerClient();
   const scope = await getAssetContext(projectId, client);
@@ -46,15 +47,16 @@ async function context(projectId: string) {
 }
 export async function getEditorView(projectId: string): Promise<EditorView> {
   try {
-    const ctx = await context(projectId), reorder = ctx.page ? readReorder(ctx.page.settings) : null;
+    const ctx = await editorContext(projectId), reorder = ctx.page ? readReorder(ctx.page.settings) : null;
     if (reorder && reorder.detailPageId !== ctx.page?.id) throw new EditorError("not_found");
     const visible = ctx.generation?.backup ?? visibleOrderRows(ctx.rows, reorder);
     const sections = visible.map(row => editorSectionSchema.parse(row));
     const plan = latestPlanSchema.safeParse(ctx.page?.plan.latestResult);
+    const planner = await getPlannerView(projectId).catch(() => null);
     let previewWarning = false;
     const previews = ctx.scope.product ? await listAssets(projectId).catch(() => { previewWarning = true; return null; }) : null;
     return { projectId, projectName: ctx.scope.project.name, productName: ctx.scope.product?.name ?? "상품정보 없음", detailPageId: ctx.page?.id ?? null, sections,
-      stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success),
+      stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !planner || planner.stale,
       blocked: !!reorder || !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
       reorderRecovery: !!reorder && !!ctx.page && !hasEditLease(ctx.page), manualOrder: !!ctx.page && hasManualOrder(ctx.page.settings, ctx.rows),
       assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
@@ -63,7 +65,7 @@ export async function getEditorView(projectId: string): Promise<EditorView> {
 export async function saveSection(projectId: string, sectionId: string, input: unknown) {
   try {
     if (!z.uuid().safeParse(sectionId).success) throw new EditorError("not_found");
-    const request = editRequestSchema.parse(input), ctx = await context(projectId);
+    const request = editRequestSchema.parse(input), ctx = await editorContext(projectId);
     const existing = ctx.rows.find(row => row.id === sectionId);
     if (!ctx.page || !ctx.scope.product || !existing || existing.detail_page_id !== ctx.page.id) throw new EditorError("not_found");
     const section = editorSectionSchema.parse(existing);

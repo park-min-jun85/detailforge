@@ -25,7 +25,7 @@ async function seeded(fn){return fixture(async s=>{await generateSections(projec
 });}
 
 for(const type of ['hero','keyBenefits','feature','imageText','gallery','useCase','detail','specification','option','notice']){
- test('shared renderer supports '+type,()=>{const c=copy(type);const final=render(c);assert.match(final,new RegExp('data-section-type="'+type+'"'));assert.doesNotMatch(final,/선택|Property Inspector|수정|AI 후보/);assert.equal(html(SectionPreview,{section:{content:c,style:defaultSectionStyle(type)},assets:[]}),final);});
+ test('shared renderer supports '+type,()=>{const c=copy(type);const final=render(c);if(type==='option')assert.equal(final,'');else assert.match(final,new RegExp('data-section-type="'+type+'"'));assert.doesNotMatch(final,/선택|Property Inspector|수정|AI 후보/);assert.equal(html(SectionPreview,{section:{content:c,style:defaultSectionStyle(type)},assets:[]}),final);});
 }
 test('canonical order and width come from saved DB, never Planner ordering',()=>seeded(async s=>{
  s.sections.reverse().forEach((r,i)=>r.sort_order=i);s.page.width=860;const before=snapshot(s);s.requests=[];

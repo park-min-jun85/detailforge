@@ -98,7 +98,7 @@ test('DB errors private, previous data preserved on write failure',async t=>{
  const response=await optionResponse(()=>saveProductOptions(projectId,input(options(),saved.version)));assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/private-database|secret-test/);assert.deepEqual(s.options,before);
 });
 test('invalid persisted options fail closed rather than becoming confirmed read model',async t=>{
- const s=await db(t);await saveProductOptions(projectId,input());s.options[0].groups.groups[0].values[0].label='상세페이지 참조';await assert.rejects(getConfirmedProductOptions(projectId,productId),code('unavailable'));
+ const s=await db(t);await saveProductOptions(projectId,input());s.options[0].groups.groups[0].values[0].label='상세페이지 참조';await assert.rejects(getConfirmedProductOptions(projectId,productId),code('invalid_schema'));
 });
 test('confirmed read model and deterministic Section mapping preserve only saved choices',async t=>{
  await db(t);const empty=await getConfirmedProductOptions(projectId,productId);assert.equal(empty.hasOptions,false);assert.deepEqual(buildOptionSectionSource(empty).items,[]);

@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {fixture,provider,protectedSnapshot} from './helpers/section-fixtures.mjs';
 import {projectId,assetRow} from './helpers/section-db.mjs';
-import {seedValidation,mockProvider} from './helpers/planner-fixtures.mjs';
+import {seedValidation,mockProvider,planResult} from './helpers/planner-fixtures.mjs';
 import {responseBody} from './helpers/analysis.mjs';
 import {generateSections} from '../src/features/section-engine/service.ts';
 import {planPage} from '../src/features/page-planner/service.ts';
@@ -38,7 +38,10 @@ for(const type of ['hero','keyBenefits','feature','imageText','gallery','useCase
   assert.equal(applied.content.plannerKey,row.content.plannerKey);assert.deepEqual(applied.content.assetIds,row.content.assetIds);
   assert.equal(applied.content.meta.regeneration.previousRevision,row.updated_at);assert.deepEqual(protectedSnapshot(state),before.upstream);
   assert.deepEqual(state.sections.filter(r=>r.id!==row.id),before.sections.filter(r=>r.id!==row.id));assert.deepEqual(state.page.settings,before.page.settings);
- },{setup:state=>{if(type!=='hero')state.page.plan.latestResult.plan.sections[1].type=type;}}));
+ },{setup:async state=>{if(type==='option') {
+ state.options={id:randomUUID(),product_id:state.product.id,version:1,groups:{schemaVersion:1,groups:[{id:randomUUID(),name:'선택',values:[{id:randomUUID(),label:'단품'}]}]},source_snapshot:{},created_at:state.product.created_at,updated_at:state.product.updated_at};
+ await planPage(projectId,()=>({model:'mock',plan:async input=>{const plan=planResult(input);plan.sections[1]={...plan.sections[1],type:'option',evidenceIds:[],assetIds:[]};return plan;}}));
+ }else if(type!=='hero')state.page.plan.latestResult.plan.sections[1].type=type;}}));
 }
 test('type/key/schema changes rejected without persistence',()=>seeded(async state=>{
  const before=all(state),ctx=await regenerationContext(projectId,state.sections[0].id);

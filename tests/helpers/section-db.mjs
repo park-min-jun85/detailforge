@@ -18,7 +18,7 @@ export async function startSectionDb() {
       description: "미검증 원본 설명", source_type: "manual", source_url: null, raw_data: { preserved: true }, ai_analysis: {}, created_at: date, updated_at: date },
     facts: { id: "3645f432-b847-4e28-9ee7-f41beccccf46", product_id: productId, facts: factsData(),
       source_snapshot: { inputMethod: "manual", ...factsData() }, validation: {}, version: 1, validated_at: null, created_at: date, updated_at: date },
-    assets: [], page: null, sections: [], requests: [], failure: null, ignoreFilter: null, beforePatch: null, ackLost: null,
+    options: null, assets: [], page: null, sections: [], requests: [], failure: null, ignoreFilter: null, beforePatch: null, ackLost: null,
   };
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -43,7 +43,7 @@ export async function startSectionDb() {
     if (request.method === "GET") {
       if (state.beforeRead) await state.beforeRead(table);
       if (state.failure === `read-${table}`) return fail();
-      const source = table === "projects" ? [state.project] : table === "products" ? [state.product] : table === "product_facts" ? [state.facts] : table === "assets" ? state.assets : table === "detail_pages" ? [state.page] : table === "sections" ? state.sections : null;
+      const source = table === "product_options" ? [state.options] : table === "projects" ? [state.project] : table === "products" ? [state.product] : table === "product_facts" ? [state.facts] : table === "assets" ? state.assets : table === "detail_pages" ? [state.page] : table === "sections" ? state.sections : null;
       if (!source) return fail();
       const rows=source.filter(Boolean).filter((row)=>state.ignoreFilter===table||matches(row));
       if(table==='sections')rows.sort((a,b)=>a.sort_order-b.sort_order||a.id.localeCompare(b.id));return send(rows);

@@ -1,3 +1,4 @@
+import { optionSnapshotSchema } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
 import { SECTION_TYPES, type SectionType } from "@/types/domain";
 
@@ -8,7 +9,7 @@ const common = { plannerKey: z.string().regex(/^[a-z][a-z0-9-]{0,59}$/), evidenc
 const point = z.strictObject({ text: text(200), evidenceIds: refs });
 const item = z.strictObject({ title: text(80), description: text(400), evidenceIds: refs });
 const row = z.strictObject({ label: text(100), value: text(500), evidenceIds: refs });
-export const sectionContentSchema = z.discriminatedUnion("type", [
+export const aiSectionContentSchema = z.discriminatedUnion("type", [
   z.strictObject({ ...common, type: z.literal("hero"), headline: text(80), subheadline: text(160).nullable(), highlights: z.array(point).max(4) }),
   z.strictObject({ ...common, type: z.literal("keyBenefits"), title: text(80), items: z.array(item).max(4) }),
   z.strictObject({ ...common, type: z.literal("feature"), title: text(80), body: text(700), bullets: z.array(point).max(6) }),
@@ -20,7 +21,13 @@ export const sectionContentSchema = z.discriminatedUnion("type", [
   z.strictObject({ ...common, type: z.literal("option"), title: text(80), items: z.array(row).max(8) }),
   z.strictObject({ ...common, type: z.literal("notice"), title: text(80), items: z.array(point).max(8) }),
 ]);
-export const sectionOutputSchema = z.strictObject({ schemaVersion: z.literal(1), sections: z.array(sectionContentSchema).min(5).max(12) });
+const optionContent = z.strictObject({ ...common, type: z.literal("option"), title: text(80),
+  items: z.array(row).max(8).optional(), optionSnapshot: optionSnapshotSchema.optional(),
+}).superRefine((value, ctx) => {
+  if ((value.items !== undefined) === (value.optionSnapshot !== undefined)) ctx.addIssue({ code: "custom", message: "Exactly one option representation required" });
+});
+export const sectionContentSchema = z.discriminatedUnion("type", [aiSectionContentSchema.options[0], aiSectionContentSchema.options[1], aiSectionContentSchema.options[2], aiSectionContentSchema.options[3], aiSectionContentSchema.options[4], aiSectionContentSchema.options[5], aiSectionContentSchema.options[6], aiSectionContentSchema.options[7], aiSectionContentSchema.options[9], optionContent]);
+export const sectionOutputSchema = z.strictObject({ schemaVersion: z.literal(1), sections: z.array(aiSectionContentSchema).min(5).max(12) });
 export type GeneratedSection = z.infer<typeof sectionContentSchema>;
 export type SectionOutput = z.infer<typeof sectionOutputSchema>;
 export const sectionStyleSchema = z.strictObject({ schemaVersion: z.literal(1), layout: z.enum(["centered", "split", "imageFirst", "textFirst", "grid", "stack"]),

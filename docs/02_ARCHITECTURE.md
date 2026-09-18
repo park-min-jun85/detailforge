@@ -292,3 +292,8 @@ domeme-api 고정 endpoint client → product-options/import-service의 저장 P
 조회 버튼 외에는 공급처 API를 호출하지 않는다. Import UI는 OptionsManager의 draft를 재사용한다. 제한/미지원/미확인 후보는 반영 ticket이 없다.
 import-merge는 원본명/값↔UUID 출처 매핑으로 기존 표시값/추가/삭제를 유지하며 선택한 신규 값만 append한다. 불명확한 이름 변경/재매핑은 추론하지 않는다.
 20분/50개 process-local ticket은 재시작 시 무효이며 다중 서버/외부 공개 서비스 전제가 아니다. 현재 single-user와 기존 인증 부재를 유지한다. [TASK-021B](tasks/TASK-021B.md).
+
+## TASK-022 확정 옵션 출력 경계
+
+Product Options confirmed read model → Planner optionsSnapshot(별도 구조 입력) → server deterministic optionSnapshot → saved Section → 공유 Renderer/Export다. F/V evidence와 옵션을 혼합하지 않는다. provider schema는 옵션값을 만들 수 없고 서버가 UUID/label/순서를 보존한다.
+기존 Section에는 GET 비교/POST 명시적 옵션 반영 endpoint를 사용한다. Section revision CAS + 기존 page lease + source version/fingerprint 재확인으로 보호한다. 원본 Options와 Sections는 cross-row 원자적 transaction이 아니며 저장 후 경쟁을 별도 결과로 알린다. GET은 변환/저장하지 않는다. [TASK-022](./tasks/TASK-022.md).

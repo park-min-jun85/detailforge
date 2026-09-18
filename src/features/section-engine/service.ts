@@ -1,4 +1,5 @@
 import "server-only";
+import { buildConfirmedOptionSnapshot } from "./options";
 import { hasEditLease } from "./edit-lease";
 import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
@@ -78,19 +79,20 @@ export async function generateSections(projectId: string, options: { replaceExis
       let result;
       try { result = validateSectionOutput(output, context.latest); } catch { throw new SectionEngineError("invalid_response"); }
       const latest = await load(client, project);
-      if (!latest.planReady || latest.fingerprint !== context.fingerprint || latest.page?.id !== page.id) throw new SectionEngineError("input_changed");
+      if (latest.planner.optionsVersion !== context.planner.optionsVersion || !latest.planReady || latest.fingerprint !== context.fingerprint || latest.page?.id !== page.id) throw new SectionEngineError("input_changed");
       if (!isDeepStrictEqual(latest.rows, context.rows)) throw new SectionEngineError("conflict");
       const generatedAt = new Date().toISOString();
       const rows: SectionRow[] = result.sections.map((section, sortOrder) => ({ id: randomUUID(), detail_page_id: page.id, type: section.type, sort_order: sortOrder,
-        content: { ...section, meta: sectionMetaSchema.parse({ schemaVersion: 1, plannerKey: section.plannerKey, sourcePlanFingerprint: context.fingerprint,
+        content: { ...(section.type === "option" && context.latest!.optionsSnapshot ? { type: section.type, plannerKey: section.plannerKey, title: "옵션 안내", evidenceIds: [], assetIds: section.assetIds,
+          optionSnapshot: buildConfirmedOptionSnapshot(context.latest!.optionsSnapshot, generatedAt) } : section), meta: sectionMetaSchema.parse({ schemaVersion: 1, plannerKey: section.plannerKey, sourcePlanFingerprint: context.fingerprint,
           sourceInputFingerprint: context.latest!.inputFingerprint, generationId: runId, generatedAt, provider: "openai", model: provider.model, origin: "generated",
-          warnings: ["review_copy_before_publish", ...(section.type === "option" && !section.items.length ? ["option_evidence_missing"] : []), ...(section.type === "useCase" ? ["hypothesis_not_fact"] : [])] }) },
+          warnings: ["review_copy_before_publish", ...(section.type === "option" && !context.latest!.optionsSnapshot && !section.items.length ? ["option_evidence_missing"] : []), ...(section.type === "useCase" ? ["hypothesis_not_fact"] : [])] }) },
         style: defaultSectionStyle(section.type), created_at: generatedAt, updated_at: generatedAt }));
       state = { ...state, staged: rows };
       page = await writeGeneration(client, await ownedPage(client, page, runId), state);
       await insertRows(client, rows);
       const check = await load(client, project);
-      if (!check.planReady || check.fingerprint !== context.fingerprint) throw new SectionEngineError("input_changed");
+      if (check.planner.optionsVersion !== context.planner.optionsVersion || !check.planReady || check.fingerprint !== context.fingerprint) throw new SectionEngineError("input_changed");
       if (check.rows.length !== context.rows.length + rows.length || !context.rows.every(old => check.rows.some(row => sameRow(row, old)))) throw new SectionEngineError("conflict");
       await ownedPage(client, page, runId);
       await removeRows(client, context.rows);

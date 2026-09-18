@@ -294,3 +294,8 @@ Options는 Product당 최대1행이며 version0은 미생성 read model, INSERT1
 TASK-021B는 migration 없이 기존 source_snapshot에 `domeme_api` source를 지원한다. supplier/productNo/sourceUrl/API 버전/조회시각/fingerprint/최소 원본 groups/UUID bindings를 서버가 구성한다.
 이후 수동 수정도 해당 source를 보존하며 confirmed groups와 원본이 분리된다. legacy manual/빈 객체/wholesale_url도 읽는다. 최신 원본100값, 삭제 보호 매핑200값 상한이며 전체 응답/HTML/무제한 history는 저장하지 않는다.
 조회/후보 반영은 쓰기0회. 명시적 저장에서 groups/source_snapshot/version을 같은 row의 product_id/version 조건 UPDATE 또는 UNIQUE INSERT로 처리한다. 소속 검사는 사용자 인증을 대신하지 않는다. [TASK-021B](tasks/TASK-021B.md).
+
+## TASK-022 JSON snapshot (migration 없음)
+
+product_options 및 0005는 변경하지 않았다. detail_pages.plan.latestResult.optionsSnapshot에 확정 source를 저장한다. sections.content의 option은 기존 items 또는 신규 optionSnapshot 중 하나다. 신규 snapshot은 source=confirmed_options, appliedAt, confirmed(schemaVersion/policyVersion/productId/rowId/version/state/groups/fingerprint)를 보존한다. 기존 meta/manualEdit/grounding은 유지한다.
+내용 hash는 row ID와 canonical groups를 포함하고 version/시각/source metadata를 제외한다. missing row와 saved empty groups는 별개다. 반영 POST는 selected section content만 revision 조건으로 UPDATE하며 원본 Options/Facts/Plan을 변경하지 않는다. GET legacy rewrite 및 일괄 변환 없음. 동시성 한계/후속 stale는 [TASK-022](./tasks/TASK-022.md).

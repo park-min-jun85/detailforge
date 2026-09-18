@@ -1,4 +1,5 @@
 import "server-only";
+import { confirmedSource } from "./confirmed-source";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { emptyOptionView, optionRowSchema, type OptionView } from "./schemas";
@@ -20,7 +21,9 @@ export async function readOptionRow(client: Client, productId: string) {
   const result = await client.from("product_options").select("*").eq("product_id", productId).abortSignal(AbortSignal.timeout(10000)).maybeSingle();
   if (result.error) throw new OptionError("unavailable");
   if (!result.data) return null;
-  const row = optionRowSchema.parse(result.data);
+  const parsed = optionRowSchema.safeParse(result.data);
+  if (!parsed.success) throw new OptionError("invalid_schema");
+  const row = parsed.data;
   if (row.product_id !== productId) throw new OptionError("not_found");
   return row;
 }
@@ -40,5 +43,5 @@ export async function getProductOptions(projectId: string, expectedProductId?: s
 export async function getConfirmedProductOptions(projectId: string, productId: string) {
   const view = await getProductOptions(projectId, productId);
   if (!view.productId) throw new OptionError("product_required");
-  return { productId: view.productId, version: view.version, hasOptions: view.options.groups.length > 0, options: view.options };
+  return { productId: view.productId, version: view.version, hasOptions: view.options.groups.length > 0, options: view.options, snapshot: confirmedSource(view) };
 }

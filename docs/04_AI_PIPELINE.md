@@ -273,3 +273,8 @@ Options CRUD는 AI를 호출하지 않는다. Options를 Fact specifications/F r
 schema 검증과 사용자 확인이 적용된 groups만 getConfirmedProductOptions로 읽는다. source_snapshot과 ImportCandidate는 원문 후보이지 확정 선택값이 아니다.
 Planner 존재 확인 helper와 Section deterministic source mapping을 제공한다. 실제 label/value를 AI가 재작성하지 않는다.
 기존 Section v1의 F 기반 option items와 새 source는 별도 계약이다. prompt/provider/Plan/Editor integration은 후속 단계에서 Options snapshot/version/stale과 전용 참조를 함께 설계한다. [TASK-020](tasks/TASK-020.md).
+
+## TASK-022 Confirmed Options와 생성 경계
+
+확정 옵션은 사용자 선택 데이터이며 Fact/Visual 근거나 판매 가능 보장이 아니다. 새 Planner는 별도 confirmedOptions 입력과 optionsSnapshot을 사용하고 present이면 option 정확히1개, missing/empty이면0개를 prompt/서버에서 검증한다. 전체 개수5–12와 Plan/Section 1:1 유지.
+Section AI는 option items=[]만 반환한다. 서버가 canonical snapshot과 중립 제목을 구성한다. 실행 중 옵션 변경은 input/version 재확인으로 거부하고 기존 Sections를 복구한다. 일반 option AI 재생성도 최신 원본을 가져오지 않고 저장된 snapshot을 그대로 보존한다. 원본 변경의 반영은 사람이 비교 후 명시적으로 요청한다. 실제 provider 호출 없이 mock으로 검증했다.

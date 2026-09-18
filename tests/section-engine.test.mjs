@@ -18,7 +18,7 @@ const output=state=>sectionOutput(buildSectionInput(latest(state)));
 const generate=()=>generateSections(projectId,{},provider);
 const regenerate=async()=>generateSections(projectId,{replaceExisting:true,expectedRevision:(await getSectionView(projectId)).revision},provider);
 test('discriminated output schema supports all ten types; bounded text and no extra fields',()=>fixture(state=>{
-  const plan=structuredClone(latest(state));plan.plan.sections=['hero','keyBenefits','feature','imageText','gallery','useCase','detail','specification','option','notice'].map((type,i)=>({key:`section-${i}`,type,purpose:`목적 ${i}`,contentBrief:'정보 확인',evidenceIds:['F1'],assetIds:[],priority:'supporting'}));
+  const plan=structuredClone(latest(state));delete plan.optionsSnapshot;plan.plan.sections=['hero','keyBenefits','feature','imageText','gallery','useCase','detail','specification','option','notice'].map((type,i)=>({key:`section-${i}`,type,purpose:`목적 ${i}`,contentBrief:'정보 확인',evidenceIds:['F1'],assetIds:[],priority:'supporting'}));
   const value=sectionOutput(buildSectionInput(plan));assert.equal(validateSectionOutput(value,plan).sections.length,10);
   for(const change of [v=>v.extra=true,v=>v.sections[0].headline='a'.repeat(81),v=>v.sections[1].type='review',v=>v.sections[0].style={layout:'stack'}]){const bad=structuredClone(value);change(bad);assert.equal(sectionOutputSchema.safeParse(bad).success,false);}
 }));
@@ -148,7 +148,7 @@ test('expired interrupted run restores durable snapshot even with missing Plan, 
   await generateSections(projectId,{},()=>{assert.fail('recovery must not spend AI');});assert.deepEqual(state.sections,before);assert.equal(state.page.settings.sectionGeneration.errorCode,'interrupted');
 }));
 test('option content never invents rows and use cases must explicitly remain hypotheses',()=>fixture(state=>{
-  const plan=structuredClone(latest(state));plan.plan.sections[1].type='option';const value=sectionOutput(buildSectionInput(plan));assert.ok(validateSectionOutput(value,plan));
+  const plan=structuredClone(latest(state));delete plan.optionsSnapshot;plan.plan.sections[1].type='option';const value=sectionOutput(buildSectionInput(plan));assert.ok(validateSectionOutput(value,plan));
   value.sections[1].items=[{label:'상품명',value:'검증용 정리함',evidenceIds:['F1']}];assert.throws(()=>validateSectionOutput(value,plan));
   plan.plan.sections[1].type='useCase';const use=sectionOutput(buildSectionInput(plan));use.sections[1].items=[{title:'사용 방향',description:'사용에 적합합니다.',confidence:.5,evidenceIds:['F1'],assetIds:[]}];assert.throws(()=>validateSectionOutput(use,plan));
   use.sections[1].items[0].description='사용 환경에 맞는지 확인해 주세요.';assert.ok(validateSectionOutput(use,plan));

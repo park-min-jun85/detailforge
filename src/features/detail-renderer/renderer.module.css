@@ -43,3 +43,7 @@
 .section[data-section-type="notice"] { border-top:2px solid #c9ccc8; font-size:16px; line-height:1.9; }
 .section[data-section-type="notice"] h2 { font-size:26px; }
 .section[data-fit="cover"] .image img { object-fit:cover; }
+
+.optionGroups { display: grid; gap: 28px; min-width: 0; }
+.optionGroups h3, .optionGroups li { white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
+.optionGroups ul { display: grid; gap: 12px; }

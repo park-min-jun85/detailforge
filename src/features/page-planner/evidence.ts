@@ -1,4 +1,5 @@
 import "server-only";
+import type { ConfirmedOptions } from "@/features/product-options/section-snapshot";
 import { buildValidationEvidence, canonicalValidationJson, validationFingerprint } from "@/features/fact-validation/evidence";
 import { validationStateSchema, isValidationStale, validateFactOutput } from "@/features/fact-validation/schemas";
 import { buildEvidenceRegistry, normalizeInput } from "@/features/product-analysis/evidence";
@@ -34,7 +35,7 @@ function usableStrategy(latest: LatestProductAnalysis, evidence: PlannerEvidence
 }
 
 export function buildPlannerInput(input: { projectId: string; productId: string; facts: unknown; sourceSnapshot: unknown; validation: unknown;
-  description: string | null; productAnalysis: unknown; assets: Asset[] }): PlannerContextInput {
+  description: string | null; productAnalysis: unknown; assets: Asset[]; confirmedOptions?: ConfirmedOptions }): PlannerContextInput {
   try {
     const validationInput = buildValidationEvidence(input);
     const validation = validationStateSchema.safeParse(input.validation);
@@ -61,10 +62,10 @@ export function buildPlannerInput(input: { projectId: string; productId: string;
     const strategy = productLatest && productAnalysisStatus === "ready" ? usableStrategy(productLatest, evidence, factPolicy) : null;
     const warnings = ["visual_observations_not_facts", ...(factPolicy.restricted.length ? ["restricted_facts_excluded"] : []),
       ...(!strategy ? ["product_strategy_unavailable"] : []), ...(current.coverage.completed < current.coverage.total ? ["partial_asset_analysis"] : [])];
-    const providerInput = { evidence, assets: assets.filter((asset) => asset.analysis), strategy,
+    const providerInput = { ...(input.confirmedOptions ? { confirmedOptions: input.confirmedOptions } : {}), evidence, assets: assets.filter((asset) => asset.analysis), strategy,
       restrictedFacts: factPolicy.restricted.map(({ factId, label, status }) => ({ factId, label, status })), warnings };
     if (canonicalValidationJson(providerInput).length > 180000) throw new PlannerError("invalid_input");
-    const inputFingerprint = validationFingerprint({ facts: input.facts, validation: validation.success ? validation.data : input.validation,
+    const inputFingerprint = validationFingerprint({ ...(input.confirmedOptions ? { optionsFingerprint: input.confirmedOptions.fingerprint } : {}), facts: input.facts, validation: validation.success ? validation.data : input.validation,
       validationInputFingerprint: validationInput.inputFingerprint, supported: factPolicy.supported, assets,
       productAnalysis: productAnalysisStatus === "ready" ? productLatest : null, productAnalysisStatus });
     return { input: providerInput, inputFingerprint, factPolicy, assetSnapshot: assets, validationStatus, productAnalysisStatus, coverage: current.coverage };

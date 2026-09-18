@@ -63,6 +63,7 @@ export function PlannerManager({ initialView }: { initialView: PlannerView }) {
       <p className="mt-4 text-sm leading-6 text-zinc-600">지원된 Fact와 완료된 이미지 관찰로 Section의 목적·순서·근거를 설계합니다. 실제 콘텐츠나 광고 문구를 생성하지 않습니다.</p>
       <p role="status" className="mt-4 text-sm font-medium">상태: {status}</p>
       {view.prerequisite !== "ready" && <div role="status" className="mt-4 space-y-3 rounded-md bg-amber-50 p-4 text-sm text-amber-900"><p>{PLANNER_ERRORS[view.prerequisite].message}</p><Link href={`/projects/${view.projectId}/validation`} className="text-link">사실 검증 확인 →</Link></div>}
+      {previous && !previous.optionsSnapshot && <p role="status" className="mt-3 text-sm text-amber-900">이전 Plan은 확정 옵션과 연결되지 않았습니다. 옵션을 포함하려면 페이지 설계를 다시 생성해 주세요.</p>}
       {view.stale && <p role="status" className="mt-3 rounded-md bg-amber-50 p-3 text-sm leading-6 text-amber-900">입력 정보가 변경되어 페이지 설계를 다시 생성하는 것을 권장합니다. 아래는 이전 입력의 Plan입니다.</p>}
       {(error || view.state?.attempt.errorCode) && <p role="alert" className="mt-3 text-sm leading-6 text-red-700">{error || (view.state?.attempt.errorCode && PLANNER_ERRORS[view.state.attempt.errorCode].message)}</p>}
       {previous && <p className="mt-3 text-xs text-zinc-500">{busy || view.state?.attempt.status !== "completed" ? "이전 성공 Plan을 유지하고 있습니다. " : ""}마지막 성공: {new Date(previous.plannedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>}

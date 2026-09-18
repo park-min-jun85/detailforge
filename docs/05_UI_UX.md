@@ -339,3 +339,9 @@ OptionsManager에서 저장된 원본 URL/상품번호 → 도매매 옵션 불�
 상품정보의 미저장 URL은 사용하지 않는다. 후보 닫기/반영만으로 DB는 바뀌지 않는다. dirty 반영은 취소/버리기 확인, 기존 옵션 저장은 그대로 사용할 수 있다.
 제한/미지원/미확인/오류는 기존 값을 유지하며 반영을 허용하지 않는다. 단일상품도 원문1값으로 표시한다. 재가져오기에서 삭제는 복구하지 않고, 수정된 표시값/UUID와 현재 순서를 유지한다. 모호한 이름 변경과 수동 중복은 수동 확인을 안내한다.
 만료·충돌은 draft를 유지하고 다시 조회 또는 명시적 후보 출처 해제/수동 저장 전환을 안내한다. 조회 시점 옵션 정보이며 실시간 재고 동기화가 아니다. Section/Editor/Renderer 출력은 후속 작업이다. [TASK-021B](tasks/TASK-021B.md).
+
+## TASK-022 옵션 snapshot 편집/출력
+
+option Inspector에 읽기 전용 groups/values, current/stale/unlinked/missing/조회불가 상태, 상품정보의 옵션 영역 링크와 최신 옵션 반영 버튼을 제공한다. 비교 → 반영 확인/취소이며 자동 저장/덮어쓰기는 없다. 기존 dirty guard를 사용하고 비교 후 편집이 생기면 반영을 차단한다. 빈 확정 groups는 “이 섹션의 옵션 표시를 비웁니다.”로 명시적으로 확인한다.
+option Section이 없으면 페이지 설계/상세페이지 생성으로 안내하며 자동 추가하지 않는다. 여러 option이 있으면 선택한 Section만 반영한다. 옵션 freshness와 전체 Plan stale는 별도이며 옵션 반영으로 전체 Plan 경고가 해제되지 않는다.
+Editor/Final/PNG/JPG는 저장된 Section snapshot의 그룹명/값/순서를 동일하게 출력한다. 긴 문구 줄바꿈과 empty Section 숨김, legacy items 호환을 지원한다. UUID/version/출처·freshness 경고는 capture 결과에 노출하지 않는다. 실제860×2865 PNG/JPG 검증 결과는 [TASK-022](./tasks/TASK-022.md).
