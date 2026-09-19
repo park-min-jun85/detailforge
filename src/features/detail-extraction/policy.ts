@@ -1,5 +1,6 @@
 // Shared bounded policy; no provider/Storage secrets in this module.
-export const POLICY_VERSION = 1;
+export const POLICY_VERSION = 2;
+export const MIN_PRODUCT_RELEVANCE = 0.75;
 export const LONG_MIN_HEIGHT = 2400;
 export const LONG_ASPECT_RATIO = 3.5;
 export const EXTREME_LONG_ASPECT_RATIO = 12;

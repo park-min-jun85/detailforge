@@ -1,5 +1,11 @@
 # UI / UX
 
+## TASK-031 추출 후보의 제품 관련도
+
+후보 카드에 기존 역할/신뢰도와 함께 사진·도식·일러스트 등의 시각 종류, 제품 관련도 %를 작은 텍스트로 표시한다. 기본 제외는 enum 기반 사유(사진 아님/대상 미확인/관련도 낮음/텍스트·품질·경계 등)이며 AI 자유문장을 핵심 경고로 사용하지 않는다. 기존 저장 금지 후보와 달리 saveAllowed인 기본 제외 후보는 checkbox로 직접 선택 가능하다.
+
+legacy v1 결과는 기존 점수·선택을 유지하고 “제품 관련도 검사를 적용하려면 다시 분석”을 안내한다. current context fingerprint가 v2 저장값과 달라지면 상품정보 변경/재분석 권고를 표시한다. 자동 AI/변환/기존 Derived 삭제 없음. 결과 검토·명시적 저장은 사용자의 최종 판단이다. 모바일1열 grid와 semantic label/keyboard checkbox를 유지한다. [TASK-031](tasks/TASK-031.md).
+
 ## TASK-029 Commerce Visual System
 
 Final render surface는 detail_pages.width(기본860px),zoom1이다. 작은 화면은 review wrapper만 가로 스크롤하며 본문을375px 레이아웃으로 재설계하지 않는다. Editor의 축소·선택 outline은 wrapper에만 있다.

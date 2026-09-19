@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-031 — Product-Relevance Guard 구현·동일 원본 실제 QA 완료. 브랜치 `feat/extraction-relevance-guard`. context/visualKind/relevance를 기존 타일 요청에 함께 전달하고 서버 추천 정책을 강화했다. 전체846 tests 및 필수 검사 통과. 같은800×23982 원본의 새14타일(14성공), 후보24/기본18, 전자기기 최종 후보·저장 혼입0. 기본18+명시적 수동1 저장 검증 후 QA DB/Storage 정리, 기존14행 해시 일치. TASK-030 H1 재현0, 이번 관찰 기준 B0/H0, M4/L1 이월. 단 cap 이전 전자기기의 실제 kind/score는 보존하지 않아 미확인이다. 해당 필드 판정까지 실검증됐다고 주장하지 않는다. migration/dependency/commit 없음. [46개 항목 보고와 검증 한계](./TASK-031.md).
+
+## 완료된 TASK-030 기반
+
 TASK-030 — Final Commerce Polish 구현·실제 새 상품 E2E QA 완료. 브랜치 `feat/final-commerce-polish`. 해상도 기반 Hero·제목 의미 검사·수동 편집 경고, 전체820 tests와 필수 검사 통과. 실제67695797의 새 Import부터 PNG/JPG860×2744까지 완료. **Release Candidate: NEEDS_WORK (HIGH1: 무관한 추출 후보 기본 선택)**. QA DB/Storage 정리, 기존14행 해시 일치. dependency/migration/commit 없음. [TASK-030](./TASK-030.md).
 
 ## 완료된 TASK-029 기반

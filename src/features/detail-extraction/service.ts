@@ -12,6 +12,7 @@ import { candidateId, normalizeCandidates } from "./geometry";
 import { bounded, loadSource } from "./source";
 import { getExtractionProvider, type ExtractionProvider } from "./provider";
 import { POLICY_VERSION, RUN_TIMEOUT_MS, TILE_TIMEOUT_MS } from "./policy";
+import { loadExtractionProductContext } from "./product-context";
 import { derivationSchema, isDerived, isExtractionActive, isSaveActive, readExtraction, resultSchema, saveRequestSchema, tileOutputSchema,
   type ExtractionState, type Candidate, type Region } from "./schemas";
 
@@ -61,7 +62,9 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
       const source = await readAsset(client, scope), previous = readExtraction(source.metadata);
       if (isExtractionActive(previous) || isSaveActive(previous)) throw new ExtractionError("busy");
       const image = await decodeSource(await loadSource(client, source), source.mimeType);
-      if (!force && previous?.latestResult?.sourceFingerprint === image.fingerprint && previous.latestResult.policyVersion === POLICY_VERSION) return { asset: source, reused: true };
+      const productContext = await loadExtractionProductContext(client, scope);
+      if (!force && previous?.latestResult?.schemaVersion === 2 && previous.latestResult.sourceFingerprint === image.fingerprint
+        && previous.latestResult.policyVersion === POLICY_VERSION && previous.latestResult.productContextFingerprint === productContext.fingerprint) return { asset: source, reused: true };
       const tiles = await imageTiles(image), provider = providerFactory(), runId = randomUUID();
       const state: ExtractionState = { schemaVersion: 1, revision: randomUUID(), saveLease: null,
         attempt: { status: "analyzing", runId, startedAt: new Date().toISOString(), finishedAt: null, errorCode: null }, latestResult: previous?.latestResult ?? null };
@@ -76,7 +79,7 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
             const dataUrl = await tileDataUrl(image, tile);
             const budget = RUN_TIMEOUT_MS - (Date.now() - started);
             if (budget <= 0) throw new ExtractionError("timeout");
-            const raw = await bounded(signal => provider.analyze(dataUrl, signal), Math.min(budget, TILE_TIMEOUT_MS));
+            const raw = await bounded(signal => provider.analyze(dataUrl, signal, productContext.context), Math.min(budget, TILE_TIMEOUT_MS));
             const parsed = tileOutputSchema.safeParse(raw);
             if (!parsed.success) throw new ExtractionError("invalid_response");
             // Validate geometry before accepting ANY regions from this tile.
@@ -86,7 +89,7 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
         }
         if (failedTiles.length === tiles.length) throw lastFailure;
         const normalized = normalizeCandidates(entries, image.dimensions, image.fingerprint);
-        const result = resultSchema.parse({ schemaVersion: 1, policyVersion: POLICY_VERSION, sourceFingerprint: image.fingerprint, sourceDimensions: image.dimensions,
+        const result = resultSchema.parse({ schemaVersion: 2, policyVersion: POLICY_VERSION, productContextFingerprint: productContext.fingerprint, sourceFingerprint: image.fingerprint, sourceDimensions: image.dimensions,
           coordinateSpace: "orientation_normalized_pixels", sourceOrientation: image.orientation, provider: "openai", model: provider.model,
           analyzedAt: new Date().toISOString(), tileCount: tiles.length, completedTiles: tiles.length - failedTiles.length, failedTiles,
           partialAnalysis: failedTiles.length > 0, ...normalized });

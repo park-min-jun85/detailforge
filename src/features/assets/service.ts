@@ -6,6 +6,8 @@ import type { Asset } from "@/types/domain";
 import { AssetError, assetRowSchema, assertAssetScope, nextAssetOrder, normalizeFilename, parseId,
   SIGNED_URL_SECONDS, storagePath, validateFile, validateSignature } from "./schemas";
 import type { AssetContext, AssetList } from "./types";
+import { readExtraction } from "@/features/detail-extraction/schemas";
+import { loadExtractionProductContext } from "@/features/detail-extraction/product-context";
 
 const BUCKET = "product-assets";
 const mutations = new Set<string>();
@@ -56,7 +58,10 @@ export async function listAssets(projectId: string, onlyIds?: readonly string[])
   const signed = await client.storage.from(BUCKET).createSignedUrls(assets.map((asset) => asset.storagePath), SIGNED_URL_SECONDS);
   if (signed.error) throw new AssetError(503, "이미지 미리보기를 불러오지 못했습니다. 다시 시도해 주세요.");
   const urls = new Map(signed.data.map((item) => [item.path, item.error ? null : item.signedUrl]));
-  return { items: assets.map((asset) => ({ asset, previewUrl: urls.get(asset.storagePath) ?? null })), expiresAt };
+  // Read-only freshness projection; never attach current context or synthetic scores to DB metadata.
+  const extractionContextFingerprint = assets.some(asset => readExtraction(asset.metadata)?.latestResult?.schemaVersion === 2)
+    ? (await loadExtractionProductContext(client, scope)).fingerprint : undefined;
+  return { items: assets.map((asset) => ({ asset, previewUrl: urls.get(asset.storagePath) ?? null })), expiresAt, extractionContextFingerprint };
 }
 
 async function removeObject(client: Client, path: string) {

@@ -229,7 +229,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
-      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy}
+      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy} currentContextFingerprint={list.extractionContextFingerprint}
         begin={() => { if (locked.current) return false; locked.current = true; setBusy(true); return true; }} end={() => { locked.current = false; setBusy(false); setNow(Date.now()); }}
         refresh={refresh} update={asset => setList(current => ({ ...current, items: current.items.map(item => item.asset.id === asset.id ? { ...item, asset } : item) }))} close={() => setExtractionId(null)} />}
       <p className="text-sm leading-6 text-zinc-500">완료된 이미지 분석은 다음 상품 분석 단계에서 사용합니다. 상세페이지 구성은 이후 단계에서 제공됩니다.</p>

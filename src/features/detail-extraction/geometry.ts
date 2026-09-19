@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { boxSchema, type Candidate, type Dimensions, type Rect, type Region } from "./schemas";
 import { CROP_MARGIN, MAX_CROP_MARGIN, MAX_CANDIDATES, MIN_CROP_WIDTH, MIN_CROP_HEIGHT, MIN_CROP_AREA, PRODUCT_REGIONS } from "./policy";
 import { ExtractionError } from "./errors";
+import { defaultExclusionReason } from "./selection";
 export type TileRect = Rect & { index: number };
 export function clampRect(rect: Rect, source: Dimensions): Rect {
   if (![rect.x,rect.y,rect.width,rect.height].every(Number.isSafeInteger)||rect.width<=0||rect.height<=0) throw new ExtractionError("invalid_rect");
@@ -27,8 +28,8 @@ export function normalizeCandidates(entries:{region:Region;tile:TileRect}[],sour
     const size=raw.width>=MIN_CROP_WIDTH&&raw.height>=MIN_CROP_HEIGHT&&raw.width*raw.height>=MIN_CROP_AREA;
     const saveAllowed=size&&(productRole(region.regionType)||region.regionType==="mixed")&&region.confidence>=0.4&&region.productVisibility>=0.35&&region.standaloneUsability>=0.35;
     const {box: _box,...description}=region;void _box;
-    return {...description,id:candidateId(fingerprint,rect,region.regionType),rect,tileIndices:[tile.index],saveAllowed,edgeTruncated,
-      defaultSelected:saveAllowed&&!edgeTruncated&&productRole(region.regionType)&&region.confidence>=0.7&&region.productVisibility>=0.65&&region.standaloneUsability>=0.65&&["none","low"].includes(region.textDensity)};
+    const candidate = {...description,id:candidateId(fingerprint,rect,region.regionType),rect,tileIndices:[tile.index],saveAllowed,edgeTruncated,defaultSelected:false};
+    return {...candidate,defaultSelected:defaultExclusionReason(candidate)===null};
   }).sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
   const kept:Candidate[]=[];
   for(const c of candidates){const duplicate=kept.find(k=>k.regionType===c.regionType&&(overlap(k.rect,c.rect).iou>=0.65||overlap(k.rect,c.rect).containment>=0.92));

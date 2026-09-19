@@ -7,7 +7,7 @@ import { regionSchema, tileOutputSchema, saveRequestSchema, isDerived, isExtract
 import { mapBox, clampRect, withMargin, normalizeCandidates, candidateId } from "../src/features/detail-extraction/geometry.ts";
 import { decodeSource, cropImage, planTiles, imageTiles, sourceFingerprint } from "../src/features/detail-extraction/images.ts";
 import { bounded, readLimitedResponse } from "../src/features/detail-extraction/source.ts";
-import { createExtractionProvider, EXTRACTION_PROMPT, getExtractionConfig } from "../src/features/detail-extraction/provider.ts";
+import { createExtractionProvider, EXTRACTION_PROMPT, RELEVANCE_PROMPT, getExtractionConfig } from "../src/features/detail-extraction/provider.ts";
 import { extractionResponse } from "../src/features/detail-extraction/http.ts";
 import { responseBody } from "./helpers/analysis.mjs";
 const source = { width: 860, height: 12900 }, fingerprint = "a".repeat(64);
@@ -129,10 +129,11 @@ test("wall-clock bound aborts even a provider ignoring abort",async()=>{
 });
 test("provider sends image as data under fixed instructions and strict output, with no retries/logging",async()=>{
   let calls=0,payload;
-  const provider=createExtractionProvider({apiKey:"secret-test",model:"gpt-5.6-luna"},async(_,init)=>{calls++;payload=JSON.parse(init.body);return Response.json(responseBody({schemaVersion:1,regions:[region()]}));});
+  const provider=createExtractionProvider({apiKey:"secret-test",model:"gpt-5.6-luna"},async(_,init)=>{calls++;payload=JSON.parse(init.body);return Response.json(responseBody({schemaVersion:2,regions:[{...region(),visualKind:"photo",targetProductRelevance:.95,containsTargetProduct:true,relevanceReason:"제품 사진"}]}));});
   await provider.analyze("data:image/jpeg;base64,abc",new AbortController().signal);
   assert.equal(calls,1);assert.equal(payload.store,false);assert.equal(payload.text.format.strict,true);
-  assert.equal(payload.input[0].content,EXTRACTION_PROMPT);assert.match(EXTRACTION_PROMPT,/untrusted DATA/);
+  assert.equal(payload.input[0].content,`${EXTRACTION_PROMPT}
+${RELEVANCE_PROMPT}`);assert.match(EXTRACTION_PROMPT,/untrusted DATA/);
   assert.equal(payload.input[1].content[1].type,"input_image");assert.equal(JSON.stringify(payload).includes("secret-test"),false);
 });
 test("provider raw errors and invalid responses are sanitized",async()=>{

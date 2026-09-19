@@ -17,7 +17,7 @@ export const assetRow = (overrides = {}) => ({
 export async function startAssetDb() {
   const state = {
     project: { id: projectId, name: "검증 프로젝트" }, product: { id: productId, project_id: projectId, name: "검증 상품" },
-    assets: [], objects: new Set(), objectBytes: new Map(), requests: [], failure: null, ackLost: false, failRecoveryRead: false,
+    facts: null, assets: [], objects: new Set(), objectBytes: new Map(), requests: [], failure: null, ackLost: false, failRecoveryRead: false,
     failCleanup: false, ignoreProductFilter: false, beforePatch: null, patchAckLost: null,
   };
   const server = createServer(async (request, response) => {
@@ -71,7 +71,7 @@ export async function startAssetDb() {
     if (request.method === "GET") {
       if (state.failure === "read" || (table === "assets" && url.searchParams.has("id") && state.failRecoveryRead)) return fail();
       let rows = table === "projects" ? (state.project ? [state.project] : [])
-        : table === "products" ? (state.product ? [state.product] : []) : [...state.assets];
+        : table === "products" ? (state.product ? [state.product] : []) : table === "product_facts" ? (state.facts ? [state.facts] : []) : [...state.assets];
       if (!(table === "products" && state.ignoreProductFilter)) rows = rows.filter(matches);
       const total = rows.length;
       if (table === "assets") {

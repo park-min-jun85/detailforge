@@ -1,5 +1,11 @@
 # Architecture
 
+## TASK-031 제품 관련성 추출 경계
+
+`detail-extraction/product-context.ts`는 소속을 재검사한 Product와 confirmed Facts에서 bounded identity context를 만든다. 상품명200자/category100자/brand100자, 허용된 품명·모델 label/value 최대4개만 사용하고 description/source_snapshot/AI analysis/Options는 읽지 않는다. canonical 정규화·정렬 후 SHA-256만 Source latestResult에 저장한다.
+
+기존 타일당 Vision 요청에 관련도와 visualKind를 함께 요청한다. regionType·candidateId(source hash/rect/role)·crop provenance·dedup·timeout·limit은 유지한다. 새 result/policy v2와 legacy v1을 판별해서 읽고 조회만으로 metadata를 쓰지 않는다. Assets 목록은 현재 context fingerprint를 읽기 전용으로 계산해 UI에 전달한다. context 변경 시 권고만 표시하며 기존 Derived는 무효화/삭제하지 않는다. Planner는 계속 실제 저장 Asset만 사용한다. [TASK-031](tasks/TASK-031.md).
+
 ## TASK-029 deterministic visual system
 
 `detail-renderer/visual-system.ts`는 해상도·비율·항목 수로 runtime 표시 모드를 계산한다. CSS Modules가 hierarchy/rhythm/중립색/배치를 소유하며 새 style token이나 DB migration은 없다. 기존 `page-quality/images.ts`의1.5배 cap에 큰 Hero/단일 Gallery용 application target만 추가한다. server read model/서명 URL/Export boundary는 그대로다.

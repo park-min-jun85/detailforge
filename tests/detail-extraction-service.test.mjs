@@ -6,10 +6,11 @@ import { startAssetDb, assetRow, projectId, productId, assetId, otherId } from "
 import { analysisResult, completedAnalysis } from "./helpers/analysis.mjs";
 import { analyzeProductShots, saveProductShots } from "../src/features/detail-extraction/service.ts";
 import { analyzeAsset } from "../src/features/asset-analysis/service.ts";
-import { deleteAsset } from "../src/features/assets/service.ts";
+import { deleteAsset, listAssets } from "../src/features/assets/service.ts";
+import { extractionContextStatus } from "../src/features/detail-extraction/selection.ts";
 import { readExtraction, derivationSchema } from "../src/features/detail-extraction/schemas.ts";
 import { sourceFingerprint } from "../src/features/detail-extraction/images.ts";
-const region={regionType:"product_photo",confidence:.9,productVisibility:.9,standaloneUsability:.9,textDensity:"none",box:{xMin:100,yMin:100,xMax:900,yMax:800},rationale:"제품이 보이는 사진"};
+const region={visualKind:"photo",targetProductRelevance:.95,containsTargetProduct:true,relevanceReason:"대상 상품 사진",regionType:"product_photo",confidence:.9,productVisibility:.9,standaloneUsability:.9,textDensity:"none",box:{xMin:100,yMin:100,xMax:900,yMax:800},rationale:"제품이 보이는 사진"};
 const code=expected=>e=>e.code===expected;
 async function fixture(t) {
   const db=await startAssetDb();t.after(()=>db.close());
@@ -17,7 +18,7 @@ async function fixture(t) {
   const row=assetRow({size_bytes:bytes.length,asset_type:"detail",metadata:{source:{url:"https://supplier.example/image.png"},aiAnalysis:completedAnalysis()}});
   db.state.assets.push(row);db.state.objects.add(row.storage_path);db.state.objectBytes.set(row.storage_path,bytes);
   let calls=0;
-  const provider={model:"mock-vision",analyze:async()=>{calls++;return {schemaVersion:1,regions:[structuredClone(region)]};}};
+  const provider={model:"mock-vision",analyze:async()=>{calls++;return {schemaVersion:2,regions:[structuredClone(region)]};}};
   const analyze=force=>analyzeProductShots(projectId,assetId,force,()=>provider);
   return {...db,row,bytes,provider,analyze,get calls(){return calls;}};
 }
@@ -50,11 +51,11 @@ test("all tile failure preserves previous success and records safe failed attemp
   assert.equal(JSON.stringify(f.row.metadata).includes("raw-secret"),false);
 });
 test("partial tile failure keeps valid candidates and explicit warning/counts",async t=>{
-  const f=await fixture(t);let count=0;f.provider.analyze=async()=>{if(count++===0)throw new Error("fail");return {schemaVersion:1,regions:[region]};};
+  const f=await fixture(t);let count=0;f.provider.analyze=async()=>{if(count++===0)throw new Error("fail");return {schemaVersion:2,regions:[region]};};
   await f.analyze(false);const result=f.row.metadata.detailExtraction.latestResult;assert.equal(result.partialAnalysis,true);assert.deepEqual(result.failedTiles,[0]);assert.equal(result.completedTiles,result.tileCount-1);
 });
 test("invalid provider rectangles never enter metadata candidates",async t=>{
-  const f=await fixture(t);f.provider.analyze=async()=>({schemaVersion:1,regions:[{...region,box:{xMin:900,yMin:0,xMax:100,yMax:1000}}]});
+  const f=await fixture(t);f.provider.analyze=async()=>({schemaVersion:2,regions:[{...region,box:{xMin:900,yMin:0,xMax:100,yMax:1000}}]});
   await assert.rejects(f.analyze(false),code("invalid_rect"));assert.equal(f.row.metadata.detailExtraction.latestResult,null);
 });
 test("provider/config failure sanitized without metadata claim",async t=>{
@@ -73,7 +74,7 @@ test("active analysis rejects concurrency and expired lease may be retried",asyn
 });
 test("shared product mutation lock rejects delete while analyzing",async t=>{
   const f=await fixture(t);let release,started;const ready=new Promise(r=>started=r),gate=new Promise(r=>release=r);
-  f.provider.analyze=async()=>{started();await gate;return {schemaVersion:1,regions:[region]};};
+  f.provider.analyze=async()=>{started();await gate;return {schemaVersion:2,regions:[region]};};
   const pending=f.analyze(false);await ready;await assert.rejects(deleteAsset(projectId,assetId),e=>e.status===409);release();await pending;
 });
 test("metadata CAS preserves concurrent namespace edit and uses small revision filter",async t=>{
@@ -166,4 +167,48 @@ test("new derived image remains eligible for existing explicit Asset AI analysis
   const asset=reply.saved[0].asset,provenance=structuredClone(asset.metadata.derivation);let calls=0;
   const analyzed=await analyzeAsset(projectId,asset.id,()=>({model:"mock-asset",analyze:async()=>{calls++;return analysisResult();}}));
   assert.equal(calls,1);assert.equal(analyzed.assetType,"product");assert.deepEqual(analyzed.metadata.derivation,provenance);
+});
+
+test("server reads current owned Product/Facts identity; metadata stores hash only and no Fact mutation", async t => {
+  const f = await fixture(t); f.state.product.category = "의류"; f.state.product.description = "do not send marketing";
+  f.state.facts = { product_id: productId, facts: { productName: "검증 상품", specifications: [{ name: "모델명", value: "조끼 모델" }, { name: "배송", value: "do not send" }] }, source_snapshot: { preserve: true }, validation: { preserve: true } };
+  const before = structuredClone({ product: f.state.product, facts: f.state.facts }); let context;
+  f.provider.analyze = async (_, signal, value) => { assert.ok(signal); context = value; return { schemaVersion: 2, regions: [region] }; };
+  await f.analyze(false); assert.deepEqual(context, { productName: "검증 상품", category: "의류", brand: "", identifiers: [{ label: "모델명", value: "조끼 모델" }] });
+  const result = f.row.metadata.detailExtraction.latestResult; assert.equal(result.schemaVersion, 2); assert.match(result.productContextFingerprint, /^[a-f0-9]{64}$/);
+  assert.equal(JSON.stringify(result).includes("조끼 모델"), false); assert.deepEqual({ product: f.state.product, facts: f.state.facts }, before);
+  assert.ok(f.state.requests.filter(r => r.method !== "GET" && r.path.startsWith("/rest/v1/")).every(r => r.path.endsWith("/assets")));
+});
+test("context change with unchanged source is stale on read, no AI/writes, explicit analysis invalidates reuse", async t => {
+  const f = await fixture(t); await f.analyze(false); const prior = structuredClone(f.row.metadata.detailExtraction.latestResult), calls = f.calls;
+  const saved = await saveProductShots(projectId, assetId, { candidateIds: [prior.candidates[0].id] });
+  const derived = structuredClone(f.state.assets.find(a => a.id === saved.saved[0].asset.id)); f.state.product.name = "변경 상품";
+  const writes = f.state.requests.filter(r => r.method === "PATCH" || r.method === "DELETE").length;
+  const list = await listAssets(projectId); assert.equal(extractionContextStatus(prior, list.extractionContextFingerprint), "stale"); assert.equal(f.calls, calls);
+  assert.equal(f.state.requests.filter(r => r.method === "PATCH" || r.method === "DELETE").length, writes); assert.deepEqual(f.row.metadata.detailExtraction.latestResult, prior);
+  assert.equal((await f.analyze(false)).reused, false); assert.notEqual(f.row.metadata.detailExtraction.latestResult.productContextFingerprint, prior.productContextFingerprint);
+  assert.deepEqual(f.state.assets.find(a => a.id === derived.id), derived);
+});
+test("legacy list/save preserve selections and provenance without automatic analysis or v2 fabrication", async t => {
+  const f = await fixture(t); await f.analyze(false); const r = f.row.metadata.detailExtraction.latestResult;
+  r.schemaVersion = 1; r.policyVersion = 1; delete r.productContextFingerprint;
+  for (const c of r.candidates) for (const k of ["visualKind", "targetProductRelevance", "containsTargetProduct", "relevanceReason"]) delete c[k];
+  const before = structuredClone(r), calls = f.calls; const list = await listAssets(projectId);
+  assert.deepEqual(readExtraction(list.items[0].asset.metadata).latestResult, before); assert.equal(f.calls, calls);
+  const saved = await saveProductShots(projectId, assetId, { candidateIds: [r.candidates[0].id] }); assert.equal(saved.saved.length, 1);
+  assert.deepEqual(f.row.metadata.detailExtraction.latestResult, before); assert.equal(f.calls, calls);
+});
+test("manual approval saves nondefault diagram while forbidden region remains rejected", async t => {
+  const f = await fixture(t); f.provider.analyze = async () => ({ schemaVersion: 2, regions: [{ ...region, visualKind: "diagram", targetProductRelevance: .1, containsTargetProduct: false }] });
+  await f.analyze(false); const candidate = f.row.metadata.detailExtraction.latestResult.candidates[0];
+  assert.equal(candidate.defaultSelected, false); assert.equal(candidate.saveAllowed, true);
+  assert.equal((await saveProductShots(projectId, assetId, { candidateIds: [candidate.id] })).saved.length, 1);
+  f.provider.analyze = async () => ({ schemaVersion: 2, regions: [{ ...region, regionType: "shipping_or_notice" }] });
+  await f.analyze(true); const prohibited = f.row.metadata.detailExtraction.latestResult.candidates[0]; assert.equal(prohibited.saveAllowed, false);
+  await assert.rejects(saveProductShots(projectId, assetId, { candidateIds: [prohibited.id] }), code("stale"));
+});
+test("a new provider returning legacy/missing relevance fails and preserves previous v2 result", async t => {
+  const f = await fixture(t); await f.analyze(false); const before = structuredClone(f.row.metadata.detailExtraction.latestResult);
+  f.provider.analyze = async () => ({ schemaVersion: 1, regions: [] }); await assert.rejects(f.analyze(true), code("invalid_response"));
+  assert.deepEqual(f.row.metadata.detailExtraction.latestResult, before);
 });
