@@ -1,6 +1,9 @@
+import type { CopyIntent, MessageSection } from "@/features/page-quality/commerce";
 import type { EditorSection } from "@/features/detail-editor/schemas";
 import type { LatestPlan, PlannerEvidence } from "@/features/page-planner/schemas";
 export type RegenerationInput = {
+  copyIntent?: CopyIntent;
+  otherSections?: MessageSection[];
   target: LatestPlan["plan"]["sections"][number];
   current: Pick<EditorSection, "type" | "content" | "style">;
   heroAssetId: string | null;

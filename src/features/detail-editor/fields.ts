@@ -19,7 +19,7 @@ export function textFields(content: GeneratedSection): TextField[] {
         content.items.forEach((item, i) => { add(`items.${i}.title`, `항목 ${i + 1} 제목`, item.title, 80); add(`items.${i}.description`, `항목 ${i + 1} 설명`, item.description, 400, false, true); });
         break;
       case "feature": case "detail": case "imageText":
-        add("body", "본문", content.body, 700, false, true);
+        add("body", "본문", content.body, 700, content.type !== "feature", true);
         if (content.type === "feature") content.bullets.forEach((p, i) => add(`bullets.${i}.text`, `특징 ${i + 1}`, p.text, 200));
         if (content.type === "detail") content.points.forEach((p, i) => add(`points.${i}.text`, `상세 항목 ${i + 1}`, p.text, 200));
         break;

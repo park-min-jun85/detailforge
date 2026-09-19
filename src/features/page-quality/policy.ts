@@ -1,12 +1,14 @@
+import { metaObservationCount } from "./commerce";
 import type { PlannerEvidence, PlannerAsset } from "@/features/page-planner/schemas";
 import type { GeneratedSection } from "@/features/section-engine/schemas";
 import { imageSizing } from "./images";
 
 export const PRESENTATION_VERSION = 1;
 export const MAX_ASSET_REUSE = 2;
-export const QUALITY_WARNINGS = ["repetitive_copy", "duplicate_title", "low_visual_density", "hero_low_resolution", "repeated_asset", "low_value_section", "copy_density", "limited_gallery_diversity"] as const;
+export const QUALITY_WARNINGS = ["repetitive_copy", "duplicate_title", "low_visual_density", "hero_low_resolution", "repeated_asset", "low_value_section", "copy_density", "limited_gallery_diversity", "meta_observation_copy"] as const;
 export type QualityWarning = (typeof QUALITY_WARNINGS)[number];
 export const QUALITY_LABELS: Record<QualityWarning, string> = {
+  meta_observation_copy: "AI 생성 문구가 이미지 설명 위주입니다. 짧은 표현을 검토해 주세요.",
   repetitive_copy: "같은 사실이나 문구가 반복됩니다. 강조할 위치를 정리해 주세요.", duplicate_title: "비슷한 제목이 있습니다. 각 섹션의 내용을 구분해 주세요.",
   low_visual_density: "텍스트가 연속됩니다. 사용할 제품 사진과 흐름을 확인해 주세요.", hero_low_resolution: "대표 이미지 해상도가 낮아 확대 시 흐려질 수 있습니다.",
   repeated_asset: "같은 이미지가 여러 섹션에서 사용되고 있습니다.", low_value_section: "새로운 정보가 적은 섹션이 있습니다. 구성 목적을 확인해 주세요.",
@@ -85,6 +87,7 @@ export function copyQuality(sections: GeneratedSection[]) {
     if ((s.type === "keyBenefits" || s.type === "notice" || s.type === "useCase") && !s.items.length) warnings.add("low_value_section");
   }
   if (duplicateCopyCount) warnings.add("repetitive_copy");
+  if (metaObservationCount(sections)) warnings.add("meta_observation_copy");
   return { warnings: [...warnings], duplicateTitleCount, duplicateCopyCount };
 }
 // New full AI generation only. Legacy reads and human edits remain non-blocking.
@@ -92,6 +95,6 @@ export function enforceGenerationQuality(sections: GeneratedSection[]) {
   if (visualMetrics(sections).maxAssetReuse > MAX_ASSET_REUSE) throw new Error("Excessive visual reuse");
   for (const s of sections) {
     if (s.type !== "hero" && sectionTitle(s).length > 40) throw new Error("Title too long");
-    if ((s.type === "feature" || s.type === "imageText" || s.type === "detail") && s.body.length > 300) throw new Error("Body too long");
+    if ((s.type === "feature" || s.type === "imageText" || s.type === "detail") && (s.body?.length ?? 0) > 300) throw new Error("Body too long");
   }
 }

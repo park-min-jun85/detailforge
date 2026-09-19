@@ -365,3 +365,9 @@ Images의 긴 Source 카드에 `제품컷 추출`을 제공한다. asset_type에
 Images와 Editor picker에 추출 이미지/원본 파일명(삭제 시 독립 이미지)/추출 역할 힌트를 표시한다. 사실이나 품질 보증이 아니다. 추출 저장 완료 수와 기존·실패 수를 구분하며 기존 명시적 batch 분석에 새 Derived가 포함된다. 자동 AI 호출은 없다.
 
 Planner는 일반/추출 Hero 후보와 배치 점수, 추출 이미지 수·긴 원본 수·사용 제외 수, 원본별 후보 있음/미분석·저장 Derived 수를 표시한다. 미분석 Derived 안내 및 Images 링크, 추출 권장, 새 Derived 후 stale·페이지 설계 다시 생성 CTA를 제공한다. raw fallback이 실제 Plan에 사용된 경우 보조 이미지 안내를 표시한다. 모든 경고는 Final export 바깥에 남는다. legacy 페이지는 명시적 재설계·콘텐츠 재생성 전 그대로다.
+
+## TASK-028 AI 카피 품질과 수동 편집
+
+새 AI가 보고체/중복 목적을 생성하면 기존 상세페이지를 유지하고 품질 검증 실패를 안내한다. Editor 수동 저장은 막지 않으며 `AI 생성 문구가 이미지 설명 위주입니다` 품질 경고만 review에 표시한다. 경고는 Final capture article 밖에 유지한다.
+
+imageText/detail 본문도 비워 둘 수 있는 nullable field가 됐다. null이면 Editor 공유 미리보기/Final/Export 모두 빈 p를 만들지 않는다. 이미지 중심인 경우 짧은 제목과 사진만 사용할 수 있다. Hero에는 상품명이 별도 중복 출력되지 않는 기존 headline 구조를 유지한다. 글자·스타일 자동 삭제/치환, 이미지 재선택, 자동 재생성 없음.

@@ -1,3 +1,4 @@
+import { CommerceCopyError } from "@/features/page-quality/commerce";
 import "server-only";
 import { copyQuality } from "@/features/page-quality/policy";
 import { buildConfirmedOptionSnapshot } from "./options";
@@ -78,7 +79,7 @@ export async function generateSections(projectId: string, options: { replaceExis
     try {
       const output = await invoke(provider, buildSectionInput(context.latest));
       let result;
-      try { result = validateSectionOutput(output, context.latest); } catch { throw new SectionEngineError("invalid_response"); }
+      try { result = validateSectionOutput(output, context.latest); } catch (error) { throw new SectionEngineError(error instanceof CommerceCopyError ? "copy_quality" : "invalid_response"); }
       const latest = await load(client, project);
       if (latest.planner.optionsVersion !== context.planner.optionsVersion || !latest.planReady || latest.fingerprint !== context.fingerprint || latest.page?.id !== page.id) throw new SectionEngineError("input_changed");
       if (!isDeepStrictEqual(latest.rows, context.rows)) throw new SectionEngineError("conflict");

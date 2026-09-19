@@ -19,12 +19,12 @@ async function fixture(fn, images=false) {
   try { if(images)db.state.assets=[assetRow({metadata:{aiAnalysis:completedAnalysis()}})];seedStrategy(db.state);seedValidation(db.state);await fn(db.state); }
   finally {await db.close();}
 }
-test('Page Plan strict schema and all ten domain types; 5–12 sections only',()=>fixture(state=>{
+test('Page Plan strict schema and all ten domain types; 4–12 sections only',()=>fixture(state=>{
   const input=buildPlannerInput(context(state)).input, plan=planResult(input);
   assert.ok(pagePlanSchema.safeParse(plan).success);
   for(const type of ['hero','keyBenefits','feature','imageText','gallery','useCase','detail','specification','option','notice'])
     assert.ok(pagePlanSchema.safeParse({...plan,sections:plan.sections.map(s=>({...s,type}))}).success);
-  for(const bad of [{sections:plan.sections.slice(0,4)},{sections:Array(13).fill(plan.sections[0])},{headline:'finished copy'},{sections:plan.sections.map(s=>({...s,type:'review'}))}])
+  for(const bad of [{sections:plan.sections.slice(0,3)},{sections:Array(13).fill(plan.sections[0])},{headline:'finished copy'},{sections:plan.sections.map(s=>({...s,type:'review'}))}])
     assert.equal(pagePlanSchema.safeParse({...plan,...bad}).success,false);
 }));
 test('duplicate keys/purposes and blank text reject; short plan has warning and null hero allowed',()=>fixture(state=>{

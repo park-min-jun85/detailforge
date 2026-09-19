@@ -16,8 +16,8 @@ export const pagePlanSchema = z.strictObject({
   heroAssetId: z.uuid().nullable(), heroRationale: text(400),
   sections: z.array(z.strictObject({ key: z.string().regex(/^[a-z][a-z0-9-]{0,59}$/), type: z.enum(SECTION_TYPES),
     purpose: text(240), contentBrief: text(500), evidenceIds: z.array(z.string().regex(/^[FV][1-9][0-9]{0,2}$/)).max(16),
-    assetIds: z.array(z.uuid()).max(8), priority: z.enum(["primary", "secondary", "supporting"]) })).min(5).max(12),
-  warnings: z.array(z.enum(PLANNER_WARNINGS)).max(14),
+    assetIds: z.array(z.uuid()).max(8), priority: z.enum(["primary", "secondary", "supporting"]) })).min(4).max(12),
+  warnings: z.array(z.enum(PLANNER_WARNINGS)).max(PLANNER_WARNINGS.length),
 });
 export type PagePlan = z.infer<typeof pagePlanSchema>;
 export const plannerEvidenceSchema = z.discriminatedUnion("kind", [
@@ -71,7 +71,7 @@ export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], as
 export const PLANNER_ERROR_CODES = ["not_found", "product_required", "facts_required", "validation_required", "content_required", "invalid_input", "ownership", "database", "busy", "conflict", "input_changed", "not_configured", "provider", "invalid_response", "timeout", "forbidden", "unexpected"] as const;
 export type PlannerErrorCode = (typeof PLANNER_ERROR_CODES)[number];
 export const latestPlanSchema = z.strictObject({ provider: z.literal("openai"), model: text(200), plannedAt: z.iso.datetime({ offset: true }),
-  presentationVersion: z.literal(1).optional(),
+  presentationVersion: z.literal(1).optional(), commerceCopyVersion: z.literal(1).optional(),
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/), evidenceSnapshot: z.array(plannerEvidenceSchema).max(83),
   factPolicySnapshot: plannerFactPolicySchema, assetSnapshot: z.array(plannerAssetSchema).max(30),
   strategySnapshot: productAnalysisSchema.nullable(), optionsSnapshot: confirmedOptionsSchema.optional(), plan: pagePlanSchema,

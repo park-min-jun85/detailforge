@@ -1,3 +1,4 @@
+import { copyIntent, distinctVisualAssignments, validateCommerceCopy, validateMessageDistinctness } from "@/features/page-quality/commerce";
 import "server-only";
 import { factCoverage, enforceGenerationQuality } from "@/features/page-quality/policy";
 import { visualAvailable, placementOnly, visualPromptAsset } from "@/features/visual-assets/policy";
@@ -10,13 +11,13 @@ import type { SectionInput } from "./types";
 export function sourcePlanFingerprint(result: LatestPlan) { return validationFingerprint(result); }
 export function buildSectionInput(latest: LatestPlan): SectionInput {
   validatePagePlan(latest.plan, latest.evidenceSnapshot, latest.assetSnapshot, latest.optionsSnapshot);
-  return { factPresentation:factCoverage(latest.evidenceSnapshot,latest.plan.sections), visualAssets: latest.assetSnapshot.filter(a => visualAvailable(a) && latest.plan.sections.some(s => s.assetIds.includes(a.assetId))).map(visualPromptAsset), optionsSnapshot: latest.optionsSnapshot, plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
+  return { sectionIntents: latest.plan.sections.map(s=>({key:s.key,intent:copyIntent(s.type),purpose:s.purpose})), visualAssignment:distinctVisualAssignments(latest.plan.sections,latest.assetSnapshot), factPresentation:factCoverage(latest.evidenceSnapshot,latest.plan.sections), visualAssets: latest.assetSnapshot.filter(a => visualAvailable(a) && latest.plan.sections.some(s => s.assetIds.includes(a.assetId))).map(visualPromptAsset), optionsSnapshot: latest.optionsSnapshot, plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
     validation: { supported: latest.factPolicySnapshot.supported.map(fact => fact.factId),
       restricted: latest.factPolicySnapshot.restricted.map(({ factId, status }) => ({ factId, status })) } };
 }
 const codePattern = /<\/?[a-z!][^>]*>|javascript:|https?:\/\/|(?:class|style)\s*=|[{}]|@import|(?:color|font-size|margin|padding)\s*:|#[a-f\d]{3,8}\b|\b(?:bg|text|p|m|flex|grid)-(?:\d+|[a-z]+-\d+)\b/i;
 const numericTokens = (text: string) => [...text.matchAll(/\d+(?:[.,]\d+)*(?:\s*(?:%|cm|mm|kg|ml|mL|mAh|시간|개월|일|년|회|개|배|위|도|g|L|W|V))?/g)].map(match => match[0].replace(/\s/g, ""));
-const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성|반드시|모든\s*가정|따뜻|편안|흡수|튼튼|실용|착용감|보온/g;
+const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성|반드시|모든\s*가정|따뜻|편안|흡수|튼튼|실용|착용감|보온|가볍|가벼|부드럽|부드러|고급|간편|편리|활동(?:하기)?\s*편|피부에\s*좋|안전/g;
 export function validateSectionOutput(value: unknown, latest: LatestPlan): SectionOutput {
   const output = sectionOutputSchema.parse(value), input = buildSectionInput(latest);
   if (JSON.stringify(output).length > 180000) throw new Error("Output too large");
@@ -24,6 +25,8 @@ export function validateSectionOutput(value: unknown, latest: LatestPlan): Secti
   if (new Set(output.sections.map(s => s.plannerKey)).size !== output.sections.length) throw new Error("Duplicate planner key");
   output.sections.forEach((section, index) => validateSectionContent(section, latest, input.plan.sections[index]));
   if(latest.presentationVersion===1) enforceGenerationQuality(output.sections);
+  output.sections.forEach(validateCommerceCopy);
+  validateMessageDistinctness(output.sections.map((s,i)=>({...s,purpose:input.plan.sections[i].purpose})));
   return output;
 }
 // Shared claim/reference checks for full generation and one-section regeneration.

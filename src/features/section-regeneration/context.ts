@@ -1,3 +1,5 @@
+import { COMMERCE_COPY_VERSION, copyIntent } from "@/features/page-quality/commerce";
+import { sectionTitle } from "@/features/page-quality/policy";
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -5,7 +7,7 @@ import { getAssetContext } from "@/features/assets/service";
 import { assetRowSchema, assertAssetScope } from "@/features/assets/schemas";
 import { getPlannerView } from "@/features/page-planner/service";
 import { isPlannerActive } from "@/features/page-planner/schemas";
-import { readPage, readGeneration } from "@/features/section-engine/persistence";
+import { readPage, readRows, readGeneration } from "@/features/section-engine/persistence";
 import { hasEditLease } from "@/features/section-engine/edit-lease";
 import { readReorder } from "@/features/section-reorder/schemas";
 import { editorSectionSchema } from "@/features/detail-editor/schemas";
@@ -26,7 +28,7 @@ export async function regenerationContext(projectId: string, sectionId: string, 
   if (planner.validationStatus !== "ready") throw new RegenError("stale_validation");
   const latest = planner.state?.latestResult;
   if (!latest || planner.stale || planner.prerequisite !== "ready") throw new RegenError("stale_plan");
-  buildSectionInput(latest); // Revalidate the complete saved Planner boundary without sending other sections to AI.
+  buildSectionInput(latest); // Revalidate the saved boundary; peers send only bounded editorial summaries.
   const result = await client.from("sections").select("*").eq("id", sectionId).eq("detail_page_id", page.id).abortSignal(AbortSignal.timeout(10000)).maybeSingle();
   if (result.error) throw new RegenError("database");
   if (!result.data) throw new RegenError("not_found");
@@ -52,11 +54,14 @@ export async function regenerationContext(projectId: string, sectionId: string, 
       strategy.useCaseHypotheses = strategy.useCaseHypotheses.filter(within); strategy.messagingAngles = strategy.messagingAngles.filter(within); strategy.cautions = strategy.cautions.filter(within);
     }
   }
-  const input: RegenerationInput = { target, current: { type: section.type, content: section.content, style: section.style }, heroAssetId: latest.plan.heroAssetId,
+  const peers = (await readRows(client, page.id)).map(row => editorSectionSchema.parse(row));
+  if (peers.length > 50 || peers.some(row => row.detail_page_id !== page.id) || !peers.some(row => isDeepStrictEqual(row, section))) throw new RegenError("conflict");
+  const otherSections = peers.filter(row => row.id !== section.id).map(row => ({ key: row.content.plannerKey, type: row.type, title: sectionTitle(row.content), purpose: latest.plan.sections.find(p => p.key === row.content.plannerKey)?.purpose, evidenceIds: row.content.evidenceIds, assetIds: row.content.assetIds }));
+  const input: RegenerationInput = { copyIntent: copyIntent(section.type), otherSections, target, current: { type: section.type, content: section.content, style: section.style }, heroAssetId: latest.plan.heroAssetId,
     evidence: latest.evidenceSnapshot.filter(evidence => allowed.has(evidence.id)), strategy,
     validation: { status: "ready", supported: latest.factPolicySnapshot.supported.filter(fact => allowed.has(fact.factId)).map(fact => fact.factId),
       restricted: latest.factPolicySnapshot.restricted.map(({ factId, status }) => ({ factId, status })) } };
   if (JSON.stringify(input).length > 180000) throw new RegenError("invalid_input");
-  return { client, scope, page, section, target, latest, input, inputFingerprint: validationFingerprint({ plan: fingerprint, current: planner.inputFingerprint, productId: scope.product.id }) };
+  return { client, scope, page, section, target, latest, input, inputFingerprint: validationFingerprint({ plan: fingerprint, current: planner.inputFingerprint, productId: scope.product.id, commerceCopyVersion:COMMERCE_COPY_VERSION, otherSections }) };
 }
 export type RegenerationContext = Awaited<ReturnType<typeof regenerationContext>>;

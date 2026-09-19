@@ -14,10 +14,10 @@ export const aiSectionContentSchema = z.discriminatedUnion("type", [
   z.strictObject({ ...common, type: z.literal("hero"), headline: text(80), subheadline: text(160).nullable(), highlights: z.array(point).max(4) }),
   z.strictObject({ ...common, type: z.literal("keyBenefits"), title: text(80), items: z.array(item).max(4) }),
   z.strictObject({ ...common, type: z.literal("feature"), title: text(80), body: text(700), bullets: z.array(point).max(6) }),
-  z.strictObject({ ...common, type: z.literal("imageText"), title: text(80), body: text(700) }),
+  z.strictObject({ ...common, type: z.literal("imageText"), title: text(80), body: text(700).nullable() }),
   z.strictObject({ ...common, type: z.literal("gallery"), title: text(80).nullable(), intro: text(160).nullable() }),
   z.strictObject({ ...common, type: z.literal("useCase"), title: text(80), intro: text(160).nullable(), items: z.array(item.extend({ confidence: z.number().min(0).max(1), assetIds: assets })).max(4) }),
-  z.strictObject({ ...common, type: z.literal("detail"), title: text(80), body: text(700), points: z.array(point).max(6) }),
+  z.strictObject({ ...common, type: z.literal("detail"), title: text(80), body: text(700).nullable(), points: z.array(point).max(6) }),
   z.strictObject({ ...common, type: z.literal("specification"), title: text(80), rows: z.array(row).max(53) }),
   z.strictObject({ ...common, type: z.literal("option"), title: text(80), items: z.array(row).max(8) }),
   z.strictObject({ ...common, type: z.literal("notice"), title: text(80), items: z.array(point).max(8) }),
@@ -28,7 +28,7 @@ const optionContent = z.strictObject({ ...common, type: z.literal("option"), tit
   if ((value.items !== undefined) === (value.optionSnapshot !== undefined)) ctx.addIssue({ code: "custom", message: "Exactly one option representation required" });
 });
 export const sectionContentSchema = z.discriminatedUnion("type", [aiSectionContentSchema.options[0], aiSectionContentSchema.options[1], aiSectionContentSchema.options[2], aiSectionContentSchema.options[3], aiSectionContentSchema.options[4], aiSectionContentSchema.options[5], aiSectionContentSchema.options[6], aiSectionContentSchema.options[7], aiSectionContentSchema.options[9], optionContent]);
-export const sectionOutputSchema = z.strictObject({ schemaVersion: z.literal(1), sections: z.array(aiSectionContentSchema).min(5).max(12) });
+export const sectionOutputSchema = z.strictObject({ schemaVersion: z.literal(1), sections: z.array(aiSectionContentSchema).min(4).max(12) });
 export type GeneratedSection = z.infer<typeof sectionContentSchema>;
 export type SectionOutput = z.infer<typeof sectionOutputSchema>;
 export const sectionStyleSchema = z.strictObject({ schemaVersion: z.literal(1), layout: z.enum(["centered", "split", "imageFirst", "textFirst", "grid", "stack"]),
@@ -48,7 +48,7 @@ export function refinedSectionStyle(section: GeneratedSection, index: number): z
   return base;
 }
 export const sectionMetaSchema = z.strictObject({ schemaVersion: z.literal(1), plannerKey: common.plannerKey, sourcePlanFingerprint: fingerprint,
-  qualityWarnings:z.array(z.enum(QUALITY_WARNINGS)).max(8).optional(),
+  qualityWarnings:z.array(z.enum(QUALITY_WARNINGS)).max(QUALITY_WARNINGS.length).optional(),
   sourceInputFingerprint: fingerprint, generationId: z.uuid(), generatedAt: z.iso.datetime({ offset: true }), provider: z.literal("openai"), model: text(200),
   origin: z.literal("generated"), warnings: z.array(z.enum(["option_evidence_missing", "hypothesis_not_fact", "review_copy_before_publish"])).max(3),
   manualEdit: z.strictObject({ edited: z.literal(true), editedAt: z.iso.datetime({ offset: true }), textEdited: z.boolean(), assetsEdited: z.boolean() }).optional(),

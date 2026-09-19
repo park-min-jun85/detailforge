@@ -10,6 +10,7 @@ export const REGEN_ERRORS = {
   stale_plan: { status: 409, message: "최신 페이지 설계를 먼저 확인해 주세요." },
   stale_validation: { status: 409, message: "최신 사실 검증을 먼저 완료해 주세요." },
   busy: { status: 409, message: "다른 편집·생성·복구가 진행 중입니다. 잠시 후 다시 시도해 주세요." },
+  copy_quality: { status: 422, message: "생성된 문구 품질 검증을 통과하지 못했습니다. 기존 상세페이지는 유지됩니다." },
   provider: { status: 502, message: "AI 후보를 생성하지 못했습니다. 기존 내용은 유지됩니다." },
   timeout: { status: 504, message: "AI 응답 시간이 초과되었습니다. 기존 내용은 유지됩니다." },
   invalid_response: { status: 502, message: "AI 결과의 형식을 확인할 수 없습니다. 기존 내용은 유지됩니다." },

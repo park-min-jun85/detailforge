@@ -123,3 +123,10 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - Shared Renderer의 intrinsic cap과 bounded token만 사용한다. Editor/Final/Export별 별도 CSS renderer를 만들지 않는다. review 경고는 capture article 밖에 둔다.
 - 새 crop에만 pixel 기반 최대3%/변 trim을 적용하며 sourceRect와 insets/출력 크기를 보존한다. 모호한 경계는 유지하고 기존 파일을 조회만으로 재가공하지 않는다.
 - 자동 retry로 품질 문제를 해결하지 않는다. 실제 API 실패와 mock/기존 canonical replay의 검증 범위를 보고서에서 구분한다.
+
+## Commerce-copy 규칙 (TASK-028)
+
+- AI 전체 생성/개별 재생성의 보고체 hard validation과 수동 저장을 구분한다. canonical option/spec 값은 prose detector 대상이 아니다.
+- 시각 명사구는 실제 V 관찰 범위만, hint는 배치만 허용한다. 전략이나 교차 Section 문구를 새 Fact 근거로 사용하지 않는다.
+- message signature/visual assignment는 runtime 편집 정책이며 데이터 truth가 아니다. 새 policy version은 Planner fingerprint에 반영하고 legacy row를 자동 변경하지 않는다.
+- quality failure는 기존 성공을 보존하며 자동 retry/문장 치환/추가 AI pass를 만들지 않는다. 실제 QA는 같은 자료의 새 두 호출과 mock 회귀를 구분한다.

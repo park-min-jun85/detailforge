@@ -11,6 +11,7 @@ export const SECTION_ERRORS = {
   recovery_required: { status: 503, message: "저장 복구가 필요합니다. 보관된 기존 결과를 표시합니다. 복구 후 다시 생성해 주세요." },
   not_configured: { status: 503, message: "Section 생성 AI 설정을 확인해 주세요." },
   invalid_response: { status: 502, message: "생성 결과가 설계 또는 근거 검증을 통과하지 못했습니다. 기존 콘텐츠는 유지됩니다." },
+  copy_quality: { status: 422, message: "생성된 문구 품질 검증을 통과하지 못했습니다. 기존 상세페이지는 유지됩니다." },
   provider: { status: 502, message: "AI 서비스에서 콘텐츠를 생성하지 못했습니다. 기존 콘텐츠는 유지됩니다." },
   timeout: { status: 504, message: "콘텐츠 생성 시간이 초과되었습니다. 결과를 새로고침해 확인해 주세요." },
   forbidden: { status: 403, message: "허용되지 않은 요청입니다." },

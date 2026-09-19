@@ -1,3 +1,4 @@
+import { COMMERCE_COPY_VERSION, validateMessageDistinctness } from "@/features/page-quality/commerce";
 import "server-only";
 import { planQuality, MAX_ASSET_REUSE, PRESENTATION_VERSION } from "@/features/page-quality/policy";
 import { readExtraction, derivationSchema } from "@/features/detail-extraction/schemas";
@@ -149,7 +150,8 @@ export async function planPage(projectId: string, providerFactory: () => Planner
       const output = await invoke(provider, context.current.input);
       let plan;
       try { plan = validatePagePlan(output, context.current.input.evidence, context.current.input.assets, context.current.input.confirmedOptions);
-        const quality=planQuality(plan.sections,context.current.input.evidence,context.current.input.assets);
+        validateMessageDistinctness(plan.sections);
+      const quality=planQuality(plan.sections,context.current.input.evidence,context.current.input.assets);
         if(quality.metrics.maxAssetReuse>MAX_ASSET_REUSE) throw new Error("Excessive asset reuse");
         plan.warnings=[...new Set([...plan.warnings,...quality.warnings])]; }
       catch { throw new PlannerError("invalid_response"); }
@@ -158,7 +160,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
       if (latest.product.id !== context.product.id || latest.current?.inputFingerprint !== context.current.inputFingerprint || view(latest).prerequisite !== "ready") throw new PlannerError("input_changed");
       const finishedAt = new Date().toISOString();
       await finish(client, project, page.id, { schemaVersion: 1, attempt: { ...state.attempt, status: "completed", finishedAt, errorCode: null },
-        latestResult: { presentationVersion:PRESENTATION_VERSION, provider: "openai", model: provider.model, plannedAt: finishedAt, inputFingerprint: context.current.inputFingerprint,
+        latestResult: { commerceCopyVersion:COMMERCE_COPY_VERSION, presentationVersion:PRESENTATION_VERSION, provider: "openai", model: provider.model, plannedAt: finishedAt, inputFingerprint: context.current.inputFingerprint,
           evidenceSnapshot: context.current.input.evidence, factPolicySnapshot: context.current.factPolicy, assetSnapshot: context.current.assetSnapshot,
           strategySnapshot: context.current.input.strategy, optionsSnapshot: context.current.input.confirmedOptions, plan } });
     } catch (error) {

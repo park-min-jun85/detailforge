@@ -20,7 +20,7 @@ Product Source
 ## MVP Goal
 
 사용자가 상품정보와 이미지 5~15장을 입력하면
-AI가 상품을 분석하고 8~12개 Section으로 상세페이지 초안을 생성한다.
+AI가 상품을 분석하고 근거량에 따라 4~12개 Section으로 상세페이지 초안을 생성한다.
 
 사용자는 문구, 이미지, Section 순서를 수정할 수 있고
 최종적으로 JPG/PNG를 출력할 수 있어야 한다.
@@ -47,4 +47,8 @@ AI가 상품을 분석하고 8~12개 Section으로 상세페이지 초안을 생
 
 ## TASK-026 판매용 품질
 
-판매용 상세페이지는 분석 보고서가 아니다. 각 Section에 다른 정보 역할을 부여하고 확인된 Fact의 반복 강조를 줄인다. 원본 intrinsic 해상도에 맞춰 사진 크기를 제한하고 deterministic spacing/layout과 보수적인 새 crop edge trim을 사용한다. 품질 개선을 위해 Fact·옵션·근거의 정확성을 희생하지 않는다. 실제 새 AI 생성 검증은 크레딧 복구 후 필요하다. [TASK-026](tasks/TASK-026.md).
+판매용 상세페이지는 분석 보고서가 아니다. 각 Section에 다른 정보 역할을 부여하고 확인된 Fact의 반복 강조를 줄인다. 원본 intrinsic 해상도에 맞춰 사진 크기를 제한하고 deterministic spacing/layout과 보수적인 새 crop edge trim을 사용한다. 품질 개선을 위해 Fact·옵션·근거의 정확성을 희생하지 않는다. 실제 새 AI 검증은 TASK-027에서 수행했고 남은 보고체·중복 문제는 TASK-028에서 보완했다. [TASK-026](tasks/TASK-026.md).
+
+## TASK-028 커머스 카피
+
+최종 산출물은 관찰 보고서가 아닌 판매용 상세페이지다. 새 AI는 근거가 있는 짧은 외형 설명과 section copy intent를 사용하며 이미지 확인을 권하는 보고체를 출력하지 않는다. 같은 사진·근거·목적을 되풀이하기보다4~12개의 유효한 Section으로 줄인다. Fact grounding과 확정 옵션 원문은 유지한다. [TASK-028](tasks/TASK-028.md).

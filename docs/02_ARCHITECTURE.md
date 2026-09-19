@@ -323,3 +323,11 @@ features/visual-assets/policy.ts는 현재 Product의 normal/derived/long_source
 Planner의 optional assetSnapshot.visual은 새 생성부터 저장하며 legacy snapshot 읽기를 유지한다. Derived와 모든 ID·분석·parent/hash/rect/사용 가능 상태가 fingerprint에 들어가고 signed URL/추출 후보/시각은 제외된다. Section Engine은 해당 Plan 선택 범위를 지키고 이미지로 Facts를 만들지 않는다. Renderer는 inventory로 이미지를 재선택하지 않고 canonical Section.assetIds만 표시한다. 기존 수동 편집·long Source Section은 조회만으로 변경되지 않는다.
 
 Source 삭제 후에도 독립 Derived는 유효하다. Derived 삭제는 새 inventory 제외와 stale/missing 안내이며 기존 Section을 fallback으로 즉시 교체하지 않는다. 추출과 Asset AI는 기존 사용자 버튼만 호출한다. [TASK-025](tasks/TASK-025.md).
+
+## TASK-028 commerce-copy 경계
+
+`page-quality/commerce.ts`의 pure helper는 type→copy intent, 문맥 기반 meta-observation 검사, 정렬된 근거·이미지 집합/정규화 purpose의 message signature, distinct visual 후보 hint를 제공한다. Facts/Asset/기존 Plan을 변경하지 않는다. Planner service는 새 출력의 중복 목적을 검사하고 commerceCopyVersion1을 입력 fingerprint와 latestResult에 기록한다. legacy Plan은 읽되 새 입력 정책에서 stale가 되며 자동 재작성하지 않는다.
+
+Section Engine은 기존 schema/correspondence/F/V/Asset/spec/options 검증 후 commerce meta-copy와 목적 중복을 hard validation한다. 개별 regeneration도 같은 검사를 거치고 다른 canonical Section의 type/title/purpose/evidenceIds/assetIds 요약만 최대49개 전달한다. peer summary는 사실 근거가 아니며 candidate fingerprint에 포함되어 동료 Section 변경 시 명시적 적용을 차단한다. unrelated peer의 수동 보고체는 검사 대상이 아니다.
+
+Plan과 Section output 개수는4~12, detail/imageText body는 string|null이다. 기존 string JSON과 legacy schemaVersion1은 호환된다. Editor field nullable와 공유 SectionCopy의 조건부 p 렌더링만 변경하며 DB migration은 없다. 품질 실패가 staging/기존 Section 삭제보다 먼저 발생하고 기존 recovery/CAS를 유지한다. [TASK-028](tasks/TASK-028.md).

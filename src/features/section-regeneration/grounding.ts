@@ -1,3 +1,4 @@
+import { CommerceCopyError, validateCommerceCopy, messageDuplication } from "@/features/page-quality/commerce";
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
 import { validateSectionContent } from "@/features/section-engine/grounding";
@@ -20,8 +21,14 @@ export function validateRegeneration(value: unknown, context: RegenerationContex
       delete content.items; content.optionSnapshot = structuredClone(current.optionSnapshot);
     } else if (content.optionSnapshot || !isDeepStrictEqual(content.items, current.items)) throw new RegenError("invalid_evidence");
   }
-  try { return validateSectionContent(content, context.latest, context.target, current.assetIds); }
+  try { validateSectionContent(content, context.latest, context.target, current.assetIds); }
   catch { throw new RegenError("invalid_evidence"); }
+  try {
+    validateCommerceCopy(content);
+    const comparison = messageDuplication([{ ...content, purpose: context.target.purpose }, ...(context.input.otherSections ?? [])]);
+    if (comparison.duplicates.some(pair => pair.first === 0)) throw new CommerceCopyError("duplicate_purpose");
+    return content;
+  } catch { throw new RegenError("copy_quality"); }
 }
 export function regeneratedContent(value: unknown, context: RegenerationContext, generatedAt: string, generationId: string, model: string) {
   const content = validateRegeneration(value, context);

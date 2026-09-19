@@ -256,7 +256,7 @@ sourcePlanFingerprint는 inputFingerprint뿐 아니라 실제 latestResult 전�
 
 명시적 버튼 1회는 선택 Section 1개의 text-only 요청이다. OPENAI_SECTION_REGEN_MODEL(기본 gpt-5.6-terra),
 기존 서버 키/SDK, strict type별 Structured Output+Zod, store=false/retry=0/60초/6,000 output tokens를 사용한다.
-원본 이미지/Vision/다른 Section은 전송하지 않는다. 고정 instruction과 untrusted current content/brief/F/V/전략 데이터를 분리한다.
+원본 이미지/Vision은 전송하지 않는다. TASK-028부터 다른 Section의 제한된 요약 context만 전송한다. 고정 instruction과 untrusted current content/brief/F/V/전략 데이터를 분리한다.
 현재 Planner purpose/type/key/evidence 안에서 supported F만 사실 주장 근거로 허용하고 TASK-012 claim guard로 재검증한다.
 V/strategy는 사실이 아니다. spec/option 원문 행, 현재 style/실제 선택 이미지와 Hero 수동 이미지 선택을 보존한다.
 후보는 저장하지 않으며 서명+10분 TTL/기준 revision/입력 fingerprint를 포함한다.
@@ -282,7 +282,7 @@ Planner 존재 확인 helper와 Section deterministic source mapping을 제공�
 
 ## TASK-022 Confirmed Options와 생성 경계
 
-확정 옵션은 사용자 선택 데이터이며 Fact/Visual 근거나 판매 가능 보장이 아니다. 새 Planner는 별도 confirmedOptions 입력과 optionsSnapshot을 사용하고 present이면 option 정확히1개, missing/empty이면0개를 prompt/서버에서 검증한다. 전체 개수5–12와 Plan/Section 1:1 유지.
+확정 옵션은 사용자 선택 데이터이며 Fact/Visual 근거나 판매 가능 보장이 아니다. 새 Planner는 별도 confirmedOptions 입력과 optionsSnapshot을 사용하고 present이면 option 정확히1개, missing/empty이면0개를 prompt/서버에서 검증한다. 전체 개수4–12 (TASK-028)와 Plan/Section 1:1 유지.
 Section AI는 option items=[]만 반환한다. 서버가 canonical snapshot과 중립 제목을 구성한다. 실행 중 옵션 변경은 input/version 재확인으로 거부하고 기존 Sections를 복구한다. 일반 option AI 재생성도 최신 원본을 가져오지 않고 저장된 snapshot을 그대로 보존한다. 원본 변경의 반영은 사람이 비교 후 명시적으로 요청한다. 실제 provider 호출 없이 mock으로 검증했다.
 
 ## TASK-024 Product Shot Extraction
@@ -304,3 +304,13 @@ Derived 저장 뒤 Asset AI를 자동 실행하지 않는다. TASK-024 당시 �
 새 Planner는 유효한 Derived가 있는 긴 parent를 제외하며 정상 대표/Derived 제품·사용 사진을 Hero pool로 비교한다. long fallback은 비Hero 최대1회, specification/notice/option에는 사용하지 않는다. 동일 parent/hash 사각형 IoU≥.85는 deterministic 후보 축소 및 출력 거부로 보호한다. 정상 이미지의 Hero+Feature 재사용은 허용한다.
 
 Prompt에는 작은 visual projection만 전달한다. 전체 provenance/hash/rect/미저장 후보/rationale/URL은 보내지 않는다. 모든 unknown/금지 Asset, 부적합 Hero, long 반복은 invalid_response로 거부하며 기존 성공 결과를 보존한다. F-only claim grounding/스펙 원문/확정 옵션 snapshot은 유지한다. 옵션 역할 이미지는 그룹 보조용으로만 쓰고 choice-image 대응을 추론하지 않는다. 자동 Vision/추출/분석 없음. [TASK-025](tasks/TASK-025.md).
+
+## TASK-028 Commerce copy와 분석 narration 분리
+
+V 관찰문은 내부 근거다. 이를 이미지에서 확인/사진을 참고/보입니다 같은 최종 보고체로 옮기지 않는다. identity, benefit_from_fact, feature_from_fact, visual_description, detail_description, usage_hypothesis, selection_information, specification, notice intent로 역할을 구분한다. 실제 관찰이 있는 외형 명사구만 허용하며 간편/편안/가벼움/부드러움/고급/안전 등의 이점을 V로 입증하지 않는다. Product Analysis 전략은 역할·흐름만 보조하며 F로 승격하지 않는다.
+
+새 생성/재생성은 Structured Output→Zod→기존 대응/근거/이미지/Fact/spec/options 검증→commerce 보고체/메시지 중복 검사 후 저장/후보 발급한다. 보고체 검사는 NFKC/공백 정규화, media+확인 표현, visual intent+관찰 서술을 조합한다. 실제 notice의 옵션 확인 지시는 일괄 차단하지 않는다. canonical spec/option 값은 검사로 변경하지 않는다. 실패는 안전한 copy_quality 오류, 이전 성공 보존, 자동 AI 재시도0회다.
+
+같은 Asset/V를 공유하고 새 근거가 없는 Hero→Detail/imageText 반복은 거부한다. 새로운 supported F를 설명하는 Feature의 동일 사진 재사용은 기존 최대2회 안에서 허용한다. distinct visual hint와 purpose signature는 결정적 휴리스틱이며 의미 진실성의 완전한 증명이 아니다. 최소 개수는5에서4로 낮췄고 상한12/1:1 대응은 유지한다. body는 imageText/detail에서만 nullable 추가, Hero subheadline/Gallery intro의 기존 null도 사용한다.
+
+개별 재생성은 compact peer summary를 추가하지만 다른 Section의 전체 body/이미지 URL을 보내지 않는다. 입력과 전략·peer 문구 모두 untrusted DATA다. 추가 third-pass/embedding/OCR/Vision 호출 없음. [TASK-028](tasks/TASK-028.md).

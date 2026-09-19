@@ -2,6 +2,14 @@
 
 ## 현재 단계
 
+TASK-028 — Commerce Copy & Visual Section Refinement 구현·실제 AI QA 완료. 브랜치 `feat/commerce-copy-quality`. 관찰 보고체 공통 검증, copy intent/message signature, distinct visual hint,4~12 Section,nullable visual body와 개별 재생성 peer context를 연결했다. 전체755 tests와 필수 검사, 실제 Planner1+Section1 호출로4 Sections/보고체0/중복사진0/860×2334 PNG·JPG 확인. [TASK-028](./TASK-028.md).
+
+## 완료된 TASK-027 기반
+
+TASK-027은 실제 새 Planner1회/Section1회로 TASK-026 정책을 검증했다. 사실·옵션은 유지됐지만 관찰 보고체와 반복 Detail을 발견했다. [TASK-027](./TASK-027.md).
+
+## 완료된 TASK-026 기반
+
 TASK-026 — Sales Detail Page Quality Refinement 구현 및 mock/crop/Renderer/PNG·JPG 검증 완료, **새 AI 생성 품질은 OpenAI credit_balance_exhausted로 미검증**. 브랜치 `feat/sales-page-quality`.
 intrinsic1.5배 cap, 새 crop3% trim, coverage/제목·밀도·이미지 반복 검사, 공유 렌더링/검토 경고를 추가했다. 전체720 tests/typegen/tsc/lint/build/diff 검사 통과. 동일 상품의 기존 canonical7개를 재현한 출력860×3919이며 새 AI 결과는 아니다. [TASK-026 보고서](./TASK-026.md). commit/migration/dependency 없음.
 
