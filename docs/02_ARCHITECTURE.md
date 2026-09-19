@@ -1,5 +1,13 @@
 # Architecture
 
+## TASK-029 deterministic visual system
+
+`detail-renderer/visual-system.ts`는 해상도·비율·항목 수로 runtime 표시 모드를 계산한다. CSS Modules가 hierarchy/rhythm/중립색/배치를 소유하며 새 style token이나 DB migration은 없다. 기존 `page-quality/images.ts`의1.5배 cap에 큰 Hero/단일 Gallery용 application target만 추가한다. server read model/서명 URL/Export boundary는 그대로다.
+
+`section-engine/style-policy.ts`는 새 Editor 선택에만 정보 섹션의 무의미한 image layout,asset 없는 cover를 차단한다. legacy saved token을 그대로 유지하는 편집과 read schema는 호환된다. 신규 Section generation defaults만 sequence와 confirmed option count를 사용한다. `page-quality/title-relevance.ts`는 원문을 보존하는 review warning이고 Fact 판정이 아니다.
+
+Editor Preview adapter/Final/Export가 동일 JSX/CSS를 사용한다. 이는 기존 token의 의도적인 renderer-system update이므로 기존 페이지도 시각적으로 달라지지만 저장 content/style/순서는 바꾸지 않는다. [TASK-029](tasks/TASK-029.md).
+
 ## TASK-026 presentation 품질 계층
 
 `features/page-quality`는 Fact truth와 분리된 pure role/coverage/title/density/reuse 검사 및 intrinsic image sizing을 담당한다. Planner runtime input/presentationVersion fingerprint와 생성 후 검증, Section runtime coverage/길이 검증, 비차단 Editor/Renderer review가 공유한다. Renderer의 canonical content와 Options snapshot은 변경하지 않는다. 새 style은 기존 bounded token으로만 결정하고 legacy row 자동 변환은 하지 않는다.

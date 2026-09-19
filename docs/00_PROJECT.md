@@ -1,5 +1,9 @@
 # DetailForge Project
 
+## TASK-029 Commerce Visual System
+
+판매용 상세페이지 디자인은 canonical Section과 bounded style token을 application-owned deterministic layout으로 표시한다. AI가 CSS/색/px/HTML을 만들지 않는다. 제품 이미지와 정보 역할에 맞는 hierarchy, adaptive option/gallery, intrinsic1.5배 cap을 Editor/Final/Export가 공유한다. 기존 사실·옵션·저장 style은 자동 변경하지 않는다. [TASK-029](tasks/TASK-029.md).
+
 ## Mission
 
 도매상품의 원본 사실정보와 실제 제품 정체성을 유지하면서

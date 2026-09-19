@@ -40,11 +40,11 @@ export function defaultSectionStyle(type: SectionType): z.infer<typeof sectionSt
     background: "plain", emphasis: type === "hero" ? "strong" : "normal", imageFit: "contain" };
 }
 const fingerprint = z.string().regex(/^[a-f0-9]{64}$/);
-export function refinedSectionStyle(section: GeneratedSection, index: number): z.infer<typeof sectionStyleSchema> {
+export function refinedSectionStyle(section: GeneratedSection, index: number, confirmedValueCount?: number): z.infer<typeof sectionStyleSchema> {
   const base=defaultSectionStyle(section.type);
   if(section.type==="specification") return {...base,density:"compact"};
-  if(section.type==="option") return {...base,background:"soft"};
-  if(section.assetIds.length && ["imageText","feature","detail"].includes(section.type)) return {...base,layout:index%2?"split":"imageFirst",density:"spacious",background:index%3===0?"soft":"plain"};
+  if(section.type==="option") return {...base,background:"soft",density:(confirmedValueCount ?? section.optionSnapshot?.confirmed.groups.reduce((n,g)=>n+g.values.length,0) ?? section.items?.length ?? 0)<=1?"compact":"normal"};
+  if(section.assetIds.length && ["imageText","feature","detail"].includes(section.type)) return {...base,layout:index%2?"textFirst":"imageFirst",density:section.type==="feature"?"normal":"spacious",background:index%3===0?"soft":"plain"};
   return base;
 }
 export const sectionMetaSchema = z.strictObject({ schemaVersion: z.literal(1), plannerKey: common.plannerKey, sourcePlanFingerprint: fingerprint,

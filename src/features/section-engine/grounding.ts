@@ -17,7 +17,7 @@ export function buildSectionInput(latest: LatestPlan): SectionInput {
 }
 const codePattern = /<\/?[a-z!][^>]*>|javascript:|https?:\/\/|(?:class|style)\s*=|[{}]|@import|(?:color|font-size|margin|padding)\s*:|#[a-f\d]{3,8}\b|\b(?:bg|text|p|m|flex|grid)-(?:\d+|[a-z]+-\d+)\b/i;
 const numericTokens = (text: string) => [...text.matchAll(/\d+(?:[.,]\d+)*(?:\s*(?:%|cm|mm|kg|ml|mL|mAh|시간|개월|일|년|회|개|배|위|도|g|L|W|V))?/g)].map(match => match[0].replace(/\s/g, ""));
-const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성|반드시|모든\s*가정|따뜻|편안|흡수|튼튼|실용|착용감|보온|가볍|가벼|부드럽|부드러|고급|간편|편리|활동(?:하기)?\s*편|피부에\s*좋|안전/g;
+const guardedTerms = /최고|완벽|무조건|보장|압도적|업계\s*1위|유일|인증|고속|방수|항균|무독성|친환경|치료|예방|안전성|내구성|반드시|모든\s*가정|따뜻|편안|흡수|튼튼|실용|착용감|보온|가볍|가벼|부드럽|부드러|고급|프리미엄|간편|편리|활동(?:하기)?\s*편|피부에\s*좋|안전/g;
 export function validateSectionOutput(value: unknown, latest: LatestPlan): SectionOutput {
   const output = sectionOutputSchema.parse(value), input = buildSectionInput(latest);
   if (JSON.stringify(output).length > 180000) throw new Error("Output too large");

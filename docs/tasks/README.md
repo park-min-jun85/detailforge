@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-029 — Commerce Visual Design System & Final Page Visual Refinement 완료. 브랜치 `feat/commerce-visual-system`. 기존 bounded token·공유 Renderer에 섹션별 hierarchy, intrinsic Hero, adaptive Benefits/Gallery/Spec/Option, 새 style guard와 title relevance warning을 연결했다. 전체790 tests, 필수 검사 및 동일 canonical 자료의 실제 production PNG/JPG860×1941 검증. 실제 외부 API/DB 요청0회, migration/dependency/commit 없음. [TASK-029](./TASK-029.md).
+
+## 완료된 TASK-028 기반
+
 TASK-028 — Commerce Copy & Visual Section Refinement 구현·실제 AI QA 완료. 브랜치 `feat/commerce-copy-quality`. 관찰 보고체 공통 검증, copy intent/message signature, distinct visual hint,4~12 Section,nullable visual body와 개별 재생성 peer context를 연결했다. 전체755 tests와 필수 검사, 실제 Planner1+Section1 호출로4 Sections/보고체0/중복사진0/860×2334 PNG·JPG 확인. [TASK-028](./TASK-028.md).
 
 ## 완료된 TASK-027 기반

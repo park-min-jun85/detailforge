@@ -1,5 +1,13 @@
 # Coding Rules
 
+## TASK-029 visual rules
+
+- 디자인은 canonical content + bounded saved token + application-owned CSS로 결정한다. AI CSS/hex/px/Tailwind/raw HTML/JS 및 DB CSS string 금지.
+- Runtime hero/count/option/spec 모드를 DB에 저장하지 않는다. 기존 saved style을 새 default로 덮어쓰지 않는다. 새 generation에서만 sequence와 confirmed option count로 기본값을 결정한다.
+- 모든 사진은 intrinsic1.5배 cap,Editor/Final/Export 동일 Renderer. 작은 viewport가 final860px 레이아웃을 바꾸지 않는다.
+- 새 invalid style 선택은 UI와 prepareEdit 경계에서 차단하되 unchanged legacy style의 읽기/문구 편집을 막지 않는다.
+- 시각 QA는 같은 canonical data의 A/B를 우선한다. 실제 상품 자료와 synthetic fixture를 구분하고,원격 데이터나 유료 AI를 불필요하게 변경/호출하지 않는다.
+
 ## 목적
 
 DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.

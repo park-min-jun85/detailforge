@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { sectionRowSchema, sectionStyleSchema, storedContentSchema } from "@/features/section-engine/schemas";
 import { applyTextFields, textFields } from "./fields";
+import { validateStyleChange } from "@/features/section-engine/style-policy";
 
 export const editRequestSchema = z.strictObject({ revision: z.iso.datetime({ offset: true }),
   fields: z.record(z.string().max(60), z.string().max(700).nullable()),
@@ -31,6 +32,7 @@ export function prepareEdit(section: EditorSection, input: unknown, now: string)
   const textChanged = Object.keys(old.fields).some(key => old.fields[key] !== fields[key]);
   const assetsChanged = JSON.stringify(old.assetIds) !== JSON.stringify(request.assetIds);
   const content = previewContent(section, { ...request, fields });
+  validateStyleChange(content, request.style, section.style);
   if (textChanged || assetsChanged) content.meta = { ...content.meta, manualEdit: { edited: true, editedAt: now,
     textEdited: textChanged || !!content.meta.manualEdit?.textEdited, assetsEdited: assetsChanged || !!content.meta.manualEdit?.assetsEdited },
     ...(textChanged ? { groundingStatus: "needs_review" as const } : {}) };

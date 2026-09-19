@@ -1,5 +1,9 @@
 # PRD
 
+## TASK-029 커머스 시각 품질
+
+860px 저장 폭을 기준으로 Hero/Benefits/Feature/ImageText/Gallery/UseCase/Detail/Specification/Option/Notice에 다른 정보 hierarchy를 제공한다. 단일 옵션은 inline,여러 값은 wrapping 정보 목록,여러 그룹은 block으로 표현하며 실제 구매 버튼으로 만들지 않는다. 작은 사진은1.5배 확대 상한을 유지하고 큰 사진만 제한적으로 확장한다. Editor와 Final은 같은 Renderer를 사용한다. 명백한 모호한 제목은 review warning이며 원문을 자동 변경하지 않는다. 동일 content/style의 디자인 A/B는 [TASK-029](tasks/TASK-029.md).
+
 PRD v0.1 - 상세페이지 재구성 MVP
 
 ## TASK-025 승인 추출컷 중심 재구성

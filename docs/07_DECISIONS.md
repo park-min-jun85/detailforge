@@ -1,5 +1,14 @@
 # Architecture Decisions
 
+## ADR-014 — Application-owned commerce visual system
+
+- Status: Accepted
+- Date: 2026-09-19
+
+기존 bounded style schemaVersion1을 유지하고 이미지 intrinsic 크기·항목 수에 따른 deterministic presentation mode는 application runtime에서만 계산한다. AI가 CSS/색/px를 작성하거나 DB에 raw style을 저장하지 않는다. Shared SectionRenderer/CSS가 Editor/Final/Export의 유일한 표현 계층이다.
+
+새 generation defaults에는 sequence/confirmed option count를 사용하지만 saved style이 항상 우선이다. CSS token mapping 개선은 intentional renderer-system update이므로 기존 페이지 외관은 달라질 수 있으며 DB migration/자동 재저장은 하지 않는다. 새 무의미한 스타일 선택만 validation하고 unchanged legacy 조합은 호환한다. 실제 Fact/옵션 원문 및 사진 bytes와1.5배 cap을 보존한다. [TASK-029](tasks/TASK-029.md).
+
 프로젝트의 확정된 기술/도메인 결정을 기록한다. 새 결정은 `ADR-XXX`로 추가한다.
 
 ## ADR-001

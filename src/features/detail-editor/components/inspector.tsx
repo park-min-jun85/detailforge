@@ -2,6 +2,7 @@ import Image from "next/image";
 import { textFields } from "../fields";
 import type { EditDraft, EditorSection } from "../schemas";
 import type { EditorAsset } from "../types";
+import { styleChoiceAllowed } from "@/features/section-engine/style-policy";
 const options = {
   layout: { centered: "중앙 구성", split: "좌우 분할", imageFirst: "이미지 먼저", textFirst: "본문 먼저", grid: "이미지 격자", stack: "세로 구성" },
   textAlign: { left: "왼쪽", center: "가운데" }, density: { compact: "촘촘하게", normal: "기본", spacious: "여유롭게" },
@@ -27,7 +28,7 @@ export function Inspector({ section, draft, assets, disabled, onChange }: { sect
       {!rows.length && <p className="text-zinc-500">등록된 사실값이 없습니다.</p>}</section>}
     <fieldset disabled={disabled} className="space-y-3 border-t border-zinc-200 pt-4"><legend className="pr-2 text-sm font-semibold">스타일</legend>
       {(Object.keys(options) as (keyof typeof options)[]).map(key => <label key={key} className="block text-sm">{labels[key]}<select className="product-input" value={draft.style[key]} onChange={event => onChange({ ...draft, style: { ...draft.style, [key]: event.target.value } })}>
-        {Object.entries(options[key]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>)}
+        {Object.entries(options[key]).map(([value, label]) => <option key={value} value={value} disabled={value !== section.style[key] && !styleChoiceAllowed(content.type, key, value, draft.assetIds.length > 0)}>{label}</option>)}</select></label>)}
     </fieldset>
     <fieldset disabled={disabled} className="space-y-3 border-t border-zinc-200 pt-4"><legend className="pr-2 text-sm font-semibold">상품 이미지 · 최대 8개</legend>
       <p className="text-xs leading-5 text-zinc-500">이미지 선택은 이 Section에만 적용됩니다. 새 이미지는 이미지 화면에서 등록하세요.</p>

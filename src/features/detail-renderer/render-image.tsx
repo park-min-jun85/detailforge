@@ -4,11 +4,13 @@ import { useState } from "react";
 import type { RenderAsset } from "./model";
 import styles from "./renderer.module.css";
 import { imageSizing } from "@/features/page-quality/images";
+import { heroMode } from "./visual-system";
 export function RenderImage({ asset, type = "default" }: { asset?: RenderAsset; type?: string }) {
   const [failed, setFailed] = useState(false);
   const [natural, setNatural] = useState<{ width:number; height:number } | null>(null);
   const width = natural?.width ?? asset?.width ?? 760, height = natural?.height ?? asset?.height ?? 570;
-  const sizing = imageSizing(natural?.width ?? asset?.width, natural?.height ?? asset?.height, type);
+  const sizingType = type === "hero" && heroMode(natural ?? asset) === "large-image" ? "heroLarge" : type;
+  const sizing = imageSizing(natural?.width ?? asset?.width, natural?.height ?? asset?.height, sizingType);
   return <figure className={styles.image} data-image-state={!asset?.previewUrl || failed ? "missing" : "available"}>
     {asset?.previewUrl && !failed
       ? <Image src={asset.previewUrl} alt={asset.name} width={width} height={height} style={{ maxWidth:sizing.maxWidth, maxHeight:sizing.maxHeight }} unoptimized loading="eager" onLoad={event => { const img=event.currentTarget; setNatural({width:img.naturalWidth,height:img.naturalHeight}); }} onError={() => setFailed(true)} />

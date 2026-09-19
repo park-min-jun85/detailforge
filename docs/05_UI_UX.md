@@ -1,5 +1,15 @@
 # UI / UX
 
+## TASK-029 Commerce Visual System
+
+Final render surface는 detail_pages.width(기본860px),zoom1이다. 작은 화면은 review wrapper만 가로 스크롤하며 본문을375px 레이아웃으로 재설계하지 않는다. Editor의 축소·선택 outline은 wrapper에만 있다.
+
+공통 카드 테두리를 제거하고 Hero42/46px→일반 제목34px→정보 제목28px→Notice22px hierarchy를 사용한다. type별 compact/normal/spacious 여백은 application CSS 상수다. Hero는 작은 사진의 중앙 stage/중간/big680px variant,ImageText는 imageFirst/textFirst 좌우 배치,Benefits1/2/3/4개와Gallery1/2/3/4~8개는 항목 수에 맞춘다. 모든 사진의1.5배 cap 및 기본 contain 유지,cover는 명시된 token만 적용한다.
+
+Specification은 label/value 표와 줄바꿈·subtle alternating row,1~3행 compact. Option1그룹1값은 inline,여러 값은 정보 chip/list,여러 그룹은 block이다. 값 원문을 분리/수정하지 않고 구매 selector나 재고 표시를 넣지 않는다. Notice는 compact,내용 없는 영역은 표시하지 않는다. plain/soft/contrast는 중립색으로 제한하고 어두운 배경에서 보조 글자 대비를 유지한다.
+
+Inspector는 기존 여백/배경/정렬/레이아웃/강조/이미지 맞춤만 제공한다. 새 invalid 조합은 disabled/server validation하며 저장된 legacy 스타일은 보존한다. 모호한 구성/옵션 제목의 품질 경고는 review에만 표시하고 Final 이미지에 출력하지 않는다. 기존 token의 CSS 해석 변경은 의도적인 Renderer 시스템 업데이트다. [TASK-029](tasks/TASK-029.md).
+
 ## TASK-026 판매용 시각 품질
 
 Editor/Final/Export는 같은 SectionRenderer의 intrinsic1.5배 cap과 type별 크기 상한을 사용한다. 작은 Hero는 중앙+중립 surface로 배치하며 이미지 정보가 원본보다 증가했다고 표현하지 않는다. 자연 비율 contain을 기본으로 하고 cover는 기존 선택을 존중한다. Hero 밀도, imageText/feature의 split/imageFirst, spec 행 정렬·subtle surface, 옵션값을 보존한 chip을 bounded token으로 매핑한다.

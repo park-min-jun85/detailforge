@@ -90,7 +90,7 @@ export async function generateSections(projectId: string, options: { replaceExis
           sourceInputFingerprint: context.latest!.inputFingerprint, generationId: runId, generatedAt, provider: "openai", model: provider.model, origin: "generated",
           qualityWarnings:copyQuality(result.sections).warnings,
           warnings: ["review_copy_before_publish", ...(section.type === "option" && !context.latest!.optionsSnapshot && !section.items.length ? ["option_evidence_missing"] : []), ...(section.type === "useCase" ? ["hypothesis_not_fact"] : [])] }) },
-        style: context.latest!.presentationVersion===1?refinedSectionStyle(section,sortOrder):defaultSectionStyle(section.type), created_at: generatedAt, updated_at: generatedAt }));
+        style: context.latest!.presentationVersion===1?refinedSectionStyle(section,sortOrder,context.latest!.optionsSnapshot?.groups.reduce((n,g)=>n+g.values.length,0)):defaultSectionStyle(section.type), created_at: generatedAt, updated_at: generatedAt }));
       state = { ...state, staged: rows };
       page = await writeGeneration(client, await ownedPage(client, page, runId), state);
       await insertRows(client, rows);
