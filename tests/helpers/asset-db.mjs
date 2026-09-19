@@ -17,7 +17,7 @@ export const assetRow = (overrides = {}) => ({
 export async function startAssetDb() {
   const state = {
     project: { id: projectId, name: "검증 프로젝트" }, product: { id: productId, project_id: projectId, name: "검증 상품" },
-    assets: [], objects: new Set(), requests: [], failure: null, ackLost: false, failRecoveryRead: false,
+    assets: [], objects: new Set(), objectBytes: new Map(), requests: [], failure: null, ackLost: false, failRecoveryRead: false,
     failCleanup: false, ignoreProductFilter: false, beforePatch: null, patchAckLost: null,
   };
   const server = createServer(async (request, response) => {
@@ -35,6 +35,14 @@ export async function startAssetDb() {
     const fail = () => send({ message: "private-db-detail secret-test-key", error: "private-storage-error", statusCode: "400", code: "TEST" }, 400);
     if (url.pathname.startsWith("/storage/v1/object/sign/")) {
       if (state.failure === "sign") return fail();
+      if (request.method === "GET") {
+        if (state.downloadRedirect) { response.writeHead(302, { Location: state.downloadRedirect }); return response.end(); }
+        const path = url.pathname.slice("/storage/v1/object/sign/product-assets/".length);
+        const bytes = state.objectBytes.get(path);
+        if (!bytes) return fail();
+        response.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Length": bytes.length });
+        return response.end(bytes);
+      }
       if (!payload.paths) {
         const path = url.pathname.slice("/storage/v1/object/sign/product-assets/".length);
         if (!state.objects.has(path)) return fail();
@@ -48,17 +56,18 @@ export async function startAssetDb() {
         const path = url.pathname.slice("/storage/v1/object/product-assets/".length);
         if (state.failure === "upload") return fail();
         state.objects.add(path);
+        state.objectBytes.set(path, buffer);
         return send({ Key: `product-assets/${path}`, Id: assetId });
       }
       if (request.method === "DELETE") {
         if (state.failure === "storage-delete" || state.failCleanup) return fail();
-        for (const path of payload.prefixes) state.objects.delete(path);
+        for (const path of payload.prefixes) { state.objects.delete(path); state.objectBytes.delete(path); }
         return send([]);
       }
     }
     const table = url.pathname.split("/").at(-1);
     const matches = (row) => [...url.searchParams].every(([field, value]) => !value.startsWith("eq.")
-      || (field === "metadata" ? isDeepStrictEqual(row[field], JSON.parse(value.slice(3))) : String(row[field]) === value.slice(3)));
+      || (field === "metadata" ? isDeepStrictEqual(row[field], JSON.parse(value.slice(3))) : field === "metadata->detailExtraction->>revision" ? row.metadata?.detailExtraction?.revision === value.slice(3) : String(row[field]) === value.slice(3)));
     if (request.method === "GET") {
       if (state.failure === "read" || (table === "assets" && url.searchParams.has("id") && state.failRecoveryRead)) return fail();
       let rows = table === "projects" ? (state.project ? [state.project] : [])
@@ -76,7 +85,7 @@ export async function startAssetDb() {
     if (table !== "assets") return fail();
     if (request.method === "PATCH") {
       if (state.beforePatch) await state.beforePatch(payload);
-      const status = payload.metadata?.aiAnalysis?.status;
+      const status = payload.metadata?.detailExtraction?.attempt?.status ?? payload.metadata?.aiAnalysis?.status;
       if (state.failure === `patch-${status}`) return fail();
       const row = state.assets.find(matches);
       if (row) Object.assign(row, payload);

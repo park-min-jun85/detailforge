@@ -29,13 +29,15 @@ function getServerEnvironment() {
   return result.data;
 }
 
-export function createSupabaseServerClient(): SupabaseClient<Database> {
+export function createSupabaseServerClient(options?: { requestTimeoutMs: number }): SupabaseClient<Database> {
   const environment = getServerEnvironment();
 
   return createClient<Database>(
     environment.SUPABASE_URL,
     environment.SUPABASE_SERVICE_ROLE_KEY,
     {
+      ...(options ? { global: { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init,
+        signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(options.requestTimeoutMs)]) : AbortSignal.timeout(options.requestTimeoutMs) }) } } : {}),
       auth: {
         autoRefreshToken: false,
         detectSessionInUrl: false,

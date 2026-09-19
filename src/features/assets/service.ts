@@ -35,7 +35,7 @@ async function requireProduct(projectId: string, client: Client) {
   return { projectId: context.project.id, productId: context.product.id };
 }
 
-async function exclusive<T>(productId: string, operation: () => Promise<T>) {
+export async function exclusive<T>(productId: string, operation: () => Promise<T>) {
   // 현재 단일 서버 MVP에서 수량/순서 경쟁을 막는다. 여러 프로세스의 DB 잠금은 아니다.
   if (mutations.has(productId)) throw new AssetError(409, "이미지 작업이 진행 중입니다. 잠시 후 다시 시도해 주세요.");
   mutations.add(productId);

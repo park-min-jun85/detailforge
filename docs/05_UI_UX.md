@@ -345,3 +345,11 @@ OptionsManager에서 저장된 원본 URL/상품번호 → 도매매 옵션 불�
 option Inspector에 읽기 전용 groups/values, current/stale/unlinked/missing/조회불가 상태, 상품정보의 옵션 영역 링크와 최신 옵션 반영 버튼을 제공한다. 비교 → 반영 확인/취소이며 자동 저장/덮어쓰기는 없다. 기존 dirty guard를 사용하고 비교 후 편집이 생기면 반영을 차단한다. 빈 확정 groups는 “이 섹션의 옵션 표시를 비웁니다.”로 명시적으로 확인한다.
 option Section이 없으면 페이지 설계/상세페이지 생성으로 안내하며 자동 추가하지 않는다. 여러 option이 있으면 선택한 Section만 반영한다. 옵션 freshness와 전체 Plan stale는 별도이며 옵션 반영으로 전체 Plan 경고가 해제되지 않는다.
 Editor/Final/PNG/JPG는 저장된 Section snapshot의 그룹명/값/순서를 동일하게 출력한다. 긴 문구 줄바꿈과 empty Section 숨김, legacy items 호환을 지원한다. UUID/version/출처·freshness 경고는 capture 결과에 노출하지 않는다. 실제860×2865 PNG/JPG 검증 결과는 [TASK-022](./tasks/TASK-022.md).
+
+## TASK-024 긴 원본 제품컷 후보 검토
+
+Images의 긴 Source 카드에 `제품컷 추출`을 제공한다. asset_type에 의존하지 않으며 null 크기는 브라우저 이미지 로드로 버튼을 판단하고 서버 decoder가 최종 검증한다. Derived에는 출처/실제 크기를 표시하고 재귀 추출 버튼은 제공하지 않는다.
+
+분석은 명시적 버튼으로 시작한다. 패널은 후보 preview/종류/신뢰도/텍스트 밀도/실제 crop 크기/설명/체크박스와 제외 후보 보기, 남은 슬롯, 선택 저장을 제공한다. SVG viewBox와 명시적 clipPath로 기존 signed Source를 잘라 보여 주며 후보만으로 Storage 파일을 만들지 않는다. 일반 DOM 이미지와 같이 EXIF 방향이 적용된 좌표계를 사용한다.
+
+분석/저장 중 disabled와 aria-busy/status, checkbox label/preview 접근성 이름을 제공한다. grid는 작은 화면1열/desktop2–3열이다. 재분석 실패 시 이전 후보 유지, 부분 타일 실패와 경계 잘림 가능성을 안내한다. stale 저장 오류는 재분석을 요구한다. 슬롯 초과 시 전체 선택을 차단한다. 부분 저장은 성공/기존/실패 수와 실패 후보를 구분한다. 새 Derived는 미분류이며 후속 AI 분석은 별도 사용자 동작이다. [TASK-024](./tasks/TASK-024.md).

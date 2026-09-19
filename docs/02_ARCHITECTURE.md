@@ -297,3 +297,13 @@ import-merge는 원본명/값↔UUID 출처 매핑으로 기존 표시값/추가
 
 Product Options confirmed read model → Planner optionsSnapshot(별도 구조 입력) → server deterministic optionSnapshot → saved Section → 공유 Renderer/Export다. F/V evidence와 옵션을 혼합하지 않는다. provider schema는 옵션값을 만들 수 없고 서버가 UUID/label/순서를 보존한다.
 기존 Section에는 GET 비교/POST 명시적 옵션 반영 endpoint를 사용한다. Section revision CAS + 기존 page lease + source version/fingerprint 재확인으로 보호한다. 원본 Options와 Sections는 cross-row 원자적 transaction이 아니며 저장 후 경쟁을 별도 결과로 알린다. GET은 변환/저장하지 않는다. [TASK-022](./tasks/TASK-022.md).
+
+## TASK-024 긴 상세이미지에서 제품컷 추출
+
+`features/detail-extraction`은 Source Asset 조회 → private Storage bounded download → Sharp EXIF 정규화 → overlap tiles → Vision strict regions → 서버 좌표/품질/dedup → 후보 검토 → 명시적 ID 저장을 담당한다. Source long image는 원본 재료이며 Derived는 별도 직사각형 crop이다. 배경 제거·생성·OCR enrichment·Fact 생성은 없다.
+
+`assets/metadata.ts`는 기존 Asset AI와 추출의 공통 조건부 merge 경계다. 추출 결과가 있으면 작은 `detailExtraction.revision` UUID로 CAS하고 모든 앱 metadata writer가 revision을 교체한다. 최초 추출 이전의 작은 metadata만 기존 전체 JSON CAS를 사용한다. 최신 namespace를 reread/merge하며 충돌 시 AI를 자동 재호출하지 않는다.
+
+같은 Source는 DB attempt/save lease, 같은 Product upload/delete/crop은 기존 process-local mutation lock으로 보호한다. 추출은 프로세스당 1개다. 상품 전체 30개 한도는 기존 단일 서버 MVP 보장이며 여러 프로세스의 서로 다른 Source까지 원자적으로 잠그는 DB transaction은 아니다. 공개/다중 worker 운영 전 별도 product lock이 필요하다.
+
+Node route만 Sharp/provider/Storage에 접근한다. Client는 shared schema/policy와 후보 SVG 미리보기만 사용한다. 저장 후 기존 Asset AI는 사용자가 별도 실행한다. Planner의 Derived 우선 선택, 긴 Source fallback 처리는 TASK-025에 넘긴다. [TASK-024](./tasks/TASK-024.md).

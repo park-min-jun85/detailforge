@@ -299,3 +299,14 @@ TASK-021B는 migration 없이 기존 source_snapshot에 `domeme_api` source를 �
 
 product_options 및 0005는 변경하지 않았다. detail_pages.plan.latestResult.optionsSnapshot에 확정 source를 저장한다. sections.content의 option은 기존 items 또는 신규 optionSnapshot 중 하나다. 신규 snapshot은 source=confirmed_options, appliedAt, confirmed(schemaVersion/policyVersion/productId/rowId/version/state/groups/fingerprint)를 보존한다. 기존 meta/manualEdit/grounding은 유지한다.
 내용 hash는 row ID와 canonical groups를 포함하고 version/시각/source metadata를 제외한다. missing row와 saved empty groups는 별개다. 반영 POST는 selected section content만 revision 조건으로 UPDATE하며 원본 Options/Facts/Plan을 변경하지 않는다. GET legacy rewrite 및 일괄 변환 없음. 동시성 한계/후속 stale는 [TASK-022](./tasks/TASK-022.md).
+
+## TASK-024 Source / Derived Asset (migration 없음)
+
+기존 assets.metadata JSONB와 product-assets private bucket을 사용한다. Source row의 width/height가 null이어도 decoder로 작업 크기를 구하며 원본 컬럼은 갱신하지 않는다. 경로/bytes/asset_type/기존 metadata는 보존한다.
+
+- Source `metadata.detailExtraction`: schemaVersion, revision UUID, attempt(status/runId/startedAt/finishedAt/errorCode), saveLease, latestResult. 결과는 bytes SHA-256, EXIF 정규화 좌표계/크기, model, 시각, bounded 타일 실패 목록, 최대24 후보를 포함한다. 실패한 재분석은 latestResult를 유지한다.
+- Derived `metadata.derivation`: kind=detail_image_crop, parentAssetId, sourceFingerprint, candidateId, sourceRect, sourceDimensions, coordinateSpace, suggestedRole, confidence, extractedAt, provider/model. 처음에는 asset_type=unclassified. 실제 decoder 크기를 width/height에 저장하고 현재 최대 sort_order 뒤에 원본 후보 순서로 append한다.
+- 경로는 `projects/{projectId}/products/{productId}/{serverUUID}.{actualMimeExtension}`. signed URL과 임시 타일은 DB/Storage에 보존하지 않는다. accepted IDs는 중복 저장하지 않고 현재 Product Assets의 parent/hash/candidateId로 조회한다.
+- Source/Derived 삭제는 독립적이며 cascade를 추가하지 않는다. 후보당 INSERT 응답 유실은 재조회한다. DB 미저장이 확인되면 이번 UUID 파일만 보상 삭제하며 저장 여부가 불명확하면 파일을 지우지 않고 recovery 오류를 반환한다.
+
+Product/Facts/Validation/Analysis/Options/Plan/Sections/Project status는 추출의 쓰기 대상이 아니다. [TASK-024](./tasks/TASK-024.md).

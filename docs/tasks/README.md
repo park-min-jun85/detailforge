@@ -2,6 +2,14 @@
 
 ## 현재 단계
 
+TASK-024 — Product Shot Extraction from Long Detail Images 구현·실제 QA 완료. 브랜치 `feat/detail-image-extraction`.
+긴 private Source → overlap Vision tiles → 후보 검토/선택 → Sharp crop → 별도 unclassified Derived Asset을 연결했다.
+실제860×12900 원본에 gpt-5.6-luna8회 tile 호출,73.5초, 후보24/기본선택11/검토저장7개 성공. 도식2개 오분류는 직접 제외했고 품질 한계를 기록했다.
+전체639 tests(기존586+신규53)/typegen/tsc/lint/build/diff/secret 검사 통과. Source·비Asset·기존 사용자 데이터 보존, QA DB/Storage 정리 완료.
+sharp0.35.4 직접 의존성 추가. migration/commit/main merge 없음. [54항목 완료 보고와 실제 QA](./TASK-024.md). 다음 TASK-025는 승인 Derived 우선 이미지 선택과 긴 Source fallback 정책이다.
+
+## 완료된 TASK-023 기반
+
 TASK-023 — 실제 도매상품 End-to-End MVP QA 완료. 브랜치 `feat/e2e-mvp-qa`.
 67695797 실제 Import/API 옵션/AI/Planner/Section/Editor/Renderer/PNG·JPG 검증. 기능 흐름은 완료했으나 긴 상세 이미지와 Hero 품질은 판매용 기준 미달이다.
 Planner provider의 confirmedOptions 인자 누락 blocker만 최소 수정했다. 전체586 tests/typegen/tsc/lint/build/diff 통과. QA DB/Storage 정리, 기존 데이터 해시 일치. 상세 문제·우선순위는 [TASK-023](./TASK-023.md).

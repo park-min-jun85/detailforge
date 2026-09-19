@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAssetContext } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope, parseId } from "@/features/assets/schemas";
 import type { Asset } from "@/types/domain";
+import { metadataUpdate } from "@/features/assets/metadata";
 import { AI_SIGNED_URL_SECONDS, MAX_CONCURRENT_ANALYSES, PROVIDER_TIMEOUT_MS } from "./config";
 import { AnalysisError } from "./errors";
 import { getAnalysisProvider } from "./provider";
@@ -29,9 +30,7 @@ async function readAsset(client: Client, scope: Scope): Promise<Asset> {
 }
 
 async function compareAndSave(client: Client, asset: Asset, state: AnalysisState, assetType = asset.assetType) {
-  const result = await client.from("assets").update({ metadata: mergeAnalysis(asset.metadata, state), asset_type: assetType })
-    .eq("id", asset.id).eq("project_id", asset.projectId).eq("product_id", asset.productId).eq("storage_path", asset.storagePath)
-    .eq("metadata", JSON.stringify(asset.metadata)).eq("asset_type", asset.assetType).select("*").abortSignal(dbTimeout()).maybeSingle();
+  const result = await metadataUpdate(client, asset, mergeAnalysis(asset.metadata, state), assetType).select("*").abortSignal(dbTimeout()).maybeSingle();
   if (result.error) {
     // 응답만 유실된 UPDATE인지 확인한다. 이 재조회는 AI를 다시 호출하지 않는다.
     const actual = await readAsset(client, { projectId: asset.projectId, productId: asset.productId, assetId: asset.id });

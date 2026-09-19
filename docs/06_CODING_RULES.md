@@ -104,3 +104,15 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - schema bounds/중복/placeholder 규칙은 공통 계층에서 검사한다. Fact helper의 없음/X를 옵션에서 무조건 삭제하지 않는다. slash를 자동 분할하지 않는다.
 - Product 저장과 별도 explicit Options save를 사용하며 실패 시 draft를 보존한다. 내부 DB 오류와 service-role 키는 비공개다.
 - Adapter options는 optional 후보 boundary일 뿐 자동 저장하지 않는다. 후속 명시적 확인·출처·CAS 계약을 통해 연결한다.
+
+## Product Shot Extraction 규칙 (TASK-024)
+
+- Sharp/OpenAI/Storage는 server-only. Source는 검증된 Project→Product→Asset ID와 private 경로로만 읽는다. 요청 body의 URL/파일 경로/rect를 수용하지 않는다.
+- 입력10MiB, decoder40MP, 최대 폭6000/높이60000, 타일16/후보24를 유지한다. EXIF 정규화된 하나의 lossless working buffer에서 분석과 실제 crop을 수행하고 원본 bytes를 수정하지 않는다.
+- 원본 bytes SHA-256을 분석/저장에서 검증한다. candidateId는 source hash/rect/role로 결정하며 signed URL은 지문이나 DB 데이터가 아니다.
+- 새 metadata writer는 `assets/metadata.ts` CAS에 참여해야 한다. namespace를 최신 row에 merge하고 다른 분석/출처 정보를 덮어쓰지 않는다. large JSON을 URL 필터에 넣지 않는다.
+- 저장은 사용자 candidate ID 선택만 허용한다. capacity는 전체 신규 선택을 시작 전에 검사하고 source 순서로 append한다. 같은 parent/hash/candidate의 재요청은 기존 row를 반환한다.
+- 파생 사진은 실제 rectangle crop, 원본 MIME 유지(JPEG/WebP95, PNG lossless), resize/upscale/생성/배경 제거 없음. asset_type=unclassified와 derivation 출처를 저장한다.
+- 원본/파생 삭제는 독립적이다. 불확실한 DB commit의 파일은 삭제하지 않는다. SDK/Sharp stack·secret·raw provider response·prompt를 사용자/DB에 남기지 않는다.
+- 자동 테스트 provider는 mock만 사용한다. 실제 QA는 별도 Project와 최소 호출을 사용하고 기존 데이터 hash 보존 및 테스트 DB/Storage 정리를 확인한다.
+- Fact/OCR enrichment, AI 자동 후속 분석, Planner Derived 우선 변경은 이번 범위가 아니다. 후속 TASK-025에 넘긴다.

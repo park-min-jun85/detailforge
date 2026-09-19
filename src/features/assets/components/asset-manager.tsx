@@ -8,14 +8,17 @@ import type { AssetList } from "../types";
 import { requestAssetAnalysis } from "@/features/asset-analysis/client";
 import { AnalysisResultCard, ASSET_TYPE_LABELS } from "@/features/asset-analysis/components/analysis-result";
 import { isActiveAnalysis, readAnalysis } from "@/features/asset-analysis/schemas";
+import { ExtractionPanel } from "@/features/detail-extraction/components/extraction-panel";
+import { isDerived, isExtractionActive, isSaveActive, readExtraction } from "@/features/detail-extraction/schemas";
+import { imageCategory } from "@/features/detail-extraction/policy";
 
 type Selection = { file: File; status: "ready" | "uploading" | "success" | "error"; message?: string };
 const sizeLabel = (bytes: number) => bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : "이미지 작업을 완료하지 못했습니다.";
 
-function AssetThumbnail({ url, filename }: { url: string | null; filename: string }) {
+function AssetThumbnail({ url, filename, onDimensions }: { url: string | null; filename: string; onDimensions: (width: number, height: number) => void }) {
   const [failed, setFailed] = useState(false);
-  return url && !failed ? <Image src={url} alt={filename} fill unoptimized className="object-contain p-3" onError={() => setFailed(true)} />
+  return url && !failed ? <Image src={url} alt={filename} fill unoptimized className="object-contain p-3" onError={() => setFailed(true)} onLoad={e => onDimensions(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)} />
     : <p className="px-4 text-center text-xs leading-5 text-zinc-500">미리보기를 불러올 수 없습니다.<br />목록을 새로고침해 주세요.</p>;
 }
 
@@ -23,6 +26,9 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
   const [list, setList] = useState(initialList);
   const [selection, setSelection] = useState<Selection[]>([]);
   const [busy, setBusy] = useState(false);
+  const [extractionId, setExtractionId] = useState<string | null>(null);
+  const [dimensions, setDimensions] = useState<Record<string, { width: number; height: number }>>({});
+  const extractionItem = list.items.find(item => item.asset.id === extractionId);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -31,7 +37,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<{ done: number; total: number; success: number; failed: number } | null>(null);
-  const hasActiveAnalysis = list.items.some(({ asset }) => isActiveAnalysis(readAnalysis(asset.metadata), now));
+  const hasActiveAnalysis = list.items.some(({ asset }) => isActiveAnalysis(readAnalysis(asset.metadata), now) || isExtractionActive(readExtraction(asset.metadata), now) || isSaveActive(readExtraction(asset.metadata), now));
   const analysisTargets = list.items.filter(({ asset }) => {
     const state = readAnalysis(asset.metadata);
     return state?.status !== "completed" && !isActiveAnalysis(state, now);
@@ -200,11 +206,13 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
             {list.items.map(({ asset, previewUrl }, index) => (
               <li key={asset.id} className="min-w-0 overflow-hidden rounded-lg border border-zinc-200">
                 <div className="relative flex aspect-square items-center justify-center border-b border-zinc-100 bg-zinc-50">
-                  <AssetThumbnail key={previewUrl} url={previewUrl} filename={asset.originalFilename} />
+                  <AssetThumbnail key={previewUrl} url={previewUrl} filename={asset.originalFilename} onDimensions={(width, height) => setDimensions(current => current[asset.id]?.width === width && current[asset.id]?.height === height ? current : { ...current, [asset.id]: { width, height } })} />
                 </div>
                 <div className="space-y-3 p-4">
                   <p className="break-all text-sm font-medium">{index + 1}. {asset.originalFilename}</p>
                   <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 저장 분류: {ASSET_TYPE_LABELS[asset.assetType]}</p>
+                  {isDerived(asset.metadata) ? <p className="text-xs font-medium text-zinc-600">상세이미지에서 추출한 제품컷 · {asset.width} × {asset.height}px</p>
+                    : (readExtraction(asset.metadata) || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => setExtractionId(asset.id)}>제품컷 추출{readExtraction(asset.metadata)?.latestResult ? " 후보 보기" : ""}</button>}
                   <AnalysisResultCard asset={asset} now={now} pending={analyzingId === asset.id} disabled={busy}
                     error={analysisErrors[asset.id]} onAnalyze={() => analyze([asset.id])} />
                   {confirmId === asset.id ? <div className="space-y-3">
@@ -220,6 +228,9 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
+      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy}
+        begin={() => { if (locked.current) return false; locked.current = true; setBusy(true); return true; }} end={() => { locked.current = false; setBusy(false); setNow(Date.now()); }}
+        refresh={refresh} update={asset => setList(current => ({ ...current, items: current.items.map(item => item.asset.id === asset.id ? { ...item, asset } : item) }))} close={() => setExtractionId(null)} />}
       <p className="text-sm leading-6 text-zinc-500">완료된 이미지 분석은 다음 상품 분석 단계에서 사용합니다. 상세페이지 구성은 이후 단계에서 제공됩니다.</p>
     </div>
   );

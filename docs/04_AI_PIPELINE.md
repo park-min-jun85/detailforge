@@ -278,3 +278,15 @@ Planner 존재 확인 helper와 Section deterministic source mapping을 제공�
 
 확정 옵션은 사용자 선택 데이터이며 Fact/Visual 근거나 판매 가능 보장이 아니다. 새 Planner는 별도 confirmedOptions 입력과 optionsSnapshot을 사용하고 present이면 option 정확히1개, missing/empty이면0개를 prompt/서버에서 검증한다. 전체 개수5–12와 Plan/Section 1:1 유지.
 Section AI는 option items=[]만 반환한다. 서버가 canonical snapshot과 중립 제목을 구성한다. 실행 중 옵션 변경은 input/version 재확인으로 거부하고 기존 Sections를 복구한다. 일반 option AI 재생성도 최신 원본을 가져오지 않고 저장된 snapshot을 그대로 보존한다. 원본 변경의 반영은 사람이 비교 후 명시적으로 요청한다. 실제 provider 호출 없이 mock으로 검증했다.
+
+## TASK-024 Product Shot Extraction
+
+이 분석은 Fact가 아닌 사진 사각형을 제안한다. 기본 `gpt-5.6-luna`, 서버 환경변수 `OPENAI_DETAIL_EXTRACTION_MODEL`, 기존 OPENAI_API_KEY를 사용한다. 모델/입력 지원은 [공식 모델 문서](https://developers.openai.com/api/docs/models/gpt-5.6-luna)와 [Vision guide](https://developers.openai.com/api/docs/guides/images-vision)를 확인했다.
+
+EXIF 정규화 Source를 목표2048px 높이, overlap256px, 최대16 타일로 나눈다. ±128px 안의 16행 이상 near-white/low-variance gutter만 보수적으로 snapping한다. 타일은 폭1024px 이하 JPEG data URL이며 영구 업로드하지 않는다. 이미지 내용은 untrusted DATA이며 지시·OCR·Fact·옵션값 추론을 따르지 않는 고정 system prompt를 사용한다.
+
+Strict Structured Outputs와 Zod로 9개 regionType, 0..1 점수3개, textDensity, 0..1000 정수 box, 180자 이하 시각적 rationale을 검사한다. 서버가 tile offset을 더해 원본 pixel 사각형으로 변환하고 invalid/reversed/zero box를 거부한다. margin 2%(축당 최대24px), 동일 role IoU≥0.65 또는 containment≥0.92 NMS 후 상위24개를 원본 순서로 복원한다. 다른 사진일 수 있는 edge 조각은 union하지 않으며 기본 선택하지 않는다.
+
+제품/사용·착용/디테일/옵션사진 중 충분한 크기·confidence·visibility·usability와 text none/low만 기본 선택한다. mixed는 사용자 검토 대상, 텍스트/배송·공지/배너/기타는 저장 제외다. 실제 선택 저장까지 사용자가 결정한다. 동일 bytes hash 성공 결과는 재사용하며 재분석 버튼만 추가 호출한다. 타일45초, run300초, 자동 retry0, SDK log off/store false다. 일부 실패는 partialAnalysis/실패 구간 경고, 전부 실패는 failed와 이전 결과 보존이다.
+
+Derived 저장 뒤 Asset AI를 자동 실행하지 않는다. TASK-025의 이미지 우선 선택은 아직 변경하지 않는다. [TASK-024](./tasks/TASK-024.md).
