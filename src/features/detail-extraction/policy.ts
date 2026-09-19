@@ -20,6 +20,7 @@ export const TILE_TIMEOUT_MS = 45000;
 export const RUN_TIMEOUT_MS = 300000;
 export const LEASE_MS = 360000;
 export const OUTPUT_QUALITY = 95;
+export const MAX_TRIM_FRACTION = .03;
 export const PRODUCT_REGIONS = ["product_photo", "usage_photo", "detail_closeup", "variant_photo"] as const;
 export function imageCategory(width: number, height: number) {
   if (!(width > 0 && height >= LONG_MIN_HEIGHT && height / width >= LONG_ASPECT_RATIO)) return "normal";

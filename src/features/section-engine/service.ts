@@ -1,4 +1,5 @@
 import "server-only";
+import { copyQuality } from "@/features/page-quality/policy";
 import { buildConfirmedOptionSnapshot } from "./options";
 import { hasEditLease } from "./edit-lease";
 import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
@@ -10,7 +11,7 @@ import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { parseId } from "@/features/assets/schemas";
 import { SectionEngineError } from "./errors";
 import { buildSectionInput, sourcePlanFingerprint, validateSectionOutput } from "./grounding";
-import { defaultSectionStyle, isGenerationActive, sectionsAreStale, sectionMetaSchema, type GenerationState, type SectionRow } from "./schemas";
+import { defaultSectionStyle, refinedSectionStyle, isGenerationActive, sectionsAreStale, sectionMetaSchema, type GenerationState, type SectionRow } from "./schemas";
 import { getSectionProvider } from "./provider";
 import { SECTION_TIMEOUT_MS } from "./config";
 import { readPage, readRows, readGeneration, writeGeneration, ownedPage, insertRows, removeRows, restoreGeneration, sameRow, type Client } from "./persistence";
@@ -86,8 +87,9 @@ export async function generateSections(projectId: string, options: { replaceExis
         content: { ...(section.type === "option" && context.latest!.optionsSnapshot ? { type: section.type, plannerKey: section.plannerKey, title: "옵션 안내", evidenceIds: section.evidenceIds, assetIds: section.assetIds,
           optionSnapshot: buildConfirmedOptionSnapshot(context.latest!.optionsSnapshot, generatedAt) } : section), meta: sectionMetaSchema.parse({ schemaVersion: 1, plannerKey: section.plannerKey, sourcePlanFingerprint: context.fingerprint,
           sourceInputFingerprint: context.latest!.inputFingerprint, generationId: runId, generatedAt, provider: "openai", model: provider.model, origin: "generated",
+          qualityWarnings:copyQuality(result.sections).warnings,
           warnings: ["review_copy_before_publish", ...(section.type === "option" && !context.latest!.optionsSnapshot && !section.items.length ? ["option_evidence_missing"] : []), ...(section.type === "useCase" ? ["hypothesis_not_fact"] : [])] }) },
-        style: defaultSectionStyle(section.type), created_at: generatedAt, updated_at: generatedAt }));
+        style: context.latest!.presentationVersion===1?refinedSectionStyle(section,sortOrder):defaultSectionStyle(section.type), created_at: generatedAt, updated_at: generatedAt }));
       state = { ...state, staged: rows };
       page = await writeGeneration(client, await ownedPage(client, page, runId), state);
       await insertRows(client, rows);

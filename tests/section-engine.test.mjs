@@ -5,7 +5,7 @@ import {fixture,provider,sectionOutput,protectedSnapshot} from './helpers/sectio
 import {projectId,assetId} from './helpers/section-db.mjs';
 import {sameRow} from '../src/features/section-engine/persistence.ts';
 import {buildSectionInput,validateSectionOutput,sourcePlanFingerprint} from '../src/features/section-engine/grounding.ts';
-import {sectionOutputSchema,sectionStyleSchema,defaultSectionStyle,storedContentSchema,sectionsAreStale} from '../src/features/section-engine/schemas.ts';
+import {sectionOutputSchema,sectionStyleSchema,defaultSectionStyle,refinedSectionStyle,storedContentSchema,sectionsAreStale} from '../src/features/section-engine/schemas.ts';
 import {getSectionView,generateSections} from '../src/features/section-engine/service.ts';
 import {createSectionProvider} from '../src/features/section-engine/provider.ts';
 import {getSectionConfig} from '../src/features/section-engine/config.ts';
@@ -67,7 +67,7 @@ test('missing/stale Planner and Validation block POST while existing content rem
 }));
 test('initial generation saves exact count/order, provenance, defaults; upstream/Plan/Project unchanged',()=>fixture(async state=>{
   const before=protectedSnapshot(state);const result=await generate();assert.equal(result.sections.length,latest(state).plan.sections.length);
-  result.sections.forEach((row,i)=>{assert.equal(row.sort_order,i);assert.equal(row.type,latest(state).plan.sections[i].type);assert.ok(storedContentSchema.safeParse(row.content).success);assert.equal(row.content.meta.plannerKey,latest(state).plan.sections[i].key);assert.deepEqual(row.style,defaultSectionStyle(row.type));assert.equal(row.content.meta.sourcePlanFingerprint,sourcePlanFingerprint(latest(state)));});
+  result.sections.forEach((row,i)=>{assert.equal(row.sort_order,i);assert.equal(row.type,latest(state).plan.sections[i].type);assert.ok(storedContentSchema.safeParse(row.content).success);assert.equal(row.content.meta.plannerKey,latest(state).plan.sections[i].key);assert.deepEqual(row.style,refinedSectionStyle(row.content,i));assert.equal(row.content.meta.sourcePlanFingerprint,sourcePlanFingerprint(latest(state)));});
   assert.deepEqual(protectedSnapshot(state),before);assert.equal(state.page.settings.sectionGeneration.status,'completed');assert.equal(state.page.settings.sectionGeneration.backup,null);
   assert.deepEqual((await getSectionView(projectId)).sections,result.sections);assert.doesNotMatch(JSON.stringify(state.sections),/signedUrl|input_image|https:/);
 }));

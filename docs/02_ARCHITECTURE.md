@@ -1,5 +1,11 @@
 # Architecture
 
+## TASK-026 presentation 품질 계층
+
+`features/page-quality`는 Fact truth와 분리된 pure role/coverage/title/density/reuse 검사 및 intrinsic image sizing을 담당한다. Planner runtime input/presentationVersion fingerprint와 생성 후 검증, Section runtime coverage/길이 검증, 비차단 Editor/Renderer review가 공유한다. Renderer의 canonical content와 Options snapshot은 변경하지 않는다. 새 style은 기존 bounded token으로만 결정하고 legacy row 자동 변환은 하지 않는다.
+
+`detail-extraction/edge-trim.ts`는 server-only Sharp crop 저장 경계의 deterministic pixel 분석이다. sourceRect 보존, 선택적 trim insets/postTrimDimensions, 실제 출력 W/H를 기록하며 visual inventory가 일관성을 검사한다. 원본/기존 Derived 덮어쓰기, 추가 Vision, 배경 제거 없음. [TASK-026](tasks/TASK-026.md).
+
 ## 목적
 
 DetailForge의 시스템 경계, 계층, 핵심 모델을 정의한다.

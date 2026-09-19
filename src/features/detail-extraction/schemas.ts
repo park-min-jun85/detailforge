@@ -37,6 +37,7 @@ export function readExtraction(metadata: Record<string, unknown>) { const p=extr
 export function isExtractionActive(state: ExtractionState|null, now=Date.now()) { const age=now-Date.parse(state?.attempt.startedAt??"");return state?.attempt.status==="analyzing"&&age>=0&&age<LEASE_MS; }
 export function isSaveActive(state: ExtractionState|null, now=Date.now()) { const age=now-Date.parse(state?.saveLease?.startedAt??"");return Boolean(state?.saveLease && age>=0 && age<LEASE_MS); }
 export function isDerived(metadata: Record<string, unknown>) { const d=metadata.derivation;return Boolean(d&&typeof d==="object"&&"kind" in d&&d.kind==="detail_image_crop"); }
-export const derivationSchema = z.strictObject({ schemaVersion:z.literal(1),kind:z.literal("detail_image_crop"),parentAssetId:z.uuid(),sourceFingerprint:hash,candidateId:hash,
+export const trimSchema = z.strictObject({ policyVersion: z.literal(1), insets: z.strictObject({ top:z.number().int().nonnegative(), right:z.number().int().nonnegative(), bottom:z.number().int().nonnegative(), left:z.number().int().nonnegative() }), postTrimDimensions: dimensionsSchema });
+export const derivationSchema = z.strictObject({ schemaVersion:z.literal(1),kind:z.literal("detail_image_crop"),parentAssetId:z.uuid(),sourceFingerprint:hash,candidateId:hash, trim:trimSchema.optional(),
   sourceRect:rectSchema,sourceDimensions:dimensionsSchema,coordinateSpace:z.literal("orientation_normalized_pixels"),suggestedRole:z.enum(["product","usage","detail","option","mixed"]),
   confidence:score,extractedAt:z.iso.datetime({offset:true}),provider:z.literal("openai"),model:z.string().min(1).max(200) });

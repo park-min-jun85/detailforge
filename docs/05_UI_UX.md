@@ -1,5 +1,11 @@
 # UI / UX
 
+## TASK-026 판매용 시각 품질
+
+Editor/Final/Export는 같은 SectionRenderer의 intrinsic1.5배 cap과 type별 크기 상한을 사용한다. 작은 Hero는 중앙+중립 surface로 배치하며 이미지 정보가 원본보다 증가했다고 표현하지 않는다. 자연 비율 contain을 기본으로 하고 cover는 기존 선택을 존중한다. Hero 밀도, imageText/feature의 split/imageFirst, spec 행 정렬·subtle surface, 옵션값을 보존한 chip을 bounded token으로 매핑한다.
+
+quality summary는 사용/반복 이미지 수, visualRatio/text-only 길이와 저해상도·반복·low-value 경고를 disclosure에 표시한다. 편집은 계속 가능하며 경고는 render article 밖에만 둔다. 새 생성에만 copy 길이 제한을 적용해 기존 수동 문구를 자르지 않는다. 사진/여백·사실 보호가 좋아져도 실제 카피 품질을 별도로 읽고 평가한다. [TASK-026](tasks/TASK-026.md).
+
 ## 목적
 
 판매자가 상품을 입력하고 상세페이지 초안을 편집하는 화면 구조를 정의한다.

@@ -13,6 +13,6 @@ export function SectionRenderer({ content, style, assets }: { content: Generated
   return <section className={styles.section} data-section-type={content.type} data-layout={style.layout} data-align={style.textAlign}
     data-density={style.density} data-background={style.background} data-emphasis={style.emphasis} data-fit={style.imageFit}>
     {hasCopy && <div className={styles.copy}><SectionCopy content={content} assets={assets} /></div>}
-    {!!ids.length && <div className={styles.images}>{ids.map(id => { const asset = assets.find(item => item.id === id); return <RenderImage key={id + (asset?.previewUrl ?? "")} asset={asset} />; })}</div>}
+    {!!ids.length && <div className={styles.images}>{ids.map(id => { const asset = assets.find(item => item.id === id); return <RenderImage key={id + (asset?.previewUrl ?? "")} asset={asset} type={content.type} />; })}</div>}
   </section>;
 }

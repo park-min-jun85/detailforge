@@ -1,5 +1,6 @@
 import { optionSnapshotSchema } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
+import { QUALITY_WARNINGS } from "@/features/page-quality/policy";
 import { SECTION_TYPES, type SectionType } from "@/types/domain";
 
 const text = (max: number) => z.string().min(1).max(max);
@@ -39,7 +40,15 @@ export function defaultSectionStyle(type: SectionType): z.infer<typeof sectionSt
     background: "plain", emphasis: type === "hero" ? "strong" : "normal", imageFit: "contain" };
 }
 const fingerprint = z.string().regex(/^[a-f0-9]{64}$/);
+export function refinedSectionStyle(section: GeneratedSection, index: number): z.infer<typeof sectionStyleSchema> {
+  const base=defaultSectionStyle(section.type);
+  if(section.type==="specification") return {...base,density:"compact"};
+  if(section.type==="option") return {...base,background:"soft"};
+  if(section.assetIds.length && ["imageText","feature","detail"].includes(section.type)) return {...base,layout:index%2?"split":"imageFirst",density:"spacious",background:index%3===0?"soft":"plain"};
+  return base;
+}
 export const sectionMetaSchema = z.strictObject({ schemaVersion: z.literal(1), plannerKey: common.plannerKey, sourcePlanFingerprint: fingerprint,
+  qualityWarnings:z.array(z.enum(QUALITY_WARNINGS)).max(8).optional(),
   sourceInputFingerprint: fingerprint, generationId: z.uuid(), generatedAt: z.iso.datetime({ offset: true }), provider: z.literal("openai"), model: text(200),
   origin: z.literal("generated"), warnings: z.array(z.enum(["option_evidence_missing", "hypothesis_not_fact", "review_copy_before_publish"])).max(3),
   manualEdit: z.strictObject({ edited: z.literal(true), editedAt: z.iso.datetime({ offset: true }), textEdited: z.boolean(), assetsEdited: z.boolean() }).optional(),

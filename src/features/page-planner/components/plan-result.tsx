@@ -1,7 +1,9 @@
 import Image from "next/image";
+import { QUALITY_LABELS } from "@/features/page-quality/policy";
 import type { AssetPreview } from "@/features/assets/types";
 import type { LatestPlan } from "../schemas";
 export const WARNING_LABELS: Record<string, string> = {
+  ...QUALITY_LABELS,
   insufficient_content_evidence: "근거가 부족하여 8개 미만의 Section으로 구성했습니다.",
   no_suitable_hero: "적합한 Hero 이미지가 선택되지 않았습니다.", restricted_facts_excluded: "확정적 주장에 사용할 수 없는 Fact를 제외했습니다.",
   product_strategy_unavailable: "사용 가능한 최신 상품 전략이 없어 제외했습니다.", partial_asset_analysis: "완료된 이미지 관찰만 사용했습니다.",

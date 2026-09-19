@@ -1,5 +1,11 @@
 # AI Pipeline
 
+## TASK-026 판매용 presentation
+
+Planner는5–12개 안에서 실제 근거/사진에 맞는 수를 고른다. identity/key_spec의 marketing 기본 재사용 예산1, technical/administrative는 canonical spec 중심으로 안내한다. Section semantic role과 coverage는 presentation metadata이며 Fact가 아니다. 반복·낮은 visual density·generic/유사 제목·빈약한 구성은 bounded 경고, 과도한 Asset 재사용(최대2)과 새 생성 제목40/body300 초과는 거부한다. Hero 상품명 기존80자 예외와 specification/option exactness는 유지한다.
+
+Product Analysis 전략은 copy 방향일 뿐 Fact가 아니다. V-only 관찰로 편안함/보온/흡수/튼튼함/실용성을 주장하지 않도록 서버 보호를 보강했다. Structured Outputs, F/V ID 검증, injection data separation, 이전 성공 보존, 자동 retry0은 유지한다. 새 prompt의 실제 성공 응답은 TASK-026에서 OpenAI quota 소진으로 미확보다. [TASK-026](tasks/TASK-026.md).
+
 ## 목적
 
 상품 분석부터 Section 초안 생성까지의 AI 단계를 정의한다.

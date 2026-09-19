@@ -109,7 +109,7 @@ async function persistCrop(client: Client, source: Asset, candidate: Candidate, 
   const suggestedRole = { product_photo: "product", usage_photo: "usage", detail_closeup: "detail", variant_photo: "option", mixed: "mixed" }[candidate.regionType as "product_photo" | "usage_photo" | "detail_closeup" | "variant_photo" | "mixed"];
   const derivation = derivationSchema.parse({ schemaVersion: 1, kind: "detail_image_crop", parentAssetId: source.id, sourceFingerprint: image.fingerprint,
     candidateId: candidate.id, sourceRect: candidate.rect, sourceDimensions: image.dimensions, coordinateSpace: "orientation_normalized_pixels", suggestedRole,
-    confidence: candidate.confidence, extractedAt: new Date().toISOString(), provider: "openai", model });
+    confidence: candidate.confidence, extractedAt: new Date().toISOString(), provider: "openai", model, ...(crop.trim ? { trim: crop.trim } : {}) });
   let uploaded = false;
   try { uploaded = !(await client.storage.from("product-assets").upload(path, crop.bytes, { contentType: crop.mime, upsert: false, cacheControl: "60" })).error; } catch { /* safe cleanup below */ }
   if (!uploaded) throw new ExtractionError(await removeObject(client, path) ? "upload" : "recovery");

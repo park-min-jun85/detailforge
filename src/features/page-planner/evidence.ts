@@ -1,4 +1,5 @@
 import "server-only";
+import { PRESENTATION_VERSION } from "@/features/page-quality/policy";
 import { buildVisualAssetInventory, visualAvailable, type AssetInspection } from "@/features/visual-assets/policy";
 import type { ConfirmedOptions } from "@/features/product-options/section-snapshot";
 import { buildValidationEvidence, canonicalValidationJson, validationFingerprint } from "@/features/fact-validation/evidence";
@@ -65,7 +66,7 @@ export function buildPlannerInput(input: { projectId: string; productId: string;
     const providerInput = { ...(input.confirmedOptions ? { confirmedOptions: input.confirmedOptions } : {}), evidence, assets: assets.filter(visualAvailable), strategy,
       restrictedFacts: factPolicy.restricted.map(({ factId, label, status }) => ({ factId, label, status })), warnings };
     if (canonicalValidationJson(providerInput).length > 180000) throw new PlannerError("invalid_input");
-    const inputFingerprint = validationFingerprint({ ...(input.confirmedOptions ? { optionsFingerprint: input.confirmedOptions.fingerprint } : {}), facts: input.facts, validation: validation.success ? validation.data : input.validation,
+    const inputFingerprint = validationFingerprint({ presentationVersion:PRESENTATION_VERSION, ...(input.confirmedOptions ? { optionsFingerprint: input.confirmedOptions.fingerprint } : {}), facts: input.facts, validation: validation.success ? validation.data : input.validation,
       validationInputFingerprint: validationInput.inputFingerprint, supported: factPolicy.supported, assets,
       productAnalysis: productAnalysisStatus === "ready" ? productLatest : null, productAnalysisStatus });
     return { input: providerInput, inputFingerprint, factPolicy, assetSnapshot: assets, validationStatus, productAnalysisStatus, coverage: current.coverage };

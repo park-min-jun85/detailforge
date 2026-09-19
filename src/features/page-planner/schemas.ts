@@ -1,5 +1,6 @@
 import { confirmedOptionsSchema, type ConfirmedOptions } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
+import { QUALITY_WARNINGS } from "@/features/page-quality/policy";
 import { SECTION_TYPES, DETAIL_PAGE_STATUSES } from "@/types/domain";
 import { analysisResultSchema, type AnalysisResult } from "@/features/asset-analysis/schemas";
 import { validationOutputSchema } from "@/features/fact-validation/schemas";
@@ -8,7 +9,7 @@ import { productAnalysisSchema } from "@/features/product-analysis/schemas";
 import { visualPolicySchema, visualAvailable, heroEligible, placementOnly, hasHeroQuality, validateVisualComposition } from "@/features/visual-assets/policy";
 
 const text = (max: number) => z.string().min(1).max(max);
-export const PLANNER_WARNINGS = ["insufficient_content_evidence", "no_suitable_hero", "restricted_facts_excluded", "product_strategy_unavailable", "partial_asset_analysis", "visual_observations_not_facts"] as const;
+export const PLANNER_WARNINGS = ["insufficient_content_evidence", "no_suitable_hero", "restricted_facts_excluded", "product_strategy_unavailable", "partial_asset_analysis", "visual_observations_not_facts", ...QUALITY_WARNINGS] as const;
 export const pagePlanSchema = z.strictObject({
   schemaVersion: z.literal(1),
   narrative: z.strictObject({ strategy: text(400), rationale: text(600) }),
@@ -16,7 +17,7 @@ export const pagePlanSchema = z.strictObject({
   sections: z.array(z.strictObject({ key: z.string().regex(/^[a-z][a-z0-9-]{0,59}$/), type: z.enum(SECTION_TYPES),
     purpose: text(240), contentBrief: text(500), evidenceIds: z.array(z.string().regex(/^[FV][1-9][0-9]{0,2}$/)).max(16),
     assetIds: z.array(z.uuid()).max(8), priority: z.enum(["primary", "secondary", "supporting"]) })).min(5).max(12),
-  warnings: z.array(z.enum(PLANNER_WARNINGS)).max(6),
+  warnings: z.array(z.enum(PLANNER_WARNINGS)).max(14),
 });
 export type PagePlan = z.infer<typeof pagePlanSchema>;
 export const plannerEvidenceSchema = z.discriminatedUnion("kind", [
@@ -70,6 +71,7 @@ export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], as
 export const PLANNER_ERROR_CODES = ["not_found", "product_required", "facts_required", "validation_required", "content_required", "invalid_input", "ownership", "database", "busy", "conflict", "input_changed", "not_configured", "provider", "invalid_response", "timeout", "forbidden", "unexpected"] as const;
 export type PlannerErrorCode = (typeof PLANNER_ERROR_CODES)[number];
 export const latestPlanSchema = z.strictObject({ provider: z.literal("openai"), model: text(200), plannedAt: z.iso.datetime({ offset: true }),
+  presentationVersion: z.literal(1).optional(),
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/), evidenceSnapshot: z.array(plannerEvidenceSchema).max(83),
   factPolicySnapshot: plannerFactPolicySchema, assetSnapshot: z.array(plannerAssetSchema).max(30),
   strategySnapshot: productAnalysisSchema.nullable(), optionsSnapshot: confirmedOptionsSchema.optional(), plan: pagePlanSchema,

@@ -3,7 +3,8 @@ import { SECTION_TYPES, type Asset } from "@/types/domain";
 import { analysisStateSchema, analysisResultSchema, type AnalysisResult } from "@/features/asset-analysis/schemas";
 import { assertAssetScope } from "@/features/assets/schemas";
 import { derivationSchema, readExtraction } from "@/features/detail-extraction/schemas";
-import { imageCategory } from "@/features/detail-extraction/policy";
+import { imageCategory, MAX_TRIM_FRACTION } from "@/features/detail-extraction/policy";
+import { imageSizing } from "@/features/page-quality/images";
 
 export const SECTION_VISUAL_ROLES = {
   hero: ["product", "usage"], keyBenefits: ["product", "detail", "usage"], feature: ["detail", "product"],
@@ -17,7 +18,8 @@ export const visualPolicySchema = z.strictObject({
   roleSource: z.enum(["analysis", "hint", "unknown"]), available: z.boolean(), suppressed: z.boolean(), fallback: z.boolean(),
   heroEligible: z.boolean(), heroScore: z.number().min(0).max(100), basePriority: z.number().int().nonnegative(),
   sectionPreferences: z.array(z.enum(SECTION_TYPES)).max(10), parentMissing: z.boolean(),
-  derivation: derivationSchema.pick({ parentAssetId: true, candidateId: true, sourceFingerprint: true, sourceRect: true }).nullable(),
+  resolutionSuitability: z.number().min(0).max(1).optional(),
+  derivation: derivationSchema.pick({ parentAssetId: true, candidateId: true, sourceFingerprint: true, sourceRect: true, trim: true }).nullable(),
 });
 export type VisualPolicy = z.infer<typeof visualPolicySchema>;
 export type VisualAsset = { assetId: string; analysis: AnalysisResult | null; visual?: VisualPolicy };
@@ -49,10 +51,13 @@ export function buildVisualAssetInventory(assets: Asset[], projectId: string, pr
     const sourceDimensions = readExtraction(asset.metadata)?.latestResult?.sourceDimensions;
     const width = inspection?.width ?? asset.width ?? sourceDimensions?.width ?? null;
     const height = inspection?.height ?? asset.height ?? sourceDimensions?.height ?? null;
-    const invalidDerivation = asset.metadata.derivation !== undefined && (!derived || derived.parentAssetId === asset.id
+    const trim = derived?.trim, rect = derived?.sourceRect;
+    const invalidTrim = !!(trim && rect && (Object.entries(trim.insets).some(([edge, n]) => n > Math.floor((edge === "left" || edge === "right" ? rect.width : rect.height) * MAX_TRIM_FRACTION))
+      || rect.width - trim.insets.left - trim.insets.right !== trim.postTrimDimensions.width || rect.height - trim.insets.top - trim.insets.bottom !== trim.postTrimDimensions.height));
+    const invalidDerivation = asset.metadata.derivation !== undefined && (!derived || invalidTrim || derived.parentAssetId === asset.id
       || derived.sourceRect.x + derived.sourceRect.width > derived.sourceDimensions.width
       || derived.sourceRect.y + derived.sourceRect.height > derived.sourceDimensions.height
-      || (width !== null && width !== derived.sourceRect.width) || (height !== null && height !== derived.sourceRect.height));
+      || (width !== null && width !== (trim?.postTrimDimensions.width ?? derived.sourceRect.width)) || (height !== null && height !== (trim?.postTrimDimensions.height ?? derived.sourceRect.height)));
     const usable = scoped && !invalidDerivation && inspection?.usable !== false;
     const category = imageCategory(width ?? 0, height ?? 0);
     const kind = !usable ? "unusable" : derived ? "derived" : category !== "normal" ? "long_source" : "normal";
@@ -68,9 +73,10 @@ export function buildVisualAssetInventory(assets: Asset[], projectId: string, pr
     const quality = analysis ? .45 * analysis.heroSuitability + .3 * analysis.composition.productVisibility + .25 * analysis.composition.subjectClarity : .5;
     const visual: VisualPolicy = { version: 1, kind, category, width, height, role, roleSource: analysis ? "analysis" : derived ? "hint" : "unknown",
       available: usable && (Boolean(analysis) || Boolean(derived)), suppressed: false, fallback: false, heroEligible: canHero,
-      heroScore: canHero ? Math.round((quality * 80 + basePriority * .2) * 100) / 100 : 0, basePriority,
+      heroScore: canHero ? Math.round((quality * 70 + basePriority * .2 + imageSizing(width,height,"hero").resolutionSuitability * 10) * 100) / 100 : 0, basePriority,
+      resolutionSuitability: imageSizing(width,height,"hero").resolutionSuitability,
       sectionPreferences: SECTION_TYPES.filter(type => (SECTION_VISUAL_ROLES[type] as string[]).includes(role)), parentMissing: Boolean(derived && !ids.has(derived.parentAssetId)),
-      derivation: derived ? { parentAssetId: derived.parentAssetId, candidateId: derived.candidateId, sourceFingerprint: derived.sourceFingerprint, sourceRect: derived.sourceRect } : null };
+      derivation: derived ? { parentAssetId: derived.parentAssetId, candidateId: derived.candidateId, sourceFingerprint: derived.sourceFingerprint, sourceRect: derived.sourceRect, ...(trim ? {trim} : {}) } : null };
     return { assetId: asset.id, analysis, visual };
   });
   const uniqueCrops: VisualAsset[] = [];
@@ -117,7 +123,7 @@ export function validateVisualComposition(sections: { type: string; assetIds: st
 export function visualPromptAsset(asset: VisualAsset) {
   const v = asset.visual;
   return { assetId: asset.assetId, ...(v ? { kind: v.kind, role: v.role, roleSource: v.roleSource, width: v.width, height: v.height,
-    heroEligible: v.heroEligible, heroScore: v.heroScore, basePriority: v.basePriority, sectionPreferences: v.sectionPreferences, fallback: v.fallback } : {}),
+    heroEligible: v.heroEligible, heroScore: v.heroScore, resolutionSuitability: v.resolutionSuitability, basePriority: v.basePriority, sectionPreferences: v.sectionPreferences, fallback: v.fallback } : {}),
     ...(asset.analysis ? { confidence: asset.analysis.confidence, heroSuitability: asset.analysis.heroSuitability,
       visualSummary: asset.analysis.visualSummary, warnings: asset.analysis.warnings } : {}) };
 }

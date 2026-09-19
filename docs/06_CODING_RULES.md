@@ -116,3 +116,10 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - 원본/파생 삭제는 독립적이다. 불확실한 DB commit의 파일은 삭제하지 않는다. SDK/Sharp stack·secret·raw provider response·prompt를 사용자/DB에 남기지 않는다.
 - 자동 테스트 provider는 mock만 사용한다. 실제 QA는 별도 Project와 최소 호출을 사용하고 기존 데이터 hash 보존 및 테스트 DB/Storage 정리를 확인한다.
 - Fact/OCR enrichment, AI 자동 후속 분석, Planner Derived 우선 변경은 이번 범위가 아니다. 후속 TASK-025에 넘긴다.
+
+## Sales presentation 규칙 (TASK-026)
+
+- Fact truth와 presentation coverage/재사용 예산을 분리한다. 품질 경고로 Fact/옵션 원문을 삭제·수정하지 않는다.
+- Shared Renderer의 intrinsic cap과 bounded token만 사용한다. Editor/Final/Export별 별도 CSS renderer를 만들지 않는다. review 경고는 capture article 밖에 둔다.
+- 새 crop에만 pixel 기반 최대3%/변 trim을 적용하며 sourceRect와 insets/출력 크기를 보존한다. 모호한 경계는 유지하고 기존 파일을 조회만으로 재가공하지 않는다.
+- 자동 retry로 품질 문제를 해결하지 않는다. 실제 API 실패와 mock/기존 canonical replay의 검증 범위를 보고서에서 구분한다.

@@ -1,4 +1,5 @@
 import "server-only";
+import { planQuality } from "@/features/page-quality/policy";
 import { assetProvenanceLabel } from "@/features/visual-assets/policy";
 import { z } from "zod";
 import { isDeepStrictEqual } from "node:util";
@@ -57,10 +58,11 @@ export async function getEditorView(projectId: string): Promise<EditorView> {
     let previewWarning = false;
     const previews = ctx.scope.product ? await listAssets(projectId).catch(() => { previewWarning = true; return null; }) : null;
     return { projectId, projectName: ctx.scope.project.name, productName: ctx.scope.product?.name ?? "상품정보 없음", detailPageId: ctx.page?.id ?? null, sections,
+      qualityWarnings:plan.success?planQuality(sections.map(s=>({...s.content,key:s.content.plannerKey})),plan.data.evidenceSnapshot,plan.data.assetSnapshot).warnings:[],
       stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !planner || planner.stale,
       blocked: !!reorder || !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
       reorderRecovery: !!reorder && !!ctx.page && !hasEditLease(ctx.page), manualOrder: !!ctx.page && hasManualOrder(ctx.page.settings, ctx.rows),
-      assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, provenanceLabel: assetProvenanceLabel(asset, ctx.assets), previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
+      assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, width:asset.width??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.width, height:asset.height??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.height, provenanceLabel: assetProvenanceLabel(asset, ctx.assets), previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
   } catch (error) { throw safe(error); }
 }
 export async function saveSection(projectId: string, sectionId: string, input: unknown) {

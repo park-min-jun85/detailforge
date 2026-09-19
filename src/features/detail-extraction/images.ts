@@ -1,5 +1,6 @@
 import "server-only";
 import sharp from "sharp";
+import { trimCrop } from "./edge-trim";
 import { createHash } from "node:crypto";
 import { MAX_FILE_BYTES, validateFile, validateSignature, type ImageMime } from "@/features/assets/schemas";
 import { ExtractionError } from "./errors";
@@ -77,12 +78,15 @@ export async function cropImage(image: WorkingImage, rect: Rect) {
   try {
     if (![rect.x, rect.y, rect.width, rect.height].every(Number.isSafeInteger) || rect.x < 0 || rect.y < 0 || rect.width <= 0 || rect.height <= 0
       || rect.x + rect.width > image.dimensions.width || rect.y + rect.height > image.dimensions.height) throw new ExtractionError("invalid_rect");
-    const pipeline = input(image.bytes).extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height });
+    const originalCrop = await input(image.bytes).extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height }).png().toBuffer();
+    const trimmed = await trimCrop(originalCrop, rect.width, rect.height);
+    const pipeline = input(originalCrop).extract({ left: trimmed.insets.left, top: trimmed.insets.top, width: trimmed.width, height: trimmed.height });
     const bytes = await (image.mime === "image/jpeg" ? pipeline.jpeg({ quality: OUTPUT_QUALITY, chromaSubsampling: "4:4:4" })
       : image.mime === "image/webp" ? pipeline.webp({ quality: OUTPUT_QUALITY }) : pipeline.png({ compressionLevel: 6 })).toBuffer();
     validateFile(image.mime, bytes.length); validateSignature(bytes, image.mime);
     const actual = await input(bytes).metadata();
-    if (bytes.length > MAX_FILE_BYTES || actual.width !== rect.width || actual.height !== rect.height) throw new ExtractionError("crop");
-    return { bytes, width: actual.width, height: actual.height, mime: image.mime };
+    if (bytes.length > MAX_FILE_BYTES || actual.width !== trimmed.width || actual.height !== trimmed.height) throw new ExtractionError("crop");
+    return { bytes, width: actual.width, height: actual.height, mime: image.mime,
+      ...(trimmed.applied ? { trim: { policyVersion: 1 as const, insets: trimmed.insets, postTrimDimensions: { width: trimmed.width, height: trimmed.height } } } : {}) };
   } catch (error) { throw error instanceof ExtractionError ? error : new ExtractionError("crop"); }
 }

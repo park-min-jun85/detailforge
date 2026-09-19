@@ -310,3 +310,7 @@ product_options 및 0005는 변경하지 않았다. detail_pages.plan.latestResu
 - Source/Derived 삭제는 독립적이며 cascade를 추가하지 않는다. 후보당 INSERT 응답 유실은 재조회한다. DB 미저장이 확인되면 이번 UUID 파일만 보상 삭제하며 저장 여부가 불명확하면 파일을 지우지 않고 recovery 오류를 반환한다.
 
 Product/Facts/Validation/Analysis/Options/Plan/Sections/Project status는 추출의 쓰기 대상이 아니다. [TASK-024](./tasks/TASK-024.md).
+
+## TASK-026 presentation metadata (migration 없음)
+
+새 Derived의 `metadata.derivation.trim`은 선택적 `{policyVersion:1,insets:{top,right,bottom,left},postTrimDimensions:{width,height}}`다. sourceRect는 기존 원본 좌표를 보존하고 Asset width/height는 trim 후 실제 파일 크기다. 기존 row/file 자동 변경 없음. 새 Plan latestResult의 선택적 presentationVersion1은 새 품질 정책 적용 구분과 fingerprint에 사용한다. Plan warnings의 bounded 품질 enum, Section content.meta의 선택적 qualityWarnings를 추가했다. Facts/Options의 schema와 값은 변경하지 않는다. [TASK-026](tasks/TASK-026.md).

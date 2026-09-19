@@ -2,6 +2,11 @@
 
 ## 현재 단계
 
+TASK-026 — Sales Detail Page Quality Refinement 구현 및 mock/crop/Renderer/PNG·JPG 검증 완료, **새 AI 생성 품질은 OpenAI credit_balance_exhausted로 미검증**. 브랜치 `feat/sales-page-quality`.
+intrinsic1.5배 cap, 새 crop3% trim, coverage/제목·밀도·이미지 반복 검사, 공유 렌더링/검토 경고를 추가했다. 전체720 tests/typegen/tsc/lint/build/diff 검사 통과. 동일 상품의 기존 canonical7개를 재현한 출력860×3919이며 새 AI 결과는 아니다. [TASK-026 보고서](./TASK-026.md). commit/migration/dependency 없음.
+
+## 완료된 TASK-025 기반
+
 TASK-025 — Derived Asset First Reconstruction 구현 및 실제 QA 완료. 브랜치 `feat/derived-asset-reconstruction`.
 저장 Derived inventory·Source 억제·Hero 후보·stale·F/V 분리·Editor provenance를 연결했다. 실제7 Derived 저장,7 Sections,정상 Hero+Derived2개/raw0회,PNG/JPG860×3875. 전체682 tests/typegen/tsc/lint/build/diff/secret 검사 통과. QA DB/Storage 정리 및 기존 데이터 불변 확인.
 정책·검증 기록: [TASK-025](./TASK-025.md). migration/dependency/commit/main merge 없음.

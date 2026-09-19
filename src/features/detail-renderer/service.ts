@@ -1,4 +1,5 @@
 import "server-only";
+import { planQuality } from "@/features/page-quality/policy";
 import { readOptionFreshness } from "@/features/detail-editor/option-application";
 import { optionFreshness, OPTION_FRESHNESS_LABELS } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
@@ -45,7 +46,9 @@ export async function getRenderView(projectId: string): Promise<RenderView> {
       view.readiness.missingImageCount = ids.filter(id => !view.assets.some(asset => asset.id === id && asset.previewUrl)).length;
     }
     const plan = latestPlanSchema.safeParse(page.plan.latestResult);
+    if(plan.success) view.readiness.qualityWarnings=planQuality(view.sections.map(s=>({...s.content,key:s.content.plannerKey})),plan.data.evidenceSnapshot,plan.data.assetSnapshot).warnings;
     const planner = await getPlannerView(projectId).catch(() => null);
+    view.assets = view.assets.map(asset => { const v=planner?.assets.find(a=>a.assetId===asset.id)?.visual; return {...asset,width:asset.width??v?.width,height:asset.height??v?.height}; });
     view.readiness.stalePlan = sectionsAreStale(rows, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !!planner?.stale;
     view.readiness.validation = planner?.validationStatus ?? "unknown";
     view.readiness.unavailable = !planner;
