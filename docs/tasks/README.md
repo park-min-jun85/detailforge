@@ -2,6 +2,12 @@
 
 ## 현재 단계
 
+TASK-025 — Derived Asset First Reconstruction 구현 및 실제 QA 완료. 브랜치 `feat/derived-asset-reconstruction`.
+저장 Derived inventory·Source 억제·Hero 후보·stale·F/V 분리·Editor provenance를 연결했다. 실제7 Derived 저장,7 Sections,정상 Hero+Derived2개/raw0회,PNG/JPG860×3875. 전체682 tests/typegen/tsc/lint/build/diff/secret 검사 통과. QA DB/Storage 정리 및 기존 데이터 불변 확인.
+정책·검증 기록: [TASK-025](./TASK-025.md). migration/dependency/commit/main merge 없음.
+
+## 완료된 TASK-024 기반
+
 TASK-024 — Product Shot Extraction from Long Detail Images 구현·실제 QA 완료. 브랜치 `feat/detail-image-extraction`.
 긴 private Source → overlap Vision tiles → 후보 검토/선택 → Sharp crop → 별도 unclassified Derived Asset을 연결했다.
 실제860×12900 원본에 gpt-5.6-luna8회 tile 호출,73.5초, 후보24/기본선택11/검토저장7개 성공. 도식2개 오분류는 직접 제외했고 품질 한계를 기록했다.

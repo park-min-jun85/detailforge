@@ -1,4 +1,5 @@
 import "server-only";
+import { derivationSchema } from "@/features/detail-extraction/schemas";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { manualFactsSchema } from "@/features/products/schemas";
@@ -30,12 +31,14 @@ export function buildEvidenceRegistry(input: { projectId: string; productId: str
     facts.specifications.sort((a, b) => compare(a.name, b.name) || compare(a.value, b.value)).forEach((spec, index) =>
       evidence.push({ id: `F${index + 4}`, kind: "product_fact", label: spec.name, value: spec.value }));
     if (input.assets.length > 30 || new Set(input.assets.map((asset) => asset.id)).size !== input.assets.length) throw new ProductAnalysisError("invalid_input");
-    let completed = 0, invalid = 0;
+    let completed = 0, invalid = 0, placementOnly = 0;
     for (const asset of [...input.assets].sort((a, b) => compare(a.id, b.id))) {
       try { assertAssetScope(asset, input.projectId, input.productId); } catch { throw new ProductAnalysisError("ownership"); }
       const raw = asset.metadata.aiAnalysis;
-      if (raw === undefined) continue;
       const state = analysisStateSchema.safeParse(raw);
+      // Saved, unanalysed crops are placement material, not new factual evidence.
+      if (derivationSchema.safeParse(asset.metadata.derivation).success && (!state.success || state.data.status !== "completed")) { placementOnly++; continue; }
+      if (raw === undefined) continue;
       if (!state.success) { invalid++; continue; }
       // Failed/analyzing attempts and their previousResult are deliberately excluded.
       if (state.data.status !== "completed") continue;
@@ -50,7 +53,7 @@ export function buildEvidenceRegistry(input: { projectId: string; productId: str
     if (description) evidence.push({ id: "S1", kind: "unverified_source_statement", label: "UNVERIFIED SOURCE DESCRIPTION", value: description });
     const snapshot = evidenceSnapshotSchema.parse(evidence);
     // Include coverage because absence/partial coverage is also supplied to the provider.
-    const coverage = { total: input.assets.length, completed, invalid };
+    const coverage = { total: input.assets.length - placementOnly, completed, invalid };
     const providerInput = { evidence: snapshot, coverage };
     return { ...providerInput, inputFingerprint: fingerprintInput(providerInput) };
   } catch (error) { throw error instanceof ProductAnalysisError ? error : new ProductAnalysisError("invalid_input"); }

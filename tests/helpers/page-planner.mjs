@@ -1,7 +1,8 @@
 import { createServer } from "node:http";
 import { isDeepStrictEqual } from "node:util";
-import { projectId, productId, assetId, assetRow } from "./asset-db.mjs";
-export { projectId, productId, assetId, assetRow };
+import { projectId, productId, assetId, assetRow as baseAssetRow } from "./asset-db.mjs";
+export { projectId, productId, assetId };
+export const assetRow = (overrides={}) => baseAssetRow({width:330,height:330,...overrides});
 export const date = "2026-09-13T00:00:00.000Z";
 export const factsData = () => ({ productName: "검증용 정리함", brand: "검증 브랜드", category: "수납", specifications: [{ name: "재질", value: "ABS" }, { name: "폭", value: "20cm" }] });
 export const strategyResult = (overrides = {}) => ({ schemaVersion: 1,
@@ -28,6 +29,9 @@ export async function startPlannerDb() {
     state.requests.push({ table, method: request.method, payload, path: url.pathname, query: url.search });
     const send = (rows, status = 200) => { response.writeHead(status, { "Content-Type": "application/json" });
       response.end(JSON.stringify(status === 200 && request.headers.accept?.includes("vnd.pgrst.object") ? rows[0] ?? null : rows)); };
+    if (url.pathname.startsWith('/storage/v1/object/sign/')) {
+      return send(payload.paths.map(path=>({path,error:state.missingPaths?.includes(path)?'missing':null,signedURL:state.missingPaths?.includes(path)?null:`/object/sign/product-assets/${path}?token=fixture`})));
+    }
     const fail = () => send({ code: "TEST", message: "private-db-error secret-test-key" }, 400);
     const matches = (row) => [...url.searchParams].every(([field, value]) => {
       if (field === "or") return value.slice(1, -1).split(",").some((condition) => { const [key, , id] = condition.split("."); return row[key] === id; });

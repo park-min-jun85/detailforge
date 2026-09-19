@@ -85,7 +85,7 @@ for(const [label,change] of [
 ])test(`${label} change marks stored plan stale without automatically replanning`,()=>fixture(async state=>{
   await planPage(projectId,mockProvider);const previous=structuredClone(state.page.plan.latestResult);change(state);
   const before=state.requests.length,view=await getPlannerView(projectId);assert.equal(view.stale,true);assert.deepEqual(view.state.latestResult,previous);
-  assert.ok(state.requests.slice(before).every(r=>r.method==='GET'));
+  assert.ok(state.requests.slice(before).every(r=>r.method==='GET' || r.path.startsWith('/storage/v1/object/sign/')));
 },true));
 test('stale Product Analysis excluded; fresh Validation can still plan',()=>fixture(async state=>{
   state.product.description+=' changed';seedValidation(state);const built=buildPlannerInput(context(state));assert.equal(built.productAnalysisStatus,'stale');assert.equal(built.input.strategy,null);
@@ -104,7 +104,7 @@ test('first plan/replan persist snapshots, reuse width860 page and protect all u
   const first=await planPage(projectId,mockProvider);assert.equal(first.state.attempt.status,'completed');assert.equal(state.page.width,860);
   state.page.settings={preserved:true};state.page.width=900;
   const second=await planPage(projectId,mockProvider);assert.equal(second.detailPageId,first.detailPageId);assert.equal(state.page.width,900);assert.deepEqual(state.page.settings,{preserved:true});
-  assert.equal(state.requests.filter(r=>r.method==='POST').length,1);
+  assert.equal(state.requests.filter(r=>r.method==='POST' && r.table==='detail_pages').length,1);
   assert.deepEqual({project:state.project,product:state.product,facts:state.facts,assets:state.assets,sections:state.sections},before);
   assert.ok(state.requests.filter(r=>r.method==='PATCH').every(r=>r.table==='detail_pages'&&Object.keys(r.payload).join()==='plan'));
   assert.ok(plannerStateSchema.safeParse(second.state).success);assert.equal((await getPlannerView(projectId)).stale,false);

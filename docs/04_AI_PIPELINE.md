@@ -289,4 +289,12 @@ Strict Structured Outputs와 Zod로 9개 regionType, 0..1 점수3개, textDensit
 
 제품/사용·착용/디테일/옵션사진 중 충분한 크기·confidence·visibility·usability와 text none/low만 기본 선택한다. mixed는 사용자 검토 대상, 텍스트/배송·공지/배너/기타는 저장 제외다. 실제 선택 저장까지 사용자가 결정한다. 동일 bytes hash 성공 결과는 재사용하며 재분석 버튼만 추가 호출한다. 타일45초, run300초, 자동 retry0, SDK log off/store false다. 일부 실패는 partialAnalysis/실패 구간 경고, 전부 실패는 failed와 이전 결과 보존이다.
 
-Derived 저장 뒤 Asset AI를 자동 실행하지 않는다. TASK-025의 이미지 우선 선택은 아직 변경하지 않는다. [TASK-024](./tasks/TASK-024.md).
+Derived 저장 뒤 Asset AI를 자동 실행하지 않는다. TASK-024 당시 이미지 우선 선택은 변경하지 않았으며, 후속 TASK-025 정책은 아래에 기록한다. [TASK-024](./tasks/TASK-024.md).
+
+## TASK-025 시각 배치와 사실 근거 분리
+
+완료된 TASK-008 분석이 추출 suggestedRole보다 우선한다. 미분석 저장 Derived의 역할은 배치 힌트이며 V/F evidence를 생성하지 않는다. 이 추가·삭제만으로 미분석 사진 수가 변해 Validation/상품전략을 stale로 만들지 않도록 해당 Derived는 evidence coverage.total에서 제외한다. 분석이 완료되어 실제 V가 바뀌면 기존 Validation/전략 freshness 정책이 적용된다. Planner의 visual fingerprint는 항상 추가·삭제를 감지한다.
+
+새 Planner는 유효한 Derived가 있는 긴 parent를 제외하며 정상 대표/Derived 제품·사용 사진을 Hero pool로 비교한다. long fallback은 비Hero 최대1회, specification/notice/option에는 사용하지 않는다. 동일 parent/hash 사각형 IoU≥.85는 deterministic 후보 축소 및 출력 거부로 보호한다. 정상 이미지의 Hero+Feature 재사용은 허용한다.
+
+Prompt에는 작은 visual projection만 전달한다. 전체 provenance/hash/rect/미저장 후보/rationale/URL은 보내지 않는다. 모든 unknown/금지 Asset, 부적합 Hero, long 반복은 invalid_response로 거부하며 기존 성공 결과를 보존한다. F-only claim grounding/스펙 원문/확정 옵션 snapshot은 유지한다. 옵션 역할 이미지는 그룹 보조용으로만 쓰고 choice-image 대응을 추론하지 않는다. 자동 Vision/추출/분석 없음. [TASK-025](tasks/TASK-025.md).

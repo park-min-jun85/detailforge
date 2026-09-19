@@ -83,7 +83,7 @@ export async function generateSections(projectId: string, options: { replaceExis
       if (!isDeepStrictEqual(latest.rows, context.rows)) throw new SectionEngineError("conflict");
       const generatedAt = new Date().toISOString();
       const rows: SectionRow[] = result.sections.map((section, sortOrder) => ({ id: randomUUID(), detail_page_id: page.id, type: section.type, sort_order: sortOrder,
-        content: { ...(section.type === "option" && context.latest!.optionsSnapshot ? { type: section.type, plannerKey: section.plannerKey, title: "옵션 안내", evidenceIds: [], assetIds: section.assetIds,
+        content: { ...(section.type === "option" && context.latest!.optionsSnapshot ? { type: section.type, plannerKey: section.plannerKey, title: "옵션 안내", evidenceIds: section.evidenceIds, assetIds: section.assetIds,
           optionSnapshot: buildConfirmedOptionSnapshot(context.latest!.optionsSnapshot, generatedAt) } : section), meta: sectionMetaSchema.parse({ schemaVersion: 1, plannerKey: section.plannerKey, sourcePlanFingerprint: context.fingerprint,
           sourceInputFingerprint: context.latest!.inputFingerprint, generationId: runId, generatedAt, provider: "openai", model: provider.model, origin: "generated",
           warnings: ["review_copy_before_publish", ...(section.type === "option" && !context.latest!.optionsSnapshot && !section.items.length ? ["option_evidence_missing"] : []), ...(section.type === "useCase" ? ["hypothesis_not_fact"] : [])] }) },

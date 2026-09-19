@@ -307,3 +307,13 @@ Product Options confirmed read model → Planner optionsSnapshot(별도 구조 �
 같은 Source는 DB attempt/save lease, 같은 Product upload/delete/crop은 기존 process-local mutation lock으로 보호한다. 추출은 프로세스당 1개다. 상품 전체 30개 한도는 기존 단일 서버 MVP 보장이며 여러 프로세스의 서로 다른 Source까지 원자적으로 잠그는 DB transaction은 아니다. 공개/다중 worker 운영 전 별도 product lock이 필요하다.
 
 Node route만 Sharp/provider/Storage에 접근한다. Client는 shared schema/policy와 후보 SVG 미리보기만 사용한다. 저장 후 기존 Asset AI는 사용자가 별도 실행한다. Planner의 Derived 우선 선택, 긴 Source fallback 처리는 TASK-025에 넘긴다. [TASK-024](./tasks/TASK-024.md).
+
+## TASK-025 Visual Asset Inventory
+
+원본 상세페이지의 긴 이미지를 그대로 재사용하는 것이 아니라, 원본에서 사용할 수 있는 제품 이미지를 추출하고 그 이미지와 확인된 상품정보로 새로운 상세페이지를 재구성한다.
+
+features/visual-assets/policy.ts는 현재 Product의 normal/derived/long_source/unusable read model, 역할·Hero 점수·중복·섹션 정책을 결정한다. TASK-024 strict metadata.derivation과 실제 저장 row만 approved이며 별도 boolean/DB migration은 없다. inspection.ts는 private 파일 존재 확인과 크기가 없는 원본의 bounded decode를 수행한다. URL은 내부에만 존재한다.
+
+Planner의 optional assetSnapshot.visual은 새 생성부터 저장하며 legacy snapshot 읽기를 유지한다. Derived와 모든 ID·분석·parent/hash/rect/사용 가능 상태가 fingerprint에 들어가고 signed URL/추출 후보/시각은 제외된다. Section Engine은 해당 Plan 선택 범위를 지키고 이미지로 Facts를 만들지 않는다. Renderer는 inventory로 이미지를 재선택하지 않고 canonical Section.assetIds만 표시한다. 기존 수동 편집·long Source Section은 조회만으로 변경되지 않는다.
+
+Source 삭제 후에도 독립 Derived는 유효하다. Derived 삭제는 새 inventory 제외와 stale/missing 안내이며 기존 Section을 fallback으로 즉시 교체하지 않는다. 추출과 Asset AI는 기존 사용자 버튼만 호출한다. [TASK-025](tasks/TASK-025.md).

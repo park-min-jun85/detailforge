@@ -353,3 +353,9 @@ Images의 긴 Source 카드에 `제품컷 추출`을 제공한다. asset_type에
 분석은 명시적 버튼으로 시작한다. 패널은 후보 preview/종류/신뢰도/텍스트 밀도/실제 crop 크기/설명/체크박스와 제외 후보 보기, 남은 슬롯, 선택 저장을 제공한다. SVG viewBox와 명시적 clipPath로 기존 signed Source를 잘라 보여 주며 후보만으로 Storage 파일을 만들지 않는다. 일반 DOM 이미지와 같이 EXIF 방향이 적용된 좌표계를 사용한다.
 
 분석/저장 중 disabled와 aria-busy/status, checkbox label/preview 접근성 이름을 제공한다. grid는 작은 화면1열/desktop2–3열이다. 재분석 실패 시 이전 후보 유지, 부분 타일 실패와 경계 잘림 가능성을 안내한다. stale 저장 오류는 재분석을 요구한다. 슬롯 초과 시 전체 선택을 차단한다. 부분 저장은 성공/기존/실패 수와 실패 후보를 구분한다. 새 Derived는 미분류이며 후속 AI 분석은 별도 사용자 동작이다. [TASK-024](./tasks/TASK-024.md).
+
+## TASK-025 재구성 이미지 안내
+
+Images와 Editor picker에 추출 이미지/원본 파일명(삭제 시 독립 이미지)/추출 역할 힌트를 표시한다. 사실이나 품질 보증이 아니다. 추출 저장 완료 수와 기존·실패 수를 구분하며 기존 명시적 batch 분석에 새 Derived가 포함된다. 자동 AI 호출은 없다.
+
+Planner는 일반/추출 Hero 후보와 배치 점수, 추출 이미지 수·긴 원본 수·사용 제외 수, 원본별 후보 있음/미분석·저장 Derived 수를 표시한다. 미분석 Derived 안내 및 Images 링크, 추출 권장, 새 Derived 후 stale·페이지 설계 다시 생성 CTA를 제공한다. raw fallback이 실제 Plan에 사용된 경우 보조 이미지 안내를 표시한다. 모든 경고는 Final export 바깥에 남는다. legacy 페이지는 명시적 재설계·콘텐츠 재생성 전 그대로다.

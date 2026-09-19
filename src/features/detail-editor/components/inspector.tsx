@@ -35,7 +35,7 @@ export function Inspector({ section, draft, assets, disabled, onChange }: { sect
         <input type="checkbox" className="size-4 shrink-0 accent-zinc-800" checked={draft.assetIds.includes(asset.id)} disabled={disabled || (!draft.assetIds.includes(asset.id) && draft.assetIds.length >= 8)}
           onChange={event => onChange({ ...draft, assetIds: event.target.checked ? [...draft.assetIds, asset.id] : draft.assetIds.filter(id => id !== asset.id) })} />
         {asset.previewUrl && <Image className="size-12 shrink-0 rounded object-contain" src={asset.previewUrl} alt="" width={48} height={48} unoptimized />}
-        <span className="min-w-0 break-all">{asset.name}</span></label>)}
+        <span className="min-w-0 break-all">{asset.name}{asset.provenanceLabel && <span className="mt-1 block text-xs text-zinc-500">{asset.provenanceLabel}</span>}</span></label>)}
       {!assets.length && <p className="text-sm text-zinc-500">등록된 이미지가 없습니다.</p>}
       {draft.assetIds.filter(id => !assets.some(asset => asset.id === id)).map(id => <label key={id} className="flex gap-2 text-sm"><input type="checkbox" checked onChange={() => onChange({ ...draft, assetIds: draft.assetIds.filter(value => value !== id) })} />삭제된 이미지 연결 해제</label>)}
       {content.meta.manualEdit?.assetsEdited && <p className="text-xs text-zinc-500">사람이 이미지 선택을 수정했습니다.</p>}

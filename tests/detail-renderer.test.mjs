@@ -71,7 +71,7 @@ test('missing or foreign assets are excluded, safe fallback without DB writes',(
 test('only referenced owned assets get transient signed URLs',()=>seeded(async s=>{
  const selected=assetRow(),unused=assetRow({id:randomUUID()});s.assets=[selected,unused];s.sections[0].content.assetIds=[selected.id];
  const previous=globalThis.fetch;let signedPaths=[];
- globalThis.fetch=(url,init)=>{if(String(url).includes('/storage/v1/object/sign/')){signedPaths=JSON.parse(init.body).paths;return Promise.resolve(Response.json(signedPaths.map(path=>({path,signedURL:'/object/sign/product-assets/'+path+'?token=transient'}))));}return previous(url,init);};
+ globalThis.fetch=(url,init)=>{if(String(url).includes('/storage/v1/object/sign/')){const payload=JSON.parse(init.body);if(payload.expiresIn===300)signedPaths=payload.paths;return Promise.resolve(Response.json(payload.paths.map(path=>({path,signedURL:'/object/sign/product-assets/'+path+'?token=transient'}))));}return previous(url,init);};
  const before=snapshot(s);s.requests=[];
  try{const view=await getRenderView(projectId);assert.deepEqual(signedPaths,[selected.storage_path]);assert.equal(view.assets.length,1);assert.match(view.assets[0].previewUrl,/token=transient/);assert.deepEqual(snapshot(s),before);assert.ok(s.requests.every(r=>r.method==='GET'));}
  finally{globalThis.fetch=previous;}

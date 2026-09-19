@@ -8,6 +8,7 @@ export type PlannerContextInput = { input: PlannerInput; inputFingerprint: strin
   validationStatus: "ready" | "missing" | "stale" | "invalid"; productAnalysisStatus: "ready" | "missing" | "stale" | "invalid";
   coverage: { total: number; completed: number; invalid: number } };
 export type PlannerView = { projectId: string; projectName: string; productName: string; detailPageId: string | null;
+  extraction?: { assetId: string; hasCandidates: boolean; derivedCount: number }[];
   state: PlannerState | null; inputFingerprint: string | null; stale: boolean; optionsVersion?: number;
   prerequisite: "ready" | "validation_required" | "content_required" | "invalid_input";
   validationStatus: PlannerContextInput["validationStatus"]; productAnalysisStatus: PlannerContextInput["productAnalysisStatus"];

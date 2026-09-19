@@ -1,4 +1,6 @@
 import "server-only";
+import { readExtraction, derivationSchema } from "@/features/detail-extraction/schemas";
+import { inspectVisualAssets } from "@/features/visual-assets/inspection";
 import { getConfirmedProductOptions } from "@/features/product-options/queries";
 import { hasEditLease } from "@/features/section-engine/edit-lease";
 import { readReorder } from "@/features/section-reorder/schemas";
@@ -7,7 +9,7 @@ import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { projectRowSchema } from "@/features/projects/schemas";
 import { productRowSchema, productFactsRowSchema } from "@/features/products/schemas";
-import { assetRowSchema, parseId } from "@/features/assets/schemas";
+import { assetRowSchema, parseId, assertAssetScope } from "@/features/assets/schemas";
 import { detailPageRowSchema, plannerStateSchema, isPlannerActive, isPlanStale, validatePagePlan, PLANNER_WARNINGS, type PlannerState } from "./schemas";
 import { buildPlannerInput } from "./evidence";
 import { PlannerError } from "./errors";
@@ -56,18 +58,20 @@ async function loadContext(client: Client, projectId: string) {
   const facts = productFactsRowSchema.parse(factsResult.data);
   if (facts.product_id !== product.id) throw new PlannerError("ownership");
   const assets = assetsResult.data.map((row) => assetRowSchema.parse(row));
+  for (const asset of assets) { try { assertAssetScope(asset, projectId, product.id); } catch { throw new PlannerError("ownership"); } }
+  const inspections = await inspectVisualAssets(client, assets, projectId, product.id);
   const confirmed = await getConfirmedProductOptions(projectId, product.id);
   let current: PlannerContextInput | null = null;
   try { current = buildPlannerInput({ projectId, productId: product.id, facts: facts.facts, sourceSnapshot: facts.source_snapshot,
-    validation: facts.validation, productAnalysis: product.ai_analysis, description: product.description, assets, confirmedOptions: confirmed.snapshot }); }
+    validation: facts.validation, productAnalysis: product.ai_analysis, description: product.description, assets, inspections, confirmedOptions: confirmed.snapshot }); }
   catch (error) { if (!(error instanceof PlannerError) || error.code !== "invalid_input") throw error; }
-  return { project, product, facts, page, current, state: page ? readState(page.plan) : null };
+  return { project, product, facts, page, current, assets, state: page ? readState(page.plan) : null };
 }
 function view(context: Awaited<ReturnType<typeof loadContext>>): PlannerView {
   const { current, state } = context;
   const prerequisite = !current ? "invalid_input" : current.validationStatus !== "ready" ? "validation_required"
     : !current.factPolicy.supported.length && !current.input.assets.length ? "content_required" : "ready";
-  return { projectId: context.project.id, projectName: context.project.name, productName: context.product.name,
+  return { extraction: context.assets.filter(a => current?.assetSnapshot.find(v => v.assetId === a.id)?.visual?.kind === "long_source").map(a => ({ assetId: a.id, hasCandidates: Boolean(readExtraction(a.metadata)?.latestResult?.candidates.length), derivedCount: context.assets.filter(child => { const d = derivationSchema.safeParse(child.metadata.derivation); return d.success && d.data.parentAssetId === a.id; }).length })), projectId: context.project.id, projectName: context.project.name, productName: context.product.name,
     detailPageId: context.page?.id ?? null, state, prerequisite, optionsVersion: current?.input.confirmedOptions?.version, inputFingerprint: current?.inputFingerprint ?? null,
     stale: Boolean(state?.latestResult && !state.latestResult.optionsSnapshot) || isPlanStale(state, current?.inputFingerprint ?? null), validationStatus: current?.validationStatus ?? "invalid",
     productAnalysisStatus: current?.productAnalysisStatus ?? "invalid", factPolicy: current?.factPolicy ?? { supported: [], restricted: [] },
@@ -75,7 +79,7 @@ function view(context: Awaited<ReturnType<typeof loadContext>>): PlannerView {
 }
 export async function getPlannerView(projectId: string): Promise<PlannerView> {
   const project = id(projectId);
-  try { return view(await loadContext(createSupabaseServerClient(), project)); } catch (error) { throw safe(error); }
+  try { return view(await loadContext(createSupabaseServerClient({ requestTimeoutMs: 10000 }), project)); } catch (error) { throw safe(error); }
 }
 async function saveState(client: Client, page: Page, state: PlannerState) {
   if (hasEditLease(page) || readReorder(page.settings)) throw new PlannerError("busy");
@@ -133,7 +137,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
   if (running.has(project) || running.size >= 2) throw new PlannerError("busy");
   running.add(project);
   try {
-    const client = createSupabaseServerClient(), context = await loadContext(client, project), initial = view(context);
+    const client = createSupabaseServerClient({ requestTimeoutMs: 10000 }), context = await loadContext(client, project), initial = view(context);
     if (initial.prerequisite !== "ready") throw new PlannerError(initial.prerequisite);
     if (!context.current) throw new PlannerError("invalid_input");
     if (isPlannerActive(context.state, Date.now())) throw new PlannerError("busy");

@@ -5,6 +5,8 @@ import { analysisResultSchema, type AnalysisResult } from "@/features/asset-anal
 import { validationOutputSchema } from "@/features/fact-validation/schemas";
 import { productAnalysisSchema } from "@/features/product-analysis/schemas";
 
+import { visualPolicySchema, visualAvailable, heroEligible, placementOnly, hasHeroQuality, validateVisualComposition } from "@/features/visual-assets/policy";
+
 const text = (max: number) => z.string().min(1).max(max);
 export const PLANNER_WARNINGS = ["insufficient_content_evidence", "no_suitable_hero", "restricted_facts_excluded", "product_strategy_unavailable", "partial_asset_analysis", "visual_observations_not_facts"] as const;
 export const pagePlanSchema = z.strictObject({
@@ -22,7 +24,7 @@ export const plannerEvidenceSchema = z.discriminatedUnion("kind", [
   z.strictObject({ id: z.string().regex(/^V[1-9][0-9]{0,2}$/), kind: z.literal("visual_observation"), assetId: z.uuid(), observation: analysisResultSchema }),
 ]);
 export type PlannerEvidence = z.infer<typeof plannerEvidenceSchema>;
-export const plannerAssetSchema = z.strictObject({ assetId: z.uuid(), analysis: analysisResultSchema.nullable() });
+export const plannerAssetSchema = z.strictObject({ assetId: z.uuid(), analysis: analysisResultSchema.nullable(), visual: visualPolicySchema.optional() });
 export type PlannerAsset = z.infer<typeof plannerAssetSchema>;
 export const factPolicySchema = z.strictObject({ supported: validationOutputSchema.shape.facts, restricted: z.array(validationOutputSchema.shape.facts.element).max(53) });
 // A plan may have only visual structure; it must not invent supported facts to satisfy a minimum.
@@ -30,32 +32,31 @@ export const plannerFactPolicySchema = factPolicySchema.extend({ supported: z.ar
 export type FactPolicy = z.infer<typeof plannerFactPolicySchema>;
 
 export function isHeroCandidate(analysis: AnalysisResult | null): boolean {
-  return Boolean(analysis && analysis.signals.showsProduct && analysis.confidence >= 0.65 && analysis.heroSuitability >= 0.5
-    && analysis.composition.productVisibility >= 0.5 && analysis.composition.subjectClarity >= 0.5
-    && analysis.composition.textDensity !== "high" && !analysis.warnings.some((warning) => ["blurry", "cropped", "low_visibility", "heavy_text", "ambiguous_subject"].includes(warning)));
+  return hasHeroQuality(analysis);
 }
 export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], assets: PlannerAsset[], options?: ConfirmedOptions): PagePlan {
   const plan = pagePlanSchema.parse(value);
   if (options && plan.sections.filter(section => section.type === "option").length !== (options.state === "present" ? 1 : 0)) throw new Error("Confirmed option section count");
   const registry = new Map(evidence.map((item) => [item.id, item]));
-  const available = new Map(assets.filter((asset) => asset.analysis).map((asset) => [asset.assetId, asset]));
+  const available = new Map(assets.filter(visualAvailable).map((asset) => [asset.assetId, asset]));
   if (registry.size !== evidence.length || new Set(assets.map((asset) => asset.assetId)).size !== assets.length) throw new Error("Duplicate input IDs");
   if (new Set(plan.sections.map((section) => section.key)).size !== plan.sections.length) throw new Error("Duplicate section keys");
   if (new Set(plan.sections.map((section) => section.purpose.trim().normalize("NFC"))).size !== plan.sections.length) throw new Error("Repeated purpose");
-  if (plan.heroAssetId && !isHeroCandidate(available.get(plan.heroAssetId)?.analysis ?? null)) throw new Error("Invalid hero");
+  if (plan.heroAssetId && (!available.has(plan.heroAssetId) || !heroEligible(available.get(plan.heroAssetId)!))) throw new Error("Invalid hero");
   const heroes = plan.sections.filter((section) => section.type === "hero");
   if (heroes.length > 1 || (heroes.length && plan.sections[0].type !== "hero")) throw new Error("Hero order");
   if (plan.heroAssetId && (heroes.length !== 1 || !heroes[0].assetIds.includes(plan.heroAssetId))) throw new Error("Hero reference mismatch");
   if (!plan.heroAssetId && heroes.some((section) => section.assetIds.length)) throw new Error("Unexpected hero image");
+  validateVisualComposition(plan.sections, assets);
   for (const section of plan.sections) {
     if (new Set(section.evidenceIds).size !== section.evidenceIds.length || section.evidenceIds.some((id) => !registry.has(id))) throw new Error("Invalid evidence ID");
     if (section.assetIds.some((id) => !available.has(id))) throw new Error("Invalid asset ID");
     // Visual evidence cannot stand in for factual benefits/specifications/options/use cases.
-    if (options && section.type === "option" && (section.evidenceIds.length || section.assetIds.length)) throw new Error("Options are separate from Facts and visual evidence");
+    if (options && section.type === "option" && (section.evidenceIds.some(id => registry.get(id)?.kind !== "visual_observation") || section.assetIds.some(id => available.get(id)?.visual?.role !== "option"))) throw new Error("Options are separate from Facts and visual evidence");
     if (!(options && section.type === "option") && ["keyBenefits", "feature", "useCase", "specification", "option"].includes(section.type)
       && !section.evidenceIds.some((id) => registry.get(id)?.kind === "supported_fact")) throw new Error("Supported fact required");
     if (section.evidenceIds.some((id) => { const item = registry.get(id); return item?.kind === "visual_observation" && !section.assetIds.includes(item.assetId); })) throw new Error("Visual evidence asset mismatch");
-    if (section.assetIds.some((id) => !section.evidenceIds.some((ref) => { const item = registry.get(ref); return item?.kind === "visual_observation" && item.assetId === id; }))) throw new Error("Missing visual evidence");
+    if (section.assetIds.some((id) => !placementOnly(available.get(id)!) && !section.evidenceIds.some((ref) => { const item = registry.get(ref); return item?.kind === "visual_observation" && item.assetId === id; }))) throw new Error("Missing visual evidence");
     section.assetIds = [...new Set(section.assetIds)];
   }
   const nonblank = (item: unknown): boolean => typeof item === "string" ? Boolean(item.trim()) : Array.isArray(item) ? item.every(nonblank)

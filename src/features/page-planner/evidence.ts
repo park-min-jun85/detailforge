@@ -1,4 +1,5 @@
 import "server-only";
+import { buildVisualAssetInventory, visualAvailable, type AssetInspection } from "@/features/visual-assets/policy";
 import type { ConfirmedOptions } from "@/features/product-options/section-snapshot";
 import { buildValidationEvidence, canonicalValidationJson, validationFingerprint } from "@/features/fact-validation/evidence";
 import { validationStateSchema, isValidationStale, validateFactOutput } from "@/features/fact-validation/schemas";
@@ -35,7 +36,7 @@ function usableStrategy(latest: LatestProductAnalysis, evidence: PlannerEvidence
 }
 
 export function buildPlannerInput(input: { projectId: string; productId: string; facts: unknown; sourceSnapshot: unknown; validation: unknown;
-  description: string | null; productAnalysis: unknown; assets: Asset[]; confirmedOptions?: ConfirmedOptions }): PlannerContextInput {
+  description: string | null; productAnalysis: unknown; assets: Asset[]; inspections?: Record<string, AssetInspection>; confirmedOptions?: ConfirmedOptions }): PlannerContextInput {
   try {
     const validationInput = buildValidationEvidence(input);
     const validation = validationStateSchema.safeParse(input.validation);
@@ -51,10 +52,9 @@ export function buildPlannerInput(input: { projectId: string; productId: string;
     const factPolicy: FactPolicy = { supported: assessed.filter((fact) => fact.status === "supported"), restricted: assessed.filter((fact) => fact.status !== "supported") };
     const current = buildEvidenceRegistry({ ...input, description: input.description });
     const visual = current.evidence.filter((item) => item.kind === "visual_observation");
-    const assets: PlannerAsset[] = [...input.assets].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-      .map((asset) => ({ assetId: asset.id, analysis: visual.find((item) => item.assetId === asset.id)?.observation ?? null }));
+    const assets: PlannerAsset[] = buildVisualAssetInventory(input.assets, input.projectId, input.productId, input.inspections);
     const evidence = [...factPolicy.supported.map((fact) => ({ id: fact.factId, kind: "supported_fact", label: fact.label, value: fact.value })),
-      ...visual.map((item) => ({ id: item.id, kind: "visual_observation", assetId: item.assetId, observation: item.observation }))].map((item) => plannerEvidenceSchema.parse(item));
+      ...visual.filter(item => assets.some(asset => asset.assetId === item.assetId && visualAvailable(asset))).map((item) => ({ id: item.id, kind: "visual_observation", assetId: item.assetId, observation: item.observation }))].map((item) => plannerEvidenceSchema.parse(item));
     const productAnalysis = productAnalysisStateSchema.safeParse(input.productAnalysis);
     const productLatest = productAnalysis.success ? productAnalysis.data.latestResult : null;
     const productEmpty = input.productAnalysis && typeof input.productAnalysis === "object" && !Object.keys(input.productAnalysis).length;
@@ -62,7 +62,7 @@ export function buildPlannerInput(input: { projectId: string; productId: string;
     const strategy = productLatest && productAnalysisStatus === "ready" ? usableStrategy(productLatest, evidence, factPolicy) : null;
     const warnings = ["visual_observations_not_facts", ...(factPolicy.restricted.length ? ["restricted_facts_excluded"] : []),
       ...(!strategy ? ["product_strategy_unavailable"] : []), ...(current.coverage.completed < current.coverage.total ? ["partial_asset_analysis"] : [])];
-    const providerInput = { ...(input.confirmedOptions ? { confirmedOptions: input.confirmedOptions } : {}), evidence, assets: assets.filter((asset) => asset.analysis), strategy,
+    const providerInput = { ...(input.confirmedOptions ? { confirmedOptions: input.confirmedOptions } : {}), evidence, assets: assets.filter(visualAvailable), strategy,
       restrictedFacts: factPolicy.restricted.map(({ factId, label, status }) => ({ factId, label, status })), warnings };
     if (canonicalValidationJson(providerInput).length > 180000) throw new PlannerError("invalid_input");
     const inputFingerprint = validationFingerprint({ ...(input.confirmedOptions ? { optionsFingerprint: input.confirmedOptions.fingerprint } : {}), facts: input.facts, validation: validation.success ? validation.data : input.validation,

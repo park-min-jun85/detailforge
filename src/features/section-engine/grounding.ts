@@ -1,4 +1,5 @@
 import "server-only";
+import { visualAvailable, placementOnly, visualPromptAsset } from "@/features/visual-assets/policy";
 import { confirmedOptionsFingerprint } from "@/features/product-options/confirmed-source";
 import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { validatePagePlan, type LatestPlan } from "@/features/page-planner/schemas";
@@ -8,7 +9,7 @@ import type { SectionInput } from "./types";
 export function sourcePlanFingerprint(result: LatestPlan) { return validationFingerprint(result); }
 export function buildSectionInput(latest: LatestPlan): SectionInput {
   validatePagePlan(latest.plan, latest.evidenceSnapshot, latest.assetSnapshot, latest.optionsSnapshot);
-  return { optionsSnapshot: latest.optionsSnapshot, plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
+  return { visualAssets: latest.assetSnapshot.filter(a => visualAvailable(a) && latest.plan.sections.some(s => s.assetIds.includes(a.assetId))).map(visualPromptAsset), optionsSnapshot: latest.optionsSnapshot, plan: latest.plan, evidenceSnapshot: latest.evidenceSnapshot, strategySnapshot: latest.strategySnapshot,
     validation: { supported: latest.factPolicySnapshot.supported.map(fact => fact.factId),
       restricted: latest.factPolicySnapshot.restricted.map(({ factId, status }) => ({ factId, status })) } };
 }
@@ -43,11 +44,12 @@ export function validateSectionContent(value: unknown, latest: LatestPlan, plan:
     if (section.plannerKey !== plan.key || section.type !== plan.type) throw new Error("Planner correspondence mismatch");
     const checkIds = (ids: string[], assetIds: string[]) => {
       if (new Set(ids).size !== ids.length || ids.some(id => !registry.has(id) || !plan.evidenceIds.includes(id))) throw new Error("Invalid evidence");
-      if (new Set(assetIds).size !== assetIds.length || assetIds.some(id => preservedAssets ? !preservedAssets.includes(id) : !plan.assetIds.includes(id) || !latest.assetSnapshot.some(a => a.assetId === id && a.analysis))) throw new Error("Invalid asset");
+      if (new Set(assetIds).size !== assetIds.length || assetIds.some(id => preservedAssets ? !preservedAssets.includes(id) : !plan.assetIds.includes(id) || !latest.assetSnapshot.some(a => a.assetId === id && visualAvailable(a)))) throw new Error("Invalid asset");
     };
     checkIds(section.evidenceIds, section.assetIds);
+    if (!preservedAssets && latest.assetSnapshot.some(a => a.visual) && (section.assetIds.length !== plan.assetIds.length || plan.assetIds.some(id => !section.assetIds.includes(id)))) throw new Error("Preserve planned visual composition");
     if (!preservedAssets && section.type === "hero" && latest.plan.heroAssetId && section.assetIds[0] !== latest.plan.heroAssetId) throw new Error("Hero must follow plan");
-    if (!preservedAssets && section.assetIds.some(id => !section.evidenceIds.some(ref => { const e = registry.get(ref); return e?.kind === "visual_observation" && e.assetId === id; }))) throw new Error("Missing image observation");
+    if (!preservedAssets && section.assetIds.some(id => !latest.assetSnapshot.some(a => a.assetId === id && placementOnly(a)) && !section.evidenceIds.some(ref => { const e = registry.get(ref); return e?.kind === "visual_observation" && e.assetId === id; }))) throw new Error("Missing image observation");
     const walk = (node: unknown, inherited: string[]) => {
       if (!node || typeof node !== "object") return;
       if (Array.isArray(node)) { node.forEach(item => walk(item, inherited)); return; }
@@ -68,7 +70,7 @@ export function validateSectionContent(value: unknown, latest: LatestPlan, plan:
     }
     walk(section, section.evidenceIds);
     if (section.type === "option" && latest.optionsSnapshot) {
-      if (latest.optionsSnapshot.state !== "present" || section.items?.length || section.evidenceIds.length) throw new Error("AI cannot author confirmed choices");
+      if (latest.optionsSnapshot.state !== "present" || section.items?.length || section.evidenceIds.some(id => registry.get(id)?.kind !== "visual_observation")) throw new Error("AI cannot author confirmed choices");
       return section;
     }
     const claims = section.type === "hero" ? section.highlights : section.type === "feature" ? section.bullets : section.type === "keyBenefits" ? section.items : [];

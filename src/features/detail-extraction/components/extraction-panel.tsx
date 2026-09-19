@@ -23,7 +23,7 @@ function CandidateReview({ result, ...props }: Props & { result: ExtractionResul
     try {
       const reply = await requestCropSave(props.projectId, props.asset.id, selectedIds);
       setSelected(current => new Set([...current].filter(id => !reply.saved.some(s => s.candidateId === id))));
-      setMessage(`저장 ${reply.saved.filter(s => !s.existing).length}개 · 기존 이미지 ${reply.saved.filter(s => s.existing).length}개 · 실패 ${reply.failed.length}개`);
+      setMessage(`추출 이미지 ${reply.saved.filter(s => !s.existing).length}개를 저장했습니다. · 기존 이미지 ${reply.saved.filter(s => s.existing).length}개 · 실패 ${reply.failed.length}개`);
       if (reply.failed.length) setError(reply.failed.map(f => `${result.candidates.findIndex(c => c.id === f.candidateId) + 1}번 후보: ${EXTRACTION_MESSAGES[f.code]}`).join(" / "));
     } catch (cause) {
       setError(cause instanceof ExtractionError ? cause.message + (cause.available !== undefined ? ` 남은 슬롯: ${cause.available}개.` : "") : EXTRACTION_MESSAGES.unexpected);

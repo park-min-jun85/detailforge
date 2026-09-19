@@ -10,6 +10,7 @@ import { AnalysisResultCard, ASSET_TYPE_LABELS } from "@/features/asset-analysis
 import { isActiveAnalysis, readAnalysis } from "@/features/asset-analysis/schemas";
 import { ExtractionPanel } from "@/features/detail-extraction/components/extraction-panel";
 import { isDerived, isExtractionActive, isSaveActive, readExtraction } from "@/features/detail-extraction/schemas";
+import { assetProvenanceLabel } from "@/features/visual-assets/policy";
 import { imageCategory } from "@/features/detail-extraction/policy";
 
 type Selection = { file: File; status: "ready" | "uploading" | "success" | "error"; message?: string };
@@ -211,7 +212,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
                 <div className="space-y-3 p-4">
                   <p className="break-all text-sm font-medium">{index + 1}. {asset.originalFilename}</p>
                   <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 저장 분류: {ASSET_TYPE_LABELS[asset.assetType]}</p>
-                  {isDerived(asset.metadata) ? <p className="text-xs font-medium text-zinc-600">상세이미지에서 추출한 제품컷 · {asset.width} × {asset.height}px</p>
+                  {isDerived(asset.metadata) ? <p className="text-xs font-medium text-zinc-600">{assetProvenanceLabel(asset, list.items.map(item => item.asset))} · {asset.width} × {asset.height}px</p>
                     : (readExtraction(asset.metadata) || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => setExtractionId(asset.id)}>제품컷 추출{readExtraction(asset.metadata)?.latestResult ? " 후보 보기" : ""}</button>}
                   <AnalysisResultCard asset={asset} now={now} pending={analyzingId === asset.id} disabled={busy}
                     error={analysisErrors[asset.id]} onAnalyze={() => analyze([asset.id])} />

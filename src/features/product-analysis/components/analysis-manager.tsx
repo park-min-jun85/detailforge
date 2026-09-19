@@ -61,9 +61,10 @@ export function ProductAnalysisManager({ initialView }: { initialView: ProductAn
         <p className="mt-2 text-xs leading-5 text-zinc-500">상품정보의 사실 근거입니다. 이번 AI 분석은 사실 검증을 수행하지 않습니다.</p>
         <dl className="mt-5 max-h-80 space-y-3 overflow-y-auto text-sm">{facts.map((fact) => <div key={fact.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3">
           <dt className="break-words text-zinc-500">{fact.label}</dt><dd className="break-words">{fact.value}</dd></div>)}</dl></section>
-      <section className="panel p-6 sm:p-8"><h2 className="text-lg font-semibold">이미지 분석 현황</h2>
-        <p className="mt-5 text-2xl font-semibold">{view.coverage.completed} / {view.coverage.total} <span className="text-sm font-normal text-zinc-500">분석 완료</span></p>
-        <p className="mt-3 text-sm leading-6 text-zinc-600">{view.coverage.total === 0 ? "등록된 이미지가 없습니다. 상품정보만으로 분석하며 시각 근거는 없습니다."
+      <section className="panel p-6 sm:p-8"><h2 className="text-lg font-semibold">이미지 근거 분석 현황</h2>
+        <p className="mt-5 text-2xl font-semibold">{view.coverage.completed} / {view.coverage.total} <span className="text-sm font-normal text-zinc-500">근거 대상 분석 완료</span></p>
+        <p className="mt-3 text-xs text-zinc-500">미분석 추출 이미지는 배치 자료로 분리하므로 이 근거 집계에서 제외됩니다. 이미지 화면에서 별도로 분석할 수 있습니다.</p>
+        <p className="mt-3 text-sm leading-6 text-zinc-600">{view.coverage.total === 0 ? "분석 근거 대상 이미지가 없습니다. 상품정보만으로 분석하며 시각 근거는 없습니다."
           : view.coverage.completed === 0 ? "사용할 수 있는 완료된 이미지 분석이 없습니다. 시각 근거 없이 상품정보로 분석합니다."
             : `${view.coverage.total}개 이미지 중 ${view.coverage.completed}개의 분석 결과만 사용됩니다.`}</p>
         {view.coverage.invalid > 0 && <p className="mt-2 text-sm text-amber-800">형식을 확인할 수 없는 이미지 분석 {view.coverage.invalid}개는 제외했습니다.</p>}

@@ -1,4 +1,5 @@
 import "server-only";
+import { assetProvenanceLabel } from "@/features/visual-assets/policy";
 import { z } from "zod";
 import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -59,7 +60,7 @@ export async function getEditorView(projectId: string): Promise<EditorView> {
       stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !planner || planner.stale,
       blocked: !!reorder || !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
       reorderRecovery: !!reorder && !!ctx.page && !hasEditLease(ctx.page), manualOrder: !!ctx.page && hasManualOrder(ctx.page.settings, ctx.rows),
-      assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
+      assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, provenanceLabel: assetProvenanceLabel(asset, ctx.assets), previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
   } catch (error) { throw safe(error); }
 }
 export async function saveSection(projectId: string, sectionId: string, input: unknown) {
