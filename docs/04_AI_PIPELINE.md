@@ -314,3 +314,8 @@ V 관찰문은 내부 근거다. 이를 이미지에서 확인/사진을 참고/
 같은 Asset/V를 공유하고 새 근거가 없는 Hero→Detail/imageText 반복은 거부한다. 새로운 supported F를 설명하는 Feature의 동일 사진 재사용은 기존 최대2회 안에서 허용한다. distinct visual hint와 purpose signature는 결정적 휴리스틱이며 의미 진실성의 완전한 증명이 아니다. 최소 개수는5에서4로 낮췄고 상한12/1:1 대응은 유지한다. body는 imageText/detail에서만 nullable 추가, Hero subheadline/Gallery intro의 기존 null도 사용한다.
 
 개별 재생성은 compact peer summary를 추가하지만 다른 Section의 전체 body/이미지 URL을 보내지 않는다. 입력과 전략·peer 문구 모두 untrusted DATA다. 추가 third-pass/embedding/OCR/Vision 호출 없음. [TASK-028](tasks/TASK-028.md).
+
+
+## TASK-030 Final Commerce Polish
+
+추가 모델 호출 없이 title provenance를 검사한다. supported F를 인용한 판매 구성 또는 명시적 confirmed bundle choices만 bundle 제목 근거이며, 수량이나 사진 속 묶음은 근거가 아니다. 제품컷 role과 detail/usage 제목을 비교한다. 새로운 AI 결과가 품질 검사에 실패하면 이전 성공 결과 보존, 자동 retry 없음. Planner는 목적 검사, Section Engine/개별 재생성은 최종 제목 검사다. [TASK-030](tasks/TASK-030.md).

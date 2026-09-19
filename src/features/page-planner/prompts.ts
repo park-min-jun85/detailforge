@@ -1,3 +1,4 @@
+import { TITLE_RELEVANCE_POLICY } from "@/features/page-quality/title-policy";
 import { COPY_INTENTS, distinctVisualAssignments } from "@/features/page-quality/commerce";
 import { visualPromptAsset, SECTION_VISUAL_ROLES } from "@/features/visual-assets/policy";
 import type { PlannerInput } from "./types";
@@ -17,7 +18,7 @@ A sales page is not an analysis report. Use supplied semanticRoles to separate p
 contentBrief is an instruction to the future engine such as '지원되는 스펙만 표 형태로 정리한다', not finished copy. It must not promise unprovided data. Do not choose usage claims absent corresponding supported facts.
 Compare supplied heroEligible candidates using heroScore and sectionPreferences. Good normal original product images remain first-class candidates (including 330px square images). Saved derived assets are user-approved visual material, NOT verified Facts. Prefer derived over raw long source. Use distinct saved crops in gallery/detail, not all available images. Maximum 8 per section. Long sources are provenance/fallback only: never Hero/specification/notice/option, at most once across the whole page. Never combine a raw long parent and its derived children. No extraction or image analysis is performed here. Use visual roles only for composition, never infer product claims. Specification can have assetIds:[] and exact supported Fact rows.
 Choose heroAssetId only from eligible supplied asset IDs or null. Never force an unsuitable hero. If selected, exactly one hero section must be first and include that image and its V if it has completed analysis. If null, hero section may be text-only with no assetIds; explain the missing suitable image. Selection applies to this plan only; never modify Asset type.
-Return the exact strict schema and concise Korean explanatory briefs. Do not output new facts, approval claims, section content, code, styles or extra fields.`;
+Return the exact strict schema and concise Korean explanatory briefs. Do not output new facts, approval claims, section content, code, styles or extra fields.` + "\n" + TITLE_RELEVANCE_POLICY;
 export function buildPlannerMessages(input: PlannerInput) {
   return [{ role: "developer" as const, content: PLANNER_POLICY }, { role: "user" as const, content: [{ type: "input_text" as const, text: JSON.stringify({ untrustedPlannerData: { ...input, factPresentation:factCoverage(input.evidence), semanticRoles:SEMANTIC_ROLES, assets: input.assets.map(visualPromptAsset), sectionVisualRoles: SECTION_VISUAL_ROLES, copyIntents: COPY_INTENTS, visualAssignmentHints: distinctVisualAssignments([{type:"hero"},{type:"imageText"},{type:"detail"}], input.assets) } }) }] }];
 }

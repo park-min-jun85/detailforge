@@ -1,13 +1,10 @@
 import type { GeneratedSection } from "@/features/section-engine/schemas";
 import type { RenderAsset } from "./model";
+import { heroDisplayMode } from "@/features/page-quality/images";
 
 // Derived presentation modes, never persisted tokens or AI-authored CSS.
 export function heroMode(asset?: Pick<RenderAsset, "width" | "height">) {
-  const { width, height } = asset ?? {};
-  if (!width || !height || !Number.isFinite(width) || !Number.isFinite(height)) return "balanced";
-  const ratio = width / height;
-  if (width < 480 || ratio < .65 || ratio > 1.8) return "compact-image";
-  return width >= 760 && height >= 600 ? "large-image" : "balanced";
+  return heroDisplayMode(asset?.width, asset?.height);
 }
 export function countMode(count: number) {
   return count <= 1 ? "single" : count === 2 ? "pair" : count === 3 ? "trio" : "grid";

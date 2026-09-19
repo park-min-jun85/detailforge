@@ -10,7 +10,7 @@ export const COPY_INTENTS = {
 export type CopyIntent = typeof COPY_INTENTS[keyof typeof COPY_INTENTS];
 export const copyIntent = (type: string): CopyIntent => COPY_INTENTS[type as keyof typeof COPY_INTENTS] ?? "visual_description";
 export class CommerceCopyError extends Error {
-  readonly reason: "meta_observation" | "duplicate_purpose" | "low_value_visual";
+  readonly reason: "meta_observation" | "duplicate_purpose" | "low_value_visual" | "title_relevance";
   constructor(reason: CommerceCopyError["reason"]) { super(reason); this.reason = reason; }
 }
 const normalize = (text: string) => text.normalize("NFKC").toLocaleLowerCase("ko").replace(/\s+/gu, "");

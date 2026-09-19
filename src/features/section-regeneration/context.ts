@@ -1,3 +1,4 @@
+import { COMMERCE_SEMANTIC_VERSION } from "@/features/page-quality/title-policy";
 import { COMMERCE_COPY_VERSION, copyIntent } from "@/features/page-quality/commerce";
 import { sectionTitle } from "@/features/page-quality/policy";
 import "server-only";
@@ -62,6 +63,6 @@ export async function regenerationContext(projectId: string, sectionId: string, 
     validation: { status: "ready", supported: latest.factPolicySnapshot.supported.filter(fact => allowed.has(fact.factId)).map(fact => fact.factId),
       restricted: latest.factPolicySnapshot.restricted.map(({ factId, status }) => ({ factId, status })) } };
   if (JSON.stringify(input).length > 180000) throw new RegenError("invalid_input");
-  return { client, scope, page, section, target, latest, input, inputFingerprint: validationFingerprint({ plan: fingerprint, current: planner.inputFingerprint, productId: scope.product.id, commerceCopyVersion:COMMERCE_COPY_VERSION, otherSections }) };
+  return { client, scope, page, section, target, latest, input, inputFingerprint: validationFingerprint({ plan: fingerprint, current: planner.inputFingerprint, productId: scope.product.id, commerceSemanticVersion:COMMERCE_SEMANTIC_VERSION, commerceCopyVersion:COMMERCE_COPY_VERSION, otherSections }) };
 }
 export type RegenerationContext = Awaited<ReturnType<typeof regenerationContext>>;

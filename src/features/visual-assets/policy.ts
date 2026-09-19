@@ -4,7 +4,7 @@ import { analysisStateSchema, analysisResultSchema, type AnalysisResult } from "
 import { assertAssetScope } from "@/features/assets/schemas";
 import { derivationSchema, readExtraction } from "@/features/detail-extraction/schemas";
 import { imageCategory, MAX_TRIM_FRACTION } from "@/features/detail-extraction/policy";
-import { imageSizing } from "@/features/page-quality/images";
+import { heroImageSizing } from "@/features/page-quality/images";
 
 export const SECTION_VISUAL_ROLES = {
   hero: ["product", "usage"], keyBenefits: ["product", "detail", "usage"], feature: ["detail", "product"],
@@ -73,8 +73,8 @@ export function buildVisualAssetInventory(assets: Asset[], projectId: string, pr
     const quality = analysis ? .45 * analysis.heroSuitability + .3 * analysis.composition.productVisibility + .25 * analysis.composition.subjectClarity : .5;
     const visual: VisualPolicy = { version: 1, kind, category, width, height, role, roleSource: analysis ? "analysis" : derived ? "hint" : "unknown",
       available: usable && (Boolean(analysis) || Boolean(derived)), suppressed: false, fallback: false, heroEligible: canHero,
-      heroScore: canHero ? Math.round((quality * 70 + basePriority * .2 + imageSizing(width,height,"hero").resolutionSuitability * 10) * 100) / 100 : 0, basePriority,
-      resolutionSuitability: imageSizing(width,height,"hero").resolutionSuitability,
+      heroScore: canHero ? Math.round(((["product", "usage"].includes(role) ? 40 : 0) + quality * 35 + heroImageSizing(width,height).resolutionSuitability * 20 + (kind === "normal" ? 2 : 0) + (analysis ? 3 - Math.min(3, analysis.warnings.length) : 0)) * 100) / 100 : 0, basePriority,
+      resolutionSuitability: heroImageSizing(width,height).resolutionSuitability,
       sectionPreferences: SECTION_TYPES.filter(type => (SECTION_VISUAL_ROLES[type] as string[]).includes(role)), parentMissing: Boolean(derived && !ids.has(derived.parentAssetId)),
       derivation: derived ? { parentAssetId: derived.parentAssetId, candidateId: derived.candidateId, sourceFingerprint: derived.sourceFingerprint, sourceRect: derived.sourceRect, ...(trim ? {trim} : {}) } : null };
     return { assetId: asset.id, analysis, visual };
@@ -123,7 +123,7 @@ export function validateVisualComposition(sections: { type: string; assetIds: st
 export function visualPromptAsset(asset: VisualAsset) {
   const v = asset.visual;
   return { assetId: asset.assetId, ...(v ? { kind: v.kind, role: v.role, roleSource: v.roleSource, width: v.width, height: v.height,
-    heroEligible: v.heroEligible, heroScore: v.heroScore, resolutionSuitability: v.resolutionSuitability, basePriority: v.basePriority, sectionPreferences: v.sectionPreferences, fallback: v.fallback } : {}),
+    heroEligible: v.heroEligible && ["product", "usage"].includes(v.role), heroScore: v.heroScore, resolutionSuitability: v.resolutionSuitability, basePriority: v.basePriority, sectionPreferences: v.sectionPreferences, fallback: v.fallback } : {}),
     ...(asset.analysis ? { confidence: asset.analysis.confidence, heroSuitability: asset.analysis.heroSuitability,
       visualSummary: asset.analysis.visualSummary, warnings: asset.analysis.warnings } : {}) };
 }

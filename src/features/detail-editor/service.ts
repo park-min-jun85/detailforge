@@ -62,7 +62,7 @@ export async function getEditorView(projectId: string): Promise<EditorView> {
       stale: sectionsAreStale(visible, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !planner || planner.stale,
       blocked: !!reorder || !!ctx.generation?.backup || ctx.generation?.status === "generating", previewWarning,
       reorderRecovery: !!reorder && !!ctx.page && !hasEditLease(ctx.page), manualOrder: !!ctx.page && hasManualOrder(ctx.page.settings, ctx.rows),
-      assets: ctx.assets.map(asset => ({ id: asset.id, name: asset.originalFilename, width:asset.width??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.width, height:asset.height??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.height, provenanceLabel: assetProvenanceLabel(asset, ctx.assets), previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
+      assets: ctx.assets.map(asset => ({ id: asset.id, role:planner?.assets.find(a=>a.assetId===asset.id)?.visual?.role, name: asset.originalFilename, width:asset.width??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.width, height:asset.height??planner?.assets.find(a=>a.assetId===asset.id)?.visual?.height, provenanceLabel: assetProvenanceLabel(asset, ctx.assets), previewUrl: previews?.items.find(item => item.asset.id === asset.id)?.previewUrl ?? null })) };
   } catch (error) { throw safe(error); }
 }
 export async function saveSection(projectId: string, sectionId: string, input: unknown) {

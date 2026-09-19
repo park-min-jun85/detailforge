@@ -381,3 +381,8 @@ Planner는 일반/추출 Hero 후보와 배치 점수, 추출 이미지 수·긴
 새 AI가 보고체/중복 목적을 생성하면 기존 상세페이지를 유지하고 품질 검증 실패를 안내한다. Editor 수동 저장은 막지 않으며 `AI 생성 문구가 이미지 설명 위주입니다` 품질 경고만 review에 표시한다. 경고는 Final capture article 밖에 유지한다.
 
 imageText/detail 본문도 비워 둘 수 있는 nullable field가 됐다. null이면 Editor 공유 미리보기/Final/Export 모두 빈 p를 만들지 않는다. 이미지 중심인 경우 짧은 제목과 사진만 사용할 수 있다. Hero에는 상품명이 별도 중복 출력되지 않는 기존 headline 구조를 유지한다. 글자·스타일 자동 삭제/치환, 이미지 재선택, 자동 재생성 없음.
+
+
+## TASK-030 Final Commerce Polish
+
+작은 Hero는 intrinsic 비율과 1.5배 상한을 지킨 visual stage에 표시한다. 선명도 보정 filter/SR/upscale은 없다. 낮은 해상도 경고와 이미지 화면 링크는 Review/Editor에만 있다. 제목-내용 불일치는 수동 저장을 막지 않으며 Final/Export에 검토 문구를 넣지 않는다. 확정 옵션을 색상/사이즈로 임의 분리하지 않는다. [TASK-030](tasks/TASK-030.md).

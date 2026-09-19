@@ -1,3 +1,4 @@
+import { validateGeneratedTitle } from "@/features/page-quality/generation-titles";
 import { CommerceCopyError, validateCommerceCopy, messageDuplication } from "@/features/page-quality/commerce";
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
@@ -25,6 +26,7 @@ export function validateRegeneration(value: unknown, context: RegenerationContex
   catch { throw new RegenError("invalid_evidence"); }
   try {
     validateCommerceCopy(content);
+    validateGeneratedTitle(content, context.latest);
     const comparison = messageDuplication([{ ...content, purpose: context.target.purpose }, ...(context.input.otherSections ?? [])]);
     if (comparison.duplicates.some(pair => pair.first === 0)) throw new CommerceCopyError("duplicate_purpose");
     return content;

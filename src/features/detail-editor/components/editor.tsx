@@ -65,7 +65,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
     let alive = true, refreshing = false;
     async function refresh() {
       if (refreshing || document.visibilityState !== "visible") return; refreshing = true;
-      try { const result = await fetchAssets(initialView.projectId); if (alive) { setAssets(previous=>result.items.map(item => ({ id: item.asset.id, name: item.asset.originalFilename, previewUrl: item.previewUrl, width:item.asset.width??previous.find(a=>a.id===item.asset.id)?.width, height:item.asset.height??previous.find(a=>a.id===item.asset.id)?.height, provenanceLabel:assetProvenanceLabel(item.asset,result.items.map(i=>i.asset)) }))); setPreviewWarning(false); } }
+      try { const result = await fetchAssets(initialView.projectId); if (alive) { setAssets(previous=>result.items.map(item => ({ id: item.asset.id, role:previous.find(a=>a.id===item.asset.id)?.role, name: item.asset.originalFilename, previewUrl: item.previewUrl, width:item.asset.width??previous.find(a=>a.id===item.asset.id)?.width, height:item.asset.height??previous.find(a=>a.id===item.asset.id)?.height, provenanceLabel:assetProvenanceLabel(item.asset,result.items.map(i=>i.asset)) }))); setPreviewWarning(false); } }
       catch { if (alive) setPreviewWarning(true); }
       finally { refreshing = false; }
     }
@@ -178,7 +178,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
       {view.stale && <p role="status" className="rounded bg-amber-50 p-3 text-sm leading-6 text-amber-900">페이지 설계가 변경되었습니다. 현재 상세페이지는 이전 설계를 기준으로 생성되었습니다.</p>}
       {view.blocked && <p role="status" className="text-sm text-amber-900">저장·생성·복구 상태를 확인해야 합니다. 최신 섹션을 다시 불러온 뒤 순서 복구 또는 상세페이지 생성 화면의 복구를 진행해 주세요.</p>}
       {view.reorderRecovery && <button type="button" className="button-secondary" disabled={busy} onClick={recover}>이전 순서 복구</button>}
-      <QualitySummary sections={sections} assets={assets} additionalWarnings={view.qualityWarnings} />
+      <QualitySummary projectId={view.projectId} sections={displayed} assets={assets} additionalWarnings={view.qualityWarnings} />
       {previewWarning && <p role="status" className="text-sm text-amber-900">이미지 미리보기를 불러오지 못했습니다. 문구와 선택한 이미지 ID는 유지됩니다.</p>}
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {!!sections.length && <section aria-label="선택한 섹션 AI 재생성" className="space-y-2 border-t border-zinc-200 pt-3">

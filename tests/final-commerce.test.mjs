@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {heroImageSizing} from '../src/features/page-quality/images.ts';
+import {validateSectionTitleRelevance as check,safeSectionTitle} from '../src/features/page-quality/title-policy.ts';
+import {titleRelevance} from '../src/features/page-quality/title-relevance.ts';
+import {buildVisualAssetInventory} from '../src/features/visual-assets/policy.ts';
+import {assetRowSchema} from '../src/features/assets/schemas.ts';
+import {assetRow,projectId,productId} from './helpers/page-planner.mjs';
+import {completedAnalysis} from './helpers/analysis.mjs';
+import {fixture,sectionOutput,provider,protectedSnapshot} from './helpers/section-fixtures.mjs';
+import {generateSections,getSectionView} from '../src/features/section-engine/service.ts';
+import {draftOf,editorSectionSchema} from '../src/features/detail-editor/schemas.ts';
+import {saveSection} from '../src/features/detail-editor/service.ts';
+import {regenerateSection} from '../src/features/section-regeneration/service.ts';
+import {planPage} from '../src/features/page-planner/service.ts';
+import {planResult} from './helpers/planner-fixtures.mjs';
+const options=(...labels)=>({groups:[{name:'옵션',values:labels.map(label=>({label}))}]});
+const ctx=(patch={})=>({sectionType:'option',title:'옵션 안내',content:{},supportedFacts:[],visualRoles:[],confirmedOptions:options('단일상품'),...patch});
+for(const size of [330,434,800])test('Hero actual display bounds '+size,()=>{const r=heroImageSizing(size,size);assert.ok(r.maxWidth<=size*1.5);assert.equal(r.lowResolution,size<520);assert.equal(r.resolutionSuitability,Math.min(1,size/r.requiredDisplayWidth));});
+test('portrait dimensions use aspect ratio and height cap, not square resolution assumption',()=>{const r=heroImageSizing(800,1600);assert.equal(r.maxWidth,360);assert.equal(r.maxHeight,720);assert.equal(r.lowResolution,false);});
+test('equivalent high resolution derived outranks 330 original; closeup cannot outrank representative',()=>{
+ const normal=assetRowSchema.parse(assetRow({width:330,height:330,metadata:{aiAnalysis:completedAnalysis()}})), id=randomUUID();
+ const derivation={schemaVersion:1,kind:'detail_image_crop',parentAssetId:randomUUID(),sourceFingerprint:'a'.repeat(64),candidateId:'b'.repeat(64),sourceRect:{x:0,y:0,width:800,height:800},sourceDimensions:{width:860,height:12900},coordinateSpace:'orientation_normalized_pixels',suggestedRole:'product',confidence:.9,extractedAt:'2026-09-19T00:00:00Z',provider:'openai',model:'mock'};
+ const crop=assetRowSchema.parse(assetRow({id,width:800,height:800,metadata:{aiAnalysis:completedAnalysis(),derivation}}));
+ let inventory=buildVisualAssetInventory([normal,crop],projectId,productId);assert.ok(inventory.find(a=>a.assetId===id).visual.heroScore>inventory.find(a=>a.assetId===normal.id).visual.heroScore);
+ crop.metadata.aiAnalysis=completedAnalysis({role:'detail',heroSuitability:1});inventory=buildVisualAssetInventory([normal,crop],projectId,productId);assert.ok(inventory.find(a=>a.assetId===id).visual.heroScore<inventory.find(a=>a.assetId===normal.id).visual.heroScore);
+});
+for(const title of ['묶음 구성','세트 구성','패키지 구성','구성품 세트','2개 세트'])test('single option forbids bundle title '+title,()=>assert.equal(check(ctx({title,supportedFacts:[{label:'판매 구성',value:'2개 세트'}]})).valid,false));
+test('multiple choices allow neutral title, do not imply a bundle',()=>{const c=ctx({confirmedOptions:options('아이보리 90','아이보리 95'),title:'선택 가능한 옵션'});assert.equal(check(c).valid,true);assert.equal(check({...c,title:'묶음 구성'}).valid,false);});
+test('explicit supported composition permits pack heading outside single-product options',()=>assert.equal(check(ctx({sectionType:'imageText',title:'묶음 구성',supportedFacts:[{label:'판매 구성',value:'2개 세트'}]})).valid,true));
+test('all confirmed choices expressly bundles can ground bundle title',()=>assert.equal(check(ctx({title:'세트 구성',confirmedOptions:options('상의 하의 세트','상의 치마 세트')})).valid,true));
+for(const fact of [{label:'수량',value:'40매'},{label:'판매 구성',value:'세트 아님'}])test('count or negation is not pack provenance '+fact.value,()=>assert.equal(check(ctx({sectionType:'imageText',title:'묶음 구성',supportedFacts:[fact]})).valid,false));
+for(const [title,role]of [['마감 디테일','detail'],['부분 확대컷','detail'],['착용 모습','usage'],['사용 장면','usage'],['활용 모습','usage']])test('contextual visual requirement '+title,()=>{assert.equal(check(ctx({sectionType:'imageText',title,visualRoles:['product']})).valid,false);assert.equal(check(ctx({sectionType:'imageText',title,visualRoles:[role]})).valid,true);});
+test('use-case hypothesis is distinct from a claimed usage photo',()=>assert.equal(check(ctx({sectionType:'useCase',title:'활용 예시'})).valid,true));
+test('specification heading checks actual rows and notice checks evidence',()=>{assert.equal(check(ctx({sectionType:'specification',title:'소재 정보',content:{rows:[{label:'제조국',value:'중국'}]}})).valid,false);assert.equal(check(ctx({sectionType:'notice',title:'배송 안내'})).valid,false);});
+test('safe fallback skips duplicate canonical heading, optional gallery stays absent',()=>{assert.equal(safeSectionTitle('option',null),'옵션 안내');assert.equal(safeSectionTitle('specification','', ['상품 정보']),'제품 사양');assert.equal(safeSectionTitle('notice',null),'안내사항');assert.equal(safeSectionTitle('gallery',null),null);});
+test('legacy/human review does not mutate invalid title',()=>{const s={type:'option',title:'묶음 구성',evidenceIds:[],optionSnapshot:{confirmed:options('단일상품')}},before=structuredClone(s);assert.equal(titleRelevance(s),'unverified_pack_title');assert.deepEqual(s,before);});
+test('invalid AI title rejects once and preserves previous successful Sections',()=>fixture(async state=>{await generateSections(projectId,{},provider);const before=structuredClone(state.sections),protectedBefore=protectedSnapshot(state),view=await getSectionView(projectId);let calls=0;await assert.rejects(()=>generateSections(projectId,{replaceExisting:true,expectedRevision:view.revision},()=>({model:'mock',generate:async input=>{calls++;const out=sectionOutput(input);out.sections[2].title='묶음 구성';return out;}})),e=>e.code==='copy_quality');assert.equal(calls,1);assert.deepEqual(state.sections,before);assert.deepEqual(protectedSnapshot(state),protectedBefore);}));
+test('human title saves with warning; individual AI regeneration rejects same title without writes',()=>fixture(async state=>{await generateSections(projectId,{},provider);const row=editorSectionSchema.parse(state.sections[2]),draft=draftOf(row);draft.fields.title='묶음 구성';await saveSection(projectId,row.id,{...draft,revision:row.updated_at});assert.equal(titleRelevance(state.sections[2].content),'unverified_pack_title');const before=structuredClone(state.sections);await assert.rejects(()=>regenerateSection(projectId,row.id,{revision:state.sections[2].updated_at},()=>({model:'mock',generate:async input=>{const{meta,...content}=input.current.content;void meta;return{schemaVersion:1,content};}})),e=>e.code==='copy_quality');assert.deepEqual(state.sections,before);}));
+test('Planner rejects unsupported bundle intent and preserves prior plan; no title field invented',()=>fixture(async state=>{const before=structuredClone(state.page.plan.latestResult);await assert.rejects(()=>planPage(projectId,()=>({model:'mock',plan:async input=>{const p=planResult(input);p.sections[2].purpose='묶음 구성';return p;}})),e=>e.code==='invalid_response');assert.deepEqual(state.page.plan.latestResult,before);}));
+
+
+test('review uses selected visual roles without warning on a grounded detail title',()=>{const s={type:'detail',title:'마감 디테일',evidenceIds:[],assetIds:[]};assert.equal(titleRelevance(s,[],['detail']),null);assert.equal(titleRelevance(s,[],['product']),'detail_visual_required');});
+test('usage title wording cannot evade context using a longer modifier',()=>assert.equal(check(ctx({sectionType:'imageText',title:'착용 상태의 전체 실루엣',visualRoles:['product']})).valid,false));
+test('legacy title remains unchanged even when safe fallback is requested',()=>assert.equal(safeSectionTitle('option','패드 묶음 구성'),'패드 묶음 구성'));

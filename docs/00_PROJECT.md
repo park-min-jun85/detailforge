@@ -56,3 +56,8 @@ AI가 상품을 분석하고 근거량에 따라 4~12개 Section으로 상세페
 ## TASK-028 커머스 카피
 
 최종 산출물은 관찰 보고서가 아닌 판매용 상세페이지다. 새 AI는 근거가 있는 짧은 외형 설명과 section copy intent를 사용하며 이미지 확인을 권하는 보고체를 출력하지 않는다. 같은 사진·근거·목적을 되풀이하기보다4~12개의 유효한 Section으로 줄인다. Fact grounding과 확정 옵션 원문은 유지한다. [TASK-028](tasks/TASK-028.md).
+
+
+## TASK-030 Final Commerce Polish
+
+새 AI 생성과 개별 재생성은 제목도 내용·근거와 일치해야 한다. 원본의 부족한 해상도를 CSS로 복구할 수 없으며, 대표성에 맞는 후보를 고르고 표시 크기를 제한한다. 실제 새 상품의 전체 흐름과 BLOCKER/HIGH 0건을 Release Candidate 기준으로 삼는다. [TASK-030](tasks/TASK-030.md).

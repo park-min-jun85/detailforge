@@ -2,7 +2,7 @@ import { metaObservationCount } from "./commerce";
 import { titleRelevance } from "./title-relevance";
 import type { PlannerEvidence, PlannerAsset } from "@/features/page-planner/schemas";
 import type { GeneratedSection } from "@/features/section-engine/schemas";
-import { imageSizing } from "./images";
+import { heroImageSizing } from "./images";
 
 export const PRESENTATION_VERSION = 1;
 export const MAX_ASSET_REUSE = 2;
@@ -66,13 +66,13 @@ export function planQuality(sections: PlanSection[], evidence: PlannerEvidence[]
     if ((["imageText", "gallery", "detail"].includes(s.type) && !s.assetIds.length && !facts.length)
       || (s.type === "feature" && !s.assetIds.length && facts.every(f => /카테고리|분류/.test(f.label)))
       || (s.type === "notice" && !facts.some(f => /주의|안내|배송|반품|보관|사용법/.test(f.label)))) warnings.add("low_value_section");
-    if (s.type === "hero") for (const id of s.assetIds) { const v = assets.find(a => a.assetId === id)?.visual; if (v && imageSizing(v.width, v.height, "hero").lowResolution) warnings.add("hero_low_resolution"); }
+    if (s.type === "hero") for (const id of s.assetIds) { const v = assets.find(a => a.assetId === id)?.visual; if (v && heroImageSizing(v.width, v.height).lowResolution) warnings.add("hero_low_resolution"); }
     if (s.type === "gallery" && s.assetIds.length >= 3 && new Set(s.assetIds.map(id => assets.find(a => a.assetId === id)?.visual?.role ?? "unknown")).size < 2) warnings.add("limited_gallery_diversity");
   }
   return { warnings: [...warnings], metrics, coverage };
 }
 export function sectionTitle(s: GeneratedSection) { return s.type === "hero" ? s.headline : s.title ?? ""; }
-export function copyQuality(sections: GeneratedSection[]) {
+export function copyQuality(sections: GeneratedSection[], assets?: {id:string;role?:string}[]) {
   const warnings = new Set<QualityWarning>(); let duplicateTitleCount = 0, duplicateCopyCount = 0;
   const titleList = sections.map(sectionTitle), seenMessages = new Set<string>();
   titleList.forEach((title, i) => { if (titleList.slice(0, i).some(other => titleSimilarity(title, other) >= .72)) { duplicateTitleCount++; warnings.add("duplicate_title"); } });
@@ -90,7 +90,7 @@ export function copyQuality(sections: GeneratedSection[]) {
   }
   if (duplicateCopyCount) warnings.add("repetitive_copy");
   if (metaObservationCount(sections)) warnings.add("meta_observation_copy");
-  if (sections.some(s => titleRelevance(s, sections))) warnings.add("title_relevance");
+  if (sections.some(s => titleRelevance(s, sections, assets?.filter(a => s.assetIds.includes(a.id)).map(a => a.role ?? "unknown")))) warnings.add("title_relevance");
   return { warnings: [...warnings], duplicateTitleCount, duplicateCopyCount };
 }
 // New full AI generation only. Legacy reads and human edits remain non-blocking.

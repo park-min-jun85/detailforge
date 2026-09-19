@@ -3,7 +3,7 @@ import type { QualityWarning } from "@/features/page-quality/policy";
 import { sectionRowSchema, storedContentSchema, sectionStyleSchema, type GeneratedSection } from "@/features/section-engine/schemas";
 export const canonicalSectionSchema = sectionRowSchema.extend({ content: storedContentSchema, style: sectionStyleSchema }).refine(row => row.type === row.content.type);
 export type RenderSection = { id: string; type: GeneratedSection["type"]; sortOrder: number; content: GeneratedSection; style: z.infer<typeof sectionStyleSchema> };
-export type RenderAsset = { id: string; name: string; previewUrl: string | null; width?: number | null; height?: number | null };
+export type RenderAsset = { role?: string; id: string; name: string; previewUrl: string | null; width?: number | null; height?: number | null };
 export type RenderView = {
   projectId: string; projectName: string; productName: string | null; detailPageId: string | null; width: number | null;
   state: "ready" | "product_missing" | "page_missing" | "empty" | "busy";

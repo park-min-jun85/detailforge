@@ -1,3 +1,4 @@
+import { validatePlannedSemantics } from "@/features/page-quality/generation-titles";
 import { COMMERCE_COPY_VERSION, validateMessageDistinctness } from "@/features/page-quality/commerce";
 import "server-only";
 import { planQuality, MAX_ASSET_REUSE, PRESENTATION_VERSION } from "@/features/page-quality/policy";
@@ -151,6 +152,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
       let plan;
       try { plan = validatePagePlan(output, context.current.input.evidence, context.current.input.assets, context.current.input.confirmedOptions);
         validateMessageDistinctness(plan.sections);
+        validatePlannedSemantics(plan, context.current.input.evidence, context.current.input.assets, context.current.input.confirmedOptions);
       const quality=planQuality(plan.sections,context.current.input.evidence,context.current.input.assets);
         if(quality.metrics.maxAssetReuse>MAX_ASSET_REUSE) throw new Error("Excessive asset reuse");
         plan.warnings=[...new Set([...plan.warnings,...quality.warnings])]; }

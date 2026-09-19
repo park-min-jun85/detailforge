@@ -339,3 +339,8 @@ Source 삭제 후에도 독립 Derived는 유효하다. Derived 삭제는 새 in
 Section Engine은 기존 schema/correspondence/F/V/Asset/spec/options 검증 후 commerce meta-copy와 목적 중복을 hard validation한다. 개별 regeneration도 같은 검사를 거치고 다른 canonical Section의 type/title/purpose/evidenceIds/assetIds 요약만 최대49개 전달한다. peer summary는 사실 근거가 아니며 candidate fingerprint에 포함되어 동료 Section 변경 시 명시적 적용을 차단한다. unrelated peer의 수동 보고체는 검사 대상이 아니다.
 
 Plan과 Section output 개수는4~12, detail/imageText body는 string|null이다. 기존 string JSON과 legacy schemaVersion1은 호환된다. Editor field nullable와 공유 SectionCopy의 조건부 p 렌더링만 변경하며 DB migration은 없다. 품질 실패가 staging/기존 Section 삭제보다 먼저 발생하고 기존 recovery/CAS를 유지한다. [TASK-028](tasks/TASK-028.md).
+
+
+## TASK-030 Final Commerce Polish
+
+page-quality/images.heroImageSizing을 Renderer·Review·Hero ranking이 공유한다. title-policy는 순수 deterministic contextual 검사, generation-titles는 F/confirmed options/선택한 visual 역할을 연결한다. 새 Planner purpose 및 Section/개별 재생성에 적용하며, contentBrief의 금지 지시문은 제목으로 오인하지 않는다. 기존 plan schema에는 title 필드를 추가하지 않는다. semantic policy version을 새 Planner/재생성 fingerprint에 포함하며 기존 읽기 schema는 유지한다. [TASK-030](tasks/TASK-030.md).

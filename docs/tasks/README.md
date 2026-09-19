@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-030 — Final Commerce Polish 구현·실제 새 상품 E2E QA 완료. 브랜치 `feat/final-commerce-polish`. 해상도 기반 Hero·제목 의미 검사·수동 편집 경고, 전체820 tests와 필수 검사 통과. 실제67695797의 새 Import부터 PNG/JPG860×2744까지 완료. **Release Candidate: NEEDS_WORK (HIGH1: 무관한 추출 후보 기본 선택)**. QA DB/Storage 정리, 기존14행 해시 일치. dependency/migration/commit 없음. [TASK-030](./TASK-030.md).
+
+## 완료된 TASK-029 기반
+
 TASK-029 — Commerce Visual Design System & Final Page Visual Refinement 완료. 브랜치 `feat/commerce-visual-system`. 기존 bounded token·공유 Renderer에 섹션별 hierarchy, intrinsic Hero, adaptive Benefits/Gallery/Spec/Option, 새 style guard와 title relevance warning을 연결했다. 전체790 tests, 필수 검사 및 동일 canonical 자료의 실제 production PNG/JPG860×1941 검증. 실제 외부 API/DB 요청0회, migration/dependency/commit 없음. [TASK-029](./TASK-029.md).
 
 ## 완료된 TASK-028 기반

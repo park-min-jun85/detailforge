@@ -1,3 +1,4 @@
+import { validateGeneratedTitle } from "@/features/page-quality/generation-titles";
 import { copyIntent, distinctVisualAssignments, validateCommerceCopy, validateMessageDistinctness } from "@/features/page-quality/commerce";
 import "server-only";
 import { factCoverage, enforceGenerationQuality } from "@/features/page-quality/policy";
@@ -26,6 +27,7 @@ export function validateSectionOutput(value: unknown, latest: LatestPlan): Secti
   output.sections.forEach((section, index) => validateSectionContent(section, latest, input.plan.sections[index]));
   if(latest.presentationVersion===1) enforceGenerationQuality(output.sections);
   output.sections.forEach(validateCommerceCopy);
+  output.sections.forEach(section => validateGeneratedTitle(section, latest));
   validateMessageDistinctness(output.sections.map((s,i)=>({...s,purpose:input.plan.sections[i].purpose})));
   return output;
 }

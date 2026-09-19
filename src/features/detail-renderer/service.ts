@@ -48,7 +48,7 @@ export async function getRenderView(projectId: string): Promise<RenderView> {
     const plan = latestPlanSchema.safeParse(page.plan.latestResult);
     if(plan.success) view.readiness.qualityWarnings=planQuality(view.sections.map(s=>({...s.content,key:s.content.plannerKey})),plan.data.evidenceSnapshot,plan.data.assetSnapshot).warnings;
     const planner = await getPlannerView(projectId).catch(() => null);
-    view.assets = view.assets.map(asset => { const v=planner?.assets.find(a=>a.assetId===asset.id)?.visual; return {...asset,width:asset.width??v?.width,height:asset.height??v?.height}; });
+    view.assets = view.assets.map(asset => { const v=planner?.assets.find(a=>a.assetId===asset.id)?.visual; return {...asset,role:v?.role,width:asset.width??v?.width,height:asset.height??v?.height}; });
     view.readiness.stalePlan = sectionsAreStale(rows, plan.success ? sourcePlanFingerprint(plan.data) : null, plan.success) || !!planner?.stale;
     view.readiness.validation = planner?.validationStatus ?? "unknown";
     view.readiness.unavailable = !planner;

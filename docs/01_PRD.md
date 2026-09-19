@@ -17,3 +17,8 @@ Images에서 직접 저장한 제품컷을 새 Planner/Section의 시각 자료�
 ## TASK-028 문구·시각 역할 분리
 
 전체 AI 생성과 개별 재생성은 같은 commerce-copy 검사를 통과해야 한다. 실패 시 기존 콘텐츠 보존, 자동 retry/후처리 rewrite 없음. 사람이 입력한 보고체는 저장 가능하며 품질 경고만 표시한다. sparse 상품은4개 구성도 허용하고, detail/imageText는 필요 없으면 본문을 null로 두되 빈 문자열로 채우지 않는다. distinct 사진/근거가 없는 반복 visual Section은 계획하지 않는다. 실제 동일 상품 QA와 남은 한계는 [TASK-028](tasks/TASK-028.md).
+
+
+## TASK-030 Final Commerce Polish
+
+Hero는 제품 대표성 우선, 같은 의미·품질에서는 높은 실제 해상도를 고려한다. 1.5배 확대 상한, Review의 낮은 해상도 안내와 이미지 후보 확인 링크를 제공한다. 묶음/세트/패키지는 실제 구성 근거가 필요하고 단일상품 옵션에는 금지한다. AI strict validation, 수동 편집 warning only. 기존 페이지 자동 수정 없음. [TASK-030](tasks/TASK-030.md).
