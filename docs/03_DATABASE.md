@@ -306,7 +306,7 @@ product_options 및 0005는 변경하지 않았다. detail_pages.plan.latestResu
 
 - Source `metadata.detailExtraction`: schemaVersion, revision UUID, attempt(status/runId/startedAt/finishedAt/errorCode), saveLease, latestResult. 결과는 bytes SHA-256, EXIF 정규화 좌표계/크기, model, 시각, bounded 타일 실패 목록, 최대24 후보를 포함한다. 실패한 재분석은 latestResult를 유지한다.
 - Derived `metadata.derivation`: kind=detail_image_crop, parentAssetId, sourceFingerprint, candidateId, sourceRect, sourceDimensions, coordinateSpace, suggestedRole, confidence, extractedAt, provider/model. 처음에는 asset_type=unclassified. 실제 decoder 크기를 width/height에 저장하고 현재 최대 sort_order 뒤에 원본 후보 순서로 append한다.
-- 경로는 `projects/{projectId}/products/{productId}/{serverUUID}.{actualMimeExtension}`. signed URL과 임시 타일은 DB/Storage에 보존하지 않는다. accepted IDs는 중복 저장하지 않고 현재 Product Assets의 parent/hash/candidateId로 조회한다.
+- 경로는 `projects/{projectId}/products/{productId}/{serverUUID}.{actualMimeExtension}`. signed URL과 임시 타일은 DB/Storage에 보존하지 않는다. TASK-032부터 현재 Product Assets의 parent/hash/sourceRect로 재사용한다. candidateId와 역할 provenance는 유지하되 역할만 달라진 같은 영역은 새 row를 만들지 않는다. 기존 중복 row를 조회 시 삭제하거나 합치지 않는다.
 - Source/Derived 삭제는 독립적이며 cascade를 추가하지 않는다. 후보당 INSERT 응답 유실은 재조회한다. DB 미저장이 확인되면 이번 UUID 파일만 보상 삭제하며 저장 여부가 불명확하면 파일을 지우지 않고 recovery 오류를 반환한다.
 
 Product/Facts/Validation/Analysis/Options/Plan/Sections/Project status는 추출의 쓰기 대상이 아니다. [TASK-024](./tasks/TASK-024.md).

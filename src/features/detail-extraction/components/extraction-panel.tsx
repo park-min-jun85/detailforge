@@ -4,6 +4,7 @@ import type { Asset } from "@/types/domain";
 import { requestCropSave, requestExtraction } from "../client";
 import { EXTRACTION_MESSAGES, ExtractionError } from "../errors";
 import { REGION_LABELS } from "../policy";
+import { cropRectKey } from "../crop-identity";
 import { defaultExclusionReason, EXCLUSION_LABELS, extractionContextStatus, VISUAL_KIND_LABELS } from "../selection";
 import { derivationSchema, isExtractionActive, isSaveActive, readExtraction, type Candidate, type ExtractionResult } from "../schemas";
 
@@ -13,9 +14,11 @@ type Props = { projectId: string; asset: Asset; previewUrl: string | null; asset
 function CandidateReview({ result, ...props }: Props & { result: ExtractionResult }) {
   const [selected, setSelected] = useState(() => new Set(result.candidates.filter(c => c.defaultSelected).map(c => c.id)));
   const [showExcluded, setShowExcluded] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState(""), [stale, setStale] = useState(false);
-  const existing = new Set(props.assets.flatMap(asset => { const d = derivationSchema.safeParse(asset.metadata.derivation);
-    return d.success && d.data.parentAssetId === props.asset.id && d.data.sourceFingerprint === result.sourceFingerprint ? [d.data.candidateId] : []; }));
+  const savedRects = new Set(props.assets.flatMap(asset => { const d = derivationSchema.safeParse(asset.metadata.derivation);
+    return d.success && d.data.parentAssetId === props.asset.id && d.data.sourceFingerprint === result.sourceFingerprint ? [cropRectKey(d.data.sourceRect)] : []; }));
+  const existing = new Set(result.candidates.filter(c => savedRects.has(cropRectKey(c.rect))).map(c => c.id));
   const selectedIds = [...selected].filter(id => !existing.has(id));
+  const selectedCropCount = new Set(result.candidates.filter(c => selected.has(c.id) && !existing.has(c.id)).map(c => cropRectKey(c.rect))).size;
   const available = Math.max(0, 30 - props.assets.length);
   const candidates: Candidate[] = result.candidates;
   const shown = candidates.filter(c => c.saveAllowed || showExcluded);
@@ -59,10 +62,10 @@ function CandidateReview({ result, ...props }: Props & { result: ExtractionResul
         </li>;
       })}
     </ul>
-    <p className="text-sm text-zinc-600">새로 저장할 선택 {selectedIds.length}개 · 남은 이미지 슬롯 {available}개</p>
-    {selectedIds.length > available && <p role="alert" className="text-sm text-red-700">선택 수가 남은 슬롯을 초과합니다. 일부만 저장하지 않으므로 선택을 줄여 주세요.</p>}
+    <p className="text-sm text-zinc-600">새로 저장할 이미지 {selectedCropCount}개 · 선택 후보 {selectedIds.length}개 · 남은 이미지 슬롯 {available}개</p>
+    {selectedCropCount > available && <p role="alert" className="text-sm text-red-700">선택 수가 남은 슬롯을 초과합니다. 일부만 저장하지 않으므로 선택을 줄여 주세요.</p>}
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}{message && <p role="status" className="text-sm">{message}</p>}
-    <button type="button" className="button-primary" disabled={props.busy || stale || !selectedIds.length || selectedIds.length > available || !props.previewUrl} onClick={save}>선택한 제품컷 저장 ({selectedIds.length})</button>
+    <button type="button" className="button-primary" disabled={props.busy || stale || !selectedIds.length || selectedCropCount > available || !props.previewUrl} onClick={save}>선택한 제품컷 저장 ({selectedIds.length})</button>
     <p className="text-xs leading-5 text-zinc-500">원본은 유지됩니다. 선택한 영역만 별도 이미지로 저장하며 처음에는 미분류 상태입니다. AI 이미지 분석은 저장 후 별도로 실행하세요.</p>
   </div>;
 }

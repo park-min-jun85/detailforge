@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-032 — Release Candidate Polish & Multi-Product QA 완료. 브랜치 `feat/release-candidate-polish`. 상품 저장 후 옵션 source 갱신, 같은 crop의 역할 변경 중복 방지, 이미지 후속 안내를 보완했다. 실제 A67399861 새 Project의 Import부터 PNG/JPG860×1933까지 성공. B는 실제6옵션 저장+기존 canonical 출력860×2744 재현, C는 실제 restricted12후보 자동 적용 차단이며 후속 AI/Export 미실행. 전체849 tests/typegen/typecheck/lint/build/diff 통과, client26파일·3종키 일치0, QA3Project·5Storage 정리 및 기존14행 hash 일치. 관찰 B0/H0/M4/L2, **v0.1.0 local/internal MVP Release Candidate**. 공개 SaaS는 Auth/owner_id/사용자별 RLS·Storage 전까지 차단한다. Commit/merge/tag 없음. [60개 항목 보고와 검증 한계](./TASK-032.md), [후속 과제](../RELEASE_BACKLOG.md).
+
+## 완료된 TASK-031 기반
+
 TASK-031 — Product-Relevance Guard 구현·동일 원본 실제 QA 완료. 브랜치 `feat/extraction-relevance-guard`. context/visualKind/relevance를 기존 타일 요청에 함께 전달하고 서버 추천 정책을 강화했다. 전체846 tests 및 필수 검사 통과. 같은800×23982 원본의 새14타일(14성공), 후보24/기본18, 전자기기 최종 후보·저장 혼입0. 기본18+명시적 수동1 저장 검증 후 QA DB/Storage 정리, 기존14행 해시 일치. TASK-030 H1 재현0, 이번 관찰 기준 B0/H0, M4/L1 이월. 단 cap 이전 전자기기의 실제 kind/score는 보존하지 않아 미확인이다. 해당 필드 판정까지 실검증됐다고 주장하지 않는다. migration/dependency/commit 없음. [46개 항목 보고와 검증 한계](./TASK-031.md).
 
 ## 완료된 TASK-030 기반

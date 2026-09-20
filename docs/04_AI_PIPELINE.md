@@ -1,5 +1,11 @@
 # AI Pipeline
 
+## TASK-032 실제 호출 검증
+
+새 A 상품에서 추출8타일·이미지분석4·상품분석1·Fact검증1·Planner1·Section1의 첫 유효 결과를 평가했다. 재시도/좋은 결과 선별용 재호출/개별 재생성 호출은 없다. B 출력은 기존 canonical fixture 재현이며 새 AI 성공으로 세지 않는다. C의 제한 후보는 확정 옵션에 전달하지 않았다.
+
+같은 source hash/policy/context의 추출 결과 재사용은 추가 AI 호출 없이 확인했다. 저장 Derived의 분석은 여전히 사용자가 별도로 실행한다. 현재 저장 projection에는 token usage와 이미지 분석 시작 시간이 없어 비용·누락된 소요 시간을 추정하지 않는다. 모든 수치와 경계는 [TASK-032](tasks/TASK-032.md).
+
 ## TASK-031 동일 타일 요청의 제품 관련성 검사
 
 타일 Vision의 strict output v2에 visualKind(photo/illustration/diagram/graphic/mixed/unknown), targetProductRelevance(0..1), containsTargetProduct(boolean), relevanceReason(1~120자)를 추가한다. 기존 role/좌표/품질 필드를 유지하며 서버 Zod 재검증 후 저장한다. v1은 읽기 전용 호환 대상이며 새 provider의 v1 응답은 거부한다.

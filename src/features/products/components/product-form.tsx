@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { saveProductAction } from "../actions";
 import { MAX_SPECIFICATIONS, type ProductInput } from "../schemas";
 import type { ProductSaveState } from "../types";
@@ -29,6 +30,7 @@ const textFields = [
 export function ProductForm({ projectId, initialValues, revision }: {
   projectId: string; initialValues: ProductInput | null; revision: string;
 }) {
+  const router = useRouter();
   const [values, setValues] = useState(() => formValues(initialValues));
   const [showFeedback, setShowFeedback] = useState(true);
   const [importPreview,setImportPreview]=useState<ImportPreview|null>(null),[selectedImages,setSelectedImages]=useState<string[]>([]);
@@ -47,6 +49,9 @@ export function ProductForm({ projectId, initialValues, revision }: {
           if(importPreview){
             setImportPreview(null);setSelectedImages([]);beforeImport.current=normalized;
           }
+          // Import uses a Route Handler, so sibling server props need an explicit refresh.
+          // OptionsManager keeps its product-ID key: an existing option draft survives.
+          router.refresh();
         }
         setShowFeedback(true);
         return result;

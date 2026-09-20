@@ -1,5 +1,11 @@
 # Architecture
 
+## TASK-032 저장 후 갱신과 crop 재사용
+
+ProductForm은 성공 저장 후 `router.refresh()`로 서버의 최신 Product/source URL을 sibling OptionsManager에 전달한다. 기존 Product ID를 key로 유지하므로 같은 Product의 옵션 draft는 재마운트하지 않는다. Import Route Handler와 수동 Server Action 모두 성공 경계를 공유한다.
+
+Derived 저장은 소속과 source bytes hash를 검증한 뒤 parent/sourceFingerprint/sourceRect로 재사용한다. `crop-identity.ts`는 검증된 rect의 key만 만들며 소속 검사를 대신하지 않는다. Candidate ID의 기존 role 포함 해시와 provenance는 유지한다. 저장 루프와 UI가 같은 rect key를 사용하고 같은 요청의 중복 rect도 한 슬롯만 차지한다. DB migration/unique constraint 추가 없이 기존 source save lease와 metadata CAS를 유지한다. [TASK-032](tasks/TASK-032.md).
+
 ## TASK-031 제품 관련성 추출 경계
 
 `detail-extraction/product-context.ts`는 소속을 재검사한 Product와 confirmed Facts에서 bounded identity context를 만든다. 상품명200자/category100자/brand100자, 허용된 품명·모델 label/value 최대4개만 사용하고 description/source_snapshot/AI analysis/Options는 읽지 않는다. canonical 정규화·정렬 후 SHA-256만 Source latestResult에 저장한다.

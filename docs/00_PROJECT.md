@@ -1,5 +1,9 @@
 # DetailForge Project
 
+## TASK-032 내부 MVP 출시 후보
+
+실제 상품 A의 새 Project부터 PNG/JPG까지 검증하고, B는 실제 Import/옵션과 기존 canonical 출력 재현, C는 제한 옵션의 자동 적용 차단으로 범위를 나눠 확인한다. 품질 평가에 새 AI 결과와 fixture를 혼동하지 않는다. RC는 BLOCKER/HIGH 0, 핵심 여정·검사 성공, 비밀키 비노출, 기존 데이터 보존과 QA 정리를 모두 요구한다. Auth/owner_id/사용자별 RLS·Storage 정책 전에는 public SaaS 배포가 불가하다. [검증 결과](tasks/TASK-032.md), [후속 과제](RELEASE_BACKLOG.md).
+
 ## TASK-029 Commerce Visual System
 
 판매용 상세페이지 디자인은 canonical Section과 bounded style token을 application-owned deterministic layout으로 표시한다. AI가 CSS/색/px/HTML을 만들지 않는다. 제품 이미지와 정보 역할에 맞는 hierarchy, adaptive option/gallery, intrinsic1.5배 cap을 Editor/Final/Export가 공유한다. 기존 사실·옵션·저장 style은 자동 변경하지 않는다. [TASK-029](tasks/TASK-029.md).
@@ -31,7 +35,7 @@ AI가 상품을 분석하고 근거량에 따라 4~12개 Section으로 상세페
 
 ## MVP에서 제외
 
-- 도매사이트 자동 크롤링
+- 도매사이트 대량·자동 탐색 크롤링 (사용자가 입력한 단일 공개 상품 URL 가져오기는 지원)
 - 스마트스토어/쿠팡 자동등록
 - 대량 상품처리
 - 결제/구독

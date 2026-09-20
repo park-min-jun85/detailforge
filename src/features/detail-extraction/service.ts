@@ -9,6 +9,7 @@ import type { Asset } from "@/types/domain";
 import { ExtractionError } from "./errors";
 import { decodeSource, imageTiles, tileDataUrl, cropImage, sourceFingerprint } from "./images";
 import { candidateId, normalizeCandidates } from "./geometry";
+import { cropRectKey } from "./crop-identity";
 import { bounded, loadSource } from "./source";
 import { getExtractionProvider, type ExtractionProvider } from "./provider";
 import { POLICY_VERSION, RUN_TIMEOUT_MS, TILE_TIMEOUT_MS } from "./policy";
@@ -146,8 +147,8 @@ export async function saveProductShots(projectId: string, assetId: string, body:
       const assets = existing.data.map(row => assetRowSchema.parse(row)); assets.forEach(a => assertAssetScope(a, scope.projectId, scope.productId));
       const duplicates = new Map<string, Asset>();
       for (const asset of assets) { const d = derivationSchema.safeParse(asset.metadata.derivation);
-        if (d.success && d.data.parentAssetId === source.id && d.data.sourceFingerprint === result.sourceFingerprint) duplicates.set(d.data.candidateId, asset); }
-      const available = Math.max(0, MAX_PRODUCT_ASSETS - assets.length), needed = selected.filter(c => !duplicates.has(c.id)).length;
+        if (d.success && d.data.parentAssetId === source.id && d.data.sourceFingerprint === result.sourceFingerprint) duplicates.set(cropRectKey(d.data.sourceRect), asset); }
+      const available = Math.max(0, MAX_PRODUCT_ASSETS - assets.length), needed = new Set(selected.map(c => cropRectKey(c.rect)).filter(key => !duplicates.has(key))).size;
       if (needed > available) throw new ExtractionError("asset_limit", available);
       const lease = { id: randomUUID(), startedAt: new Date().toISOString() };
       if (!await compareAndSave(client, source, { ...state, saveLease: lease })) throw new ExtractionError("conflict");
@@ -156,7 +157,7 @@ export async function saveProductShots(projectId: string, assetId: string, body:
       const saveStarted = Date.now();
       try {
         for (const candidate of selected) {
-          const duplicate = duplicates.get(candidate.id);
+          const duplicate = duplicates.get(cropRectKey(candidate.rect));
           if (duplicate) { saved.push({ candidateId: candidate.id, asset: duplicate, existing: true }); continue; }
           try {
             if (Date.now() - saveStarted >= 240_000) throw new ExtractionError("timeout");
@@ -164,6 +165,7 @@ export async function saveProductShots(projectId: string, assetId: string, body:
             const current = await readAsset(client, scope), latest = readExtraction(current.metadata);
             if (current.storagePath !== source.storagePath || latest?.saveLease?.id !== lease.id || latest.latestResult?.sourceFingerprint !== result.sourceFingerprint) throw new ExtractionError("conflict");
             const asset = await persistCrop(client, source, candidate, image, result.model, order++);
+            duplicates.set(cropRectKey(candidate.rect), asset);
             saved.push({ candidateId: candidate.id, asset, existing: false });
           } catch (error) { const failure = safeError(error); failed.push({ candidateId: candidate.id, code: failure.code, message: failure.message }); }
         }

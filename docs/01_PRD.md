@@ -1,5 +1,11 @@
 # PRD
 
+## TASK-032 저장·검토 UX
+
+상품정보 저장 직후 현재 source URL을 옵션 가져오기 영역에 반영한다. 전체 페이지 hard reload 없이 갱신하고 기존 Product의 미저장 옵션 draft는 보존한다. 후보 조회·입력란 반영·옵션 저장은 계속 별도 행동이다. 제한 조합은 빈 옵션 또는 독립 그룹으로 바꾸지 않는다.
+
+추출 사진은 동일 parent/source hash/crop rect를 한 Asset으로 재사용한다. 역할만 바뀐 같은 영역도 중복 저장하지 않으며 슬롯 수는 신규 고유 영역 수로 계산한다. 이전 파일·분류·분석·출처를 자동 수정하지 않는다. QA·출시 판정과 미검증 범위는 [TASK-032](tasks/TASK-032.md)를 따른다.
+
 ## TASK-029 커머스 시각 품질
 
 860px 저장 폭을 기준으로 Hero/Benefits/Feature/ImageText/Gallery/UseCase/Detail/Specification/Option/Notice에 다른 정보 hierarchy를 제공한다. 단일 옵션은 inline,여러 값은 wrapping 정보 목록,여러 그룹은 block으로 표현하며 실제 구매 버튼으로 만들지 않는다. 작은 사진은1.5배 확대 상한을 유지하고 큰 사진만 제한적으로 확장한다. Editor와 Final은 같은 Renderer를 사용한다. 명백한 모호한 제목은 review warning이며 원문을 자동 변경하지 않는다. 동일 content/style의 디자인 A/B는 [TASK-029](tasks/TASK-029.md).

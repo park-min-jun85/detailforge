@@ -10,6 +10,7 @@ import { deleteAsset, listAssets } from "../src/features/assets/service.ts";
 import { extractionContextStatus } from "../src/features/detail-extraction/selection.ts";
 import { readExtraction, derivationSchema } from "../src/features/detail-extraction/schemas.ts";
 import { sourceFingerprint } from "../src/features/detail-extraction/images.ts";
+import { candidateId } from "../src/features/detail-extraction/geometry.ts";
 const region={visualKind:"photo",targetProductRelevance:.95,containsTargetProduct:true,relevanceReason:"대상 상품 사진",regionType:"product_photo",confidence:.9,productVisibility:.9,standaloneUsability:.9,textDensity:"none",box:{xMin:100,yMin:100,xMax:900,yMax:800},rationale:"제품이 보이는 사진"};
 const code=expected=>e=>e.code===expected;
 async function fixture(t) {
@@ -109,6 +110,38 @@ test("unselected candidate never creates a row; duplicate save returns existing 
   const f=await fixture(t);await f.analyze(false);const ids=[f.row.metadata.detailExtraction.latestResult.candidates[0].id];
   const first=await saveProductShots(projectId,assetId,{candidateIds:ids}),second=await saveProductShots(projectId,assetId,{candidateIds:ids});
   assert.equal(f.state.assets.length,2);assert.equal(second.saved[0].existing,true);assert.equal(second.saved[0].asset.id,first.saved[0].asset.id);
+});
+test("same source pixels reuse an existing crop after the AI changes its role",async t=>{
+  const f=await fixture(t);await f.analyze(false);
+  const result=f.row.metadata.detailExtraction.latestResult,candidate=result.candidates[0];
+  const first=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});
+  const before=structuredClone(f.state.assets[1]);
+  f.row.metadata.detailExtraction.latestResult=result;
+  candidate.regionType="detail_closeup";candidate.id=candidateId(result.sourceFingerprint,candidate.rect,candidate.regionType);
+  const second=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});
+  assert.equal(second.saved[0].existing,true);assert.equal(second.saved[0].asset.id,first.saved[0].asset.id);
+  assert.equal(f.state.assets.length,2);assert.equal(f.state.objects.size,2);assert.deepEqual(f.state.assets[1],before);
+});
+test("same rectangle with two roles in one selection uses one remaining slot",async t=>{
+  const f=await fixture(t);await f.analyze(false);const result=f.row.metadata.detailExtraction.latestResult,candidate=result.candidates[0];
+  const other={...structuredClone(candidate),regionType:"detail_closeup"};other.id=candidateId(result.sourceFingerprint,other.rect,other.regionType);
+  result.candidates.push(other);
+  for(let i=0;i<28;i++)f.state.assets.push(assetRow({id:randomUUID(),sort_order:i+1}));
+  const reply=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id,other.id]});
+  assert.equal(reply.saved.length,2);assert.equal(reply.saved.filter(s=>!s.existing).length,1);
+  assert.equal(reply.saved[0].asset.id,reply.saved[1].asset.id);assert.equal(f.state.assets.length,30);assert.equal(reply.available,0);
+});
+test("crop reuse never crosses parent, source hash, or rectangle boundaries",async t=>{
+  const f=await fixture(t);await f.analyze(false);const result=f.row.metadata.detailExtraction.latestResult,candidate=result.candidates[0];
+  await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});
+  f.state.assets[1].metadata.derivation.parentAssetId=otherId;
+  const second=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});assert.equal(second.saved[0].existing,false);
+  f.state.assets[2].metadata.derivation.sourceFingerprint="f".repeat(64);
+  const third=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});assert.equal(third.saved[0].existing,false);
+  f.row.metadata.detailExtraction.latestResult=result;
+  candidate.rect.x++;candidate.id=candidateId(result.sourceFingerprint,candidate.rect,candidate.regionType);
+  const fourth=await saveProductShots(projectId,assetId,{candidateIds:[candidate.id]});assert.equal(fourth.saved[0].existing,false);
+  assert.equal(f.state.assets.length,5);
 });
 test("asset limit rejects entire selection before storage write and reports remaining slots",async t=>{
   const f=await fixture(t);await f.analyze(false);const candidates=f.row.metadata.detailExtraction.latestResult.candidates;

@@ -1,5 +1,16 @@
 # Architecture Decisions
 
+## ADR-015 — 내부 RC와 추출 파일의 동일성
+
+- Status: Accepted for local/internal MVP
+- Date: 2026-09-20
+
+TASK-032에서 실제 새 A 상품 E2E와 B canonical replay/C 제한 옵션 검증을 구분한다. 성공한 내부 RC를 Auth/owner_id/user RLS/Storage policy 없는 공개 배포 승인으로 확대하지 않는다.
+
+추출 candidate의 의미 역할은 AI 재분석으로 바뀔 수 있다. 실제 파일 재사용은 parent/source bytes hash/sourceRect로 결정하며 기존 candidateId/provenance/분석은 그대로 둔다. 기존 source lease와 검증 경계를 재사용하고 migration이나 기존 row 일괄 정리는 하지 않는다. 동일 rect의 여러 후보는 UI·서버에서 한 신규 슬롯으로 계산한다.
+
+Product 저장 후에는 서버 props만 refresh해 옵션 source 상태를 최신화한다. 동일 Product의 옵션 draft를 hard reload로 버리지 않는다. 관련 회귀와 제한은 [TASK-032](tasks/TASK-032.md).
+
 ## ADR-014 — Application-owned commerce visual system
 
 - Status: Accepted

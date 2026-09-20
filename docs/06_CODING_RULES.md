@@ -1,5 +1,12 @@
 # Coding Rules
 
+## TASK-032 QA·Release 규칙
+
+- 실제 새 AI 결과, 기존 canonical replay, mock 검증을 구분한다. 미측정 시간·usage·미실행 CASE를 성공 수치로 보충하지 않는다.
+- 외부 API는 최소 명시 호출, 자동 테스트는 mock만 사용한다. QA는 unique prefix와 명시 ID 범위로 생성·정리하고 기존 row hash 및 private Storage 잔여를 확인한다.
+- Product 저장 후 server props를 갱신할 때 기존 옵션 draft를 hard reload/remount로 버리지 않는다.
+- 내부 RC는 public release 승인이 아니다. Auth/owner_id/사용자별 RLS·Storage 정책 전까지 공개 배포를 차단한다. Commit/merge/tag는 별도 명시 요청에 따른다.
+
 ## TASK-029 visual rules
 
 - 디자인은 canonical content + bounded saved token + application-owned CSS로 결정한다. AI CSS/hex/px/Tailwind/raw HTML/JS 및 DB CSS string 금지.
@@ -119,7 +126,7 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 - 입력10MiB, decoder40MP, 최대 폭6000/높이60000, 타일16/후보24를 유지한다. EXIF 정규화된 하나의 lossless working buffer에서 분석과 실제 crop을 수행하고 원본 bytes를 수정하지 않는다.
 - 원본 bytes SHA-256을 분석/저장에서 검증한다. candidateId는 source hash/rect/role로 결정하며 signed URL은 지문이나 DB 데이터가 아니다.
 - 새 metadata writer는 `assets/metadata.ts` CAS에 참여해야 한다. namespace를 최신 row에 merge하고 다른 분석/출처 정보를 덮어쓰지 않는다. large JSON을 URL 필터에 넣지 않는다.
-- 저장은 사용자 candidate ID 선택만 허용한다. capacity는 전체 신규 선택을 시작 전에 검사하고 source 순서로 append한다. 같은 parent/hash/candidate의 재요청은 기존 row를 반환한다.
+- 저장은 사용자 candidate ID 선택만 허용한다. capacity는 신규 고유 crop rect 수를 시작 전에 검사하고 source 순서로 append한다. 같은 parent/hash/rect의 재요청은 역할·candidate ID 변경과 무관하게 기존 row를 반환한다. UI도 같은 기준으로 슬롯을 계산하며 기존 provenance·분석을 덮어쓰지 않는다.
 - 파생 사진은 실제 rectangle crop, 원본 MIME 유지(JPEG/WebP95, PNG lossless), resize/upscale/생성/배경 제거 없음. asset_type=unclassified와 derivation 출처를 저장한다.
 - 원본/파생 삭제는 독립적이다. 불확실한 DB commit의 파일은 삭제하지 않는다. SDK/Sharp stack·secret·raw provider response·prompt를 사용자/DB에 남기지 않는다.
 - 자동 테스트 provider는 mock만 사용한다. 실제 QA는 별도 Project와 최소 호출을 사용하고 기존 데이터 hash 보존 및 테스트 DB/Storage 정리를 확인한다.

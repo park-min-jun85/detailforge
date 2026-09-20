@@ -232,7 +232,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
       {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy} currentContextFingerprint={list.extractionContextFingerprint}
         begin={() => { if (locked.current) return false; locked.current = true; setBusy(true); return true; }} end={() => { locked.current = false; setBusy(false); setNow(Date.now()); }}
         refresh={refresh} update={asset => setList(current => ({ ...current, items: current.items.map(item => item.asset.id === asset.id ? { ...item, asset } : item) }))} close={() => setExtractionId(null)} />}
-      <p className="text-sm leading-6 text-zinc-500">완료된 이미지 분석은 다음 상품 분석 단계에서 사용합니다. 상세페이지 구성은 이후 단계에서 제공됩니다.</p>
+      <p className="text-sm leading-6 text-zinc-500">이미지 검토와 분석을 마쳤다면 다음 상품 분석 단계로 이동하세요. 이후 사실 검증과 페이지 설계를 거쳐 상세페이지를 만들 수 있습니다.</p>
     </div>
   );
 }
