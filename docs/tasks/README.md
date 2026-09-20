@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-036 — v0.2.0 Scope Definition & Architecture Planning 완료. `plan/v0.2.0` / `bd856d5`, 로컬 main·origin/main·v0.1.1 tag 기준점 일치. 권장 방향은 **A: Internal Quality — 검토와 재시도의 예측 가능성**이며 M2 실패 타일 복구와 M3 제목/본문 역할 개선을 Must, L1을 Should로 제안한다. 코드 근거 inventory, A/B/C 비교, Auth/소유권/RLS/Storage 공개 차단, SQL0 목표의 bounded cache 계약, TASK-037~045와 회귀/실제 QA 계획을 작성했다. M4/L1 미해결 수·package0.1.1 유지. 앱·SQL·의존성·실제 API·원격 데이터·commit/merge/tag 변경 없음. [38개 항목 보고](./TASK-036.md), [v0.2.0 Roadmap](../V0_2_ROADMAP.md). 후속 기능 구현은 아직 시작하지 않았다.
+
+## 완료된 TASK-035 기반
+
 TASK-035 — v0.1.1 Final AI Validation & Release Preparation 완료. 브랜치 `release/v0.1.1`, 기준 `19735a6`. 실제 67695797 자료에서 Planner1/Section1 첫 결과 accepted, 촬영 설명형/meta/unsupported V-only/title mismatch 0, 원문 스펙6행·옵션6개 보존. M2/L2 실제 UI, crop6종, 새 canonical PNG/JPG860×2744, 전체865 tests와 필수 검사·secret scan 통과. **v0.1.1 Local/Internal MVP RC PASS**. package/lock0.1.1, B0/H0/M4/L1. M3의 제목·본문 정보 반복은 부분 보완으로 유지한다. 원격 데이터 변경·추가 의존성·migration·commit/merge/tag 없음. [48개 항목과 첫 결과](./TASK-035.md), [Release Checklist](../RELEASE_CHECKLIST.md).
 
 ## 완료된 TASK-034 기반

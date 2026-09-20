@@ -2,6 +2,14 @@
 
 TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **MEDIUM 4 / LOW 1**, 이번 관찰 BLOCKER 0 / HIGH 0. L2는 해결했고 M2/M3는 일부 보완했지만 원래 문제 전체가 해결된 것으로 세지 않는다.
 
+## TASK-036 계획 연결 — 해결 상태 변경 없음
+
+- 현재 릴리스 기준은 v0.1.1 / `bd856d5`다. TASK-036에서 로컬 main·origin/main·tag의 commit 일치를 확인했다. 아래 TASK-035의 RC/commit 대기 문구는 당시 기록이며, 이번에 새 실제 AI/시각 QA를 수행했다는 뜻은 아니다.
+- [v0.2.0 Roadmap](V0_2_ROADMAP.md)은 **A: Internal Quality**를 권장한다. M2 실패 타일 전용 복구와 M3 제목/본문 역할 개선을 Must, L1 bounded spacing을 Should로 제안한다. M1/M4는 평가 사례·기존 회귀를 유지하고 알고리즘 확대를 이월한다.
+- M2는 현재 최종24개 후보만으로 성공 타일 원본을 복원할 수 없어 별도 bounded pre-NMS cache 계약이 필요하다. M3는 안전성 hard guard와 일반적인 카피 자연스러움을 구분한다. 해당 구현·실제 QA 완료 전에는 두 항목을 닫지 않는다.
+- 공개 SaaS의 Auth/owner_id/RLS/Storage·사용량 통제, SKU/가격/재고/옵션 이미지, 추가 Adapter, enhancement, Theme, 확장 Export는 후속 설계 목록이다. 이번 v0.2.0 권장 scope에 함께 넣지 않는다.
+- 열린 수는 **MEDIUM4/LOW1 그대로**다. L2 외에 이미 해결됐으나 열린 목록에 잘못 남아 있다고 확인된 항목은 없다. [TASK-036 보고](tasks/TASK-036.md).
+
 ## TASK-035 실제 AI·릴리스 판정
 
 - 상품 67695797의 기존 upstream 자료를 격리된 로컬 QA DB에 복제했다. 실제 OpenAI Planner 1회·Section Engine 1회, 자동 재시도 0회. 첫 신규 출력 5 Sections가 기존 서비스 검증을 통과했다. 원격 DB/Storage 변경은 없다.
@@ -51,4 +59,4 @@ TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **M
 
 ## 권장 순서
 
-v0.1.0 tag는 06d80bb로 확인됐다. TASK-035에서 v0.1.1 RC 검증과 버전 변경을 마쳤으며 사용자의 최종 diff 검토·commit/merge/tag가 남는다. M3의 여러 상품·첫 출력 품질 corpus와 M2 부분 복구를 각각 별도 범위로 다루고 M1/M4의 보수적 사진 경계를 유지한다. 외부 공개를 원하면 품질 polish보다 Auth/owner_id/RLS/Storage 격리 TASK를 먼저 수행한다. 이번 commit/merge/tag는 하지 않는다.
+v0.1.0은 `06d80bb`, v0.1.1은 `bd856d5`로 확인됐다. 다음 권장은 TASK-037의 M2/M3 재현 corpus·계약 확정 → cache/복구 → copy 정책/검토 UI → 실제 QA이며, L1은 Must 통과 후 선택한다. 상세 순서와 완료 기준은 [Roadmap](V0_2_ROADMAP.md)을 따른다. M1/M4의 보수적 사진 경계는 유지한다. 외부 공개가 우선 목표로 바뀌면 Auth/owner_id/RLS/Storage·비용 격리를 독립 릴리스로 먼저 승인해야 한다. TASK-036은 문서 계획만 수행하며 commit/merge/tag는 하지 않는다.
