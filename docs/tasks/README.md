@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-035 — v0.1.1 Final AI Validation & Release Preparation 완료. 브랜치 `release/v0.1.1`, 기준 `19735a6`. 실제 67695797 자료에서 Planner1/Section1 첫 결과 accepted, 촬영 설명형/meta/unsupported V-only/title mismatch 0, 원문 스펙6행·옵션6개 보존. M2/L2 실제 UI, crop6종, 새 canonical PNG/JPG860×2744, 전체865 tests와 필수 검사·secret scan 통과. **v0.1.1 Local/Internal MVP RC PASS**. package/lock0.1.1, B0/H0/M4/L1. M3의 제목·본문 정보 반복은 부분 보완으로 유지한다. 원격 데이터 변경·추가 의존성·migration·commit/merge/tag 없음. [48개 항목과 첫 결과](./TASK-035.md), [Release Checklist](../RELEASE_CHECKLIST.md).
+
+## 완료된 TASK-034 기반
+
 TASK-034 — v0.1.1 Internal Polish & Release Backlog Burn-down 완료. 브랜치 `fix/v0.1.1-polish`, 기준 `06d80bb`/v0.1.0. L2 Editor 읽기/쓰기 진행 문구 구분 완료, M2 전체 재분석 비용/보존 안내와 M3 제한된 카피 패턴 검증 보완. M1~M4/L1은 근거와 함께 유지한다. 기존849+신규16=865 tests 및 typegen/typecheck/lint/build/diff 통과, A/B local canonical PNG/JPG860×1933/2744 검증, 실제 AI0·secret0·원격 데이터 변경0. **v0.1.1 Local/Internal MVP RC 추천**, B0/H0/M4/L1. package는0.1.0 유지, commit/merge/tag 없음. [37개 항목과 검증 한계](./TASK-034.md), [Backlog](../RELEASE_BACKLOG.md).
 
 ## 완료된 TASK-033 기반

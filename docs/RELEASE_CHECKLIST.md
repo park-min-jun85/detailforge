@@ -1,4 +1,28 @@
-# DetailForge v0.1.0 Release Checklist
+# DetailForge Release Checklist
+
+## v0.1.1 — TASK-035 현재 판정
+
+2026-09-20 · `release/v0.1.1` · 기준 `19735a6`. **PASS — v0.1.1 Local/Internal MVP Release Candidate.** commit/main merge/tag는 미실행. 아래 v0.1.0 기록의 미확인 설치·원격 조회와 공개 SaaS 전제는 계속 미확인/미완료다.
+
+- [x] Release freeze: 앱/prompt/CSS/테스트 구현 변경 없음. package/lock 버전과 릴리스 문서만 변경, dependency/migration/generated types 불변.
+- [x] package.json 및 package-lock root/packages root 0.1.1 일치. dependency version 변경 없음.
+- [x] 실제 상품 67695797의 기존 자료를 로컬 QA DB로 복제, 실제 Planner 1회·Section Engine 1회 첫 출력 accepted. 카피 정책 v1 Plan이 stale여서 Planner를 갱신했다. 자동 재시도/Asset·Product·Validation·Extraction 재호출/도매 API 0회.
+- [x] 신규 Section 5개: Hero/ImageText/Detail/Specification/Option. 촬영 설명형 0, 기존 meta-observation 0, unsupported V-only claim 0, title mismatch 0. 사람 검토에서 허용 불가능한 Section 간 목적 중복 0. 규칙 검사가 모든 자연어 품질을 보장하지 않는다.
+- [x] Specification 6행 원문 exact, 확정 옵션 1그룹 6값·UUID·순서/version exact. AI 옵션 생성 없음.
+- [x] M2 partial UI의 전체 재분석 비용/이전 성공 보존 안내, L2 읽기·저장·실패·draft 유지·취소·재조회 실제 브라우저 확인. 재분석 버튼 실행 없음.
+- [x] 전체 865 mock tests, fail/skip/cancel 0. crop 안전 fixture 6종 및 실패 시 이전 성공 보존 검사 포함. 문서/version 변경에 의미 없는 새 test를 추가하지 않음.
+- [x] next typegen, tsc --noEmit, lint, production build, git diff --check 통과.
+- [x] 새 canonical의 PNG 860×2744px / 1,007,889 bytes, JPG 860×2744px / 277,521 bytes 각 1회. 이미지3·스펙6행·옵션6값 유지, controls/검토 경고/글자 잘림/가로 overflow 0. Export는 앱 로직이 동일한 기존 production build에서 실행했고 버전 변경 뒤 production build도 통과했다.
+- [x] Git tracked+신규 문서·production client bundle·QA 텍스트의 실제 3종 키 일치 0, client provider marker 0, 실제 secret 노출 0. 알려진 값/패턴 범위의 검사다.
+- [x] 실제 DB/Storage 연결·변경 0. 로컬 service fixture에서 새 Plan/Sections만 갱신, protected 입력 불변. UI/Export replay는 mutation 0(실패 주입용 쓰기 요청 1회는 거부). 원본 자료·기존 사용자 자료 보존.
+- [x] CHANGELOG 0.1.1, README, Backlog, TASK-035/작업 목록 갱신. M2/M3 부분 보완 상태, 미해결 MEDIUM 4/LOW 1, BLOCKER 0/HIGH 0.
+- [ ] 사용자 최종 diff 검토 후 `chore: prepare v0.1.1 release` commit.
+- [ ] 사용자 main fast-forward merge.
+- [ ] 사용자 승인 후 annotated `v0.1.1` tag. 정확한 제안 명령은 [TASK-035](tasks/TASK-035.md)에 있다.
+
+## v0.1.0 — TASK-033 당시 검증 기록
+
+다음은 당시 실행 범위의 역사적 기록이다. 이후 v0.1.0 tag가 06d80bb로 생성된 것은 확인했으며 아래 당시 체크 여부를 소급 변경하지 않는다.
 
 2026-09-20 · `release/v0.1.0` · 기준 `ee47cb7` (main과 동일). **판정: PASS — DetailForge v0.1.0 Local/Internal MVP Release.** 공개 SaaS 승인이 아니다. TASK-032의 실제 E2E와 TASK-033의 재검사를 구분하며, 미확인 환경은 체크하지 않는다.
 

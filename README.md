@@ -1,6 +1,6 @@
 # DetailForge
 
-도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.1.0 Local / Internal MVP**다.
+도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.1.1 Local / Internal MVP Release Candidate**다. TASK-035 검증을 통과했으며 commit/merge/tag는 아직 하지 않았다.
 
 **공개 인터넷 SaaS 배포는 차단한다.** 현재는 인증 없는 server-only service-role 기반 단일 사용자 구조다. 공개 전에 Auth, owner_id, 사용자별 RLS와 Storage ownership policy가 필요하다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
 

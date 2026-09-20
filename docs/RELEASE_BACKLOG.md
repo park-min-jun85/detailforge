@@ -1,6 +1,15 @@
 # Release Backlog
 
-TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-034 후 미해결 **MEDIUM 4 / LOW 1**, 이번 회귀 관찰 BLOCKER 0 / HIGH 0. L2는 해결했고 M2/M3는 일부 보완했지만 원래 문제 전체가 해결된 것으로 세지 않는다. 실제 AI 추가 호출 없이 기존 fixture와 mock으로 검증했다.
+TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **MEDIUM 4 / LOW 1**, 이번 관찰 BLOCKER 0 / HIGH 0. L2는 해결했고 M2/M3는 일부 보완했지만 원래 문제 전체가 해결된 것으로 세지 않는다.
+
+## TASK-035 실제 AI·릴리스 판정
+
+- 상품 67695797의 기존 upstream 자료를 격리된 로컬 QA DB에 복제했다. 실제 OpenAI Planner 1회·Section Engine 1회, 자동 재시도 0회. 첫 신규 출력 5 Sections가 기존 서비스 검증을 통과했다. 원격 DB/Storage 변경은 없다.
+- M3의 촬영 설명형 카피 0, 기존 meta-observation 0, unsupported V-only claim 0, title mismatch 0. Hero 정체성/전면 포켓 외관/목둘레·봉제선 상세의 역할과 이미지가 구분된다. 원문 스펙 6행·확정 옵션 1그룹 6값/UUID/순서 보존. 실제 나쁜 출력 reject 사례나 모든 표현에 대한 false-positive 부재를 검증했다는 뜻은 아니다.
+- **M3 부분 보완 유지**: 새 ImageText 제목 ‘앞면 여밈과 포켓 구성’과 본문 ‘앞면 여밈선과 양쪽 포켓이 드러난 착용 외관.’에는 같은 정보가 남아 있다. 필수 카피 안전성/Section 간 목적 분리 QA는 PASS지만 일반적인 자연스러움·제목/본문 역할 개선까지 완료 처리하지 않는다.
+- M2 UI는 성공 후보 저장 가능·전체 재분석 AI 비용·이전 성공 보존을 실제 partial fixture에서 확인했다. 실패 타일 전용 재시도는 여전히 미지원이다. 추가 AI 실행 없이 확인했다.
+- L2는 실제 UI에서 읽는 중/저장 중/저장 실패/갱신 실패, 미저장 draft 보존, 확인창 취소와 성공 재조회를 통과했다. M1/M4/L1은 알고리즘·CSS 변경 없이 유지한다.
+- 865 tests, crop 6종, 필수 검사와 새 결과 PNG/JPG 860×2744 통과. **v0.1.1 Local/Internal MVP RC PASS**, package 0.1.1. 공개 SaaS 전제와 commit/merge/tag 대기는 별개다. 상세 근거는 [TASK-035](tasks/TASK-035.md).
 
 ## TASK-034 판정 범위
 
@@ -42,4 +51,4 @@ TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-034 후 미해결 **M
 
 ## 권장 순서
 
-v0.1.0 tag는 TASK-034 시작 시 06d80bb로 확인됐다. v0.1.1 후보의 별도 release 판정/버전 변경은 후속 TASK에서 한다. 실제 새 카피 품질은 향후 필요한 최소 호출로 검증하고, M1/M4의 보수적 사진 경계를 우선 유지한다. 외부 공개를 원하면 품질 polish보다 Auth/owner_id/RLS/Storage 격리 TASK를 먼저 수행한다. 이번 commit/merge/tag는 하지 않는다.
+v0.1.0 tag는 06d80bb로 확인됐다. TASK-035에서 v0.1.1 RC 검증과 버전 변경을 마쳤으며 사용자의 최종 diff 검토·commit/merge/tag가 남는다. M3의 여러 상품·첫 출력 품질 corpus와 M2 부분 복구를 각각 별도 범위로 다루고 M1/M4의 보수적 사진 경계를 유지한다. 외부 공개를 원하면 품질 polish보다 Auth/owner_id/RLS/Storage 격리 TASK를 먼저 수행한다. 이번 commit/merge/tag는 하지 않는다.
