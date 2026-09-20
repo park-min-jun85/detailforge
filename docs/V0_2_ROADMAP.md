@@ -2,6 +2,10 @@
 
 TASK-036 설계 결정이다. **권장 방향은 A: Internal Quality Release**이며, 구현 승인이 내려진 상태를 뜻하지 않는다. 실패 타일만 명시적으로 재시도하는 복구(M2)와 근거를 유지한 제목·본문 역할 개선(M3)을 릴리스의 핵심으로 삼는다. 공개 SaaS 전환이나 Commerce 기능 확장을 함께 묶지 않는다.
 
+## TASK-037 계약 확정
+
+[M2/M3 Contracts](V0_2_M2_M3_CONTRACTS.md)에 T1~T8/C1~C22, 실제 source naming, 현재 검출 gap과 기대 classification을 고정했다. M2/M3는 아직 미해결이며 retry/prompt/validator production 변경은 없다. cache256KiB는 독립 UTF-8 byte cap으로 유지한다. 16×8 최대 설명 길이 fixture는 한글155,616B, escaped control270,816B로 후자가 상한을 넘으므로 schema 통과만으로 크기를 보장하지 않는다. 조용한 truncation은 금지하며 실제 JSONB 저장 수용성과 전체 metadata 비용은 TASK-038에서 검증한다. Tile identity와 model/policy/layout cache 호환성을 구분하고 pending/in_flight는 failed-only 대상에서 제외한다.
+
 ## 1. 기준점과 조사 범위
 
 - 조사 기준: `plan/v0.2.0`, HEAD `bd856d5` (`chore: prepare v0.1.1 release`). 조사 시작 시 clean. 로컬 `main`, `origin/main`, `v0.1.1^{commit}`도 같은 commit이며 `v0.1.0`은 `06d80bb`이다. 원격 fetch로 실시간 동기화를 다시 확인한 것은 아니다.
@@ -210,7 +214,7 @@ AI 비용 감소 목표는 M2의 재사용 가능한 성공 타일에 한정된�
 | TASK | 목표·dependency | migration / 실제 external API | 완료 조건 |
 | --- | --- | --- | --- |
 | TASK-037 M2/M3 재현 corpus와 계약 확정 | TASK-036 기반. 기존 partial/legacy cache 부재와 실제 제목·본문 반복/정상 문장을 최소 fixture로 정리, bounds·QA 판정 기준 확정 | 없음 / 없음 | 현재 실패를 재현하는 mock과 정상 negative 사례, cache 최악 크기·호출 수 계약·실제 QA 대상/예산을 문서화 |
-| TASK-038 Extraction cache schema·순수 병합 | 037 후. backward reader, versioned cache key, per-tile validation/merge/NMS 계약 구현 | 없음 목표 / 없음 | v1/v2 읽기·empty success·deterministic merge·상한·policy/model/source 변경 무효화·rollback reader 테스트 통과 |
+| TASK-038 Tile checkpoint/cache domain·persistence | 037 동결 계약 후. backward reader, versioned cache key, per-tile validation/merge/NMS와 bounded metadata checkpoint/CAS 경계 구현; provider retry는039로 분리 | 없음 목표 / 없음 | v1/v2 읽기·empty success·deterministic merge·byte/JSONB 상한·policy/model/source 변경 무효화·경합/rollback reader 테스트 통과 |
 | TASK-039 실패 타일 재시도 서버 | 038 후. checkpoint/CAS/runId/lease와 명시 retry endpoint를 기존 service에 연결 | 없음 / 자동 tests는 mock만 | 완료 타일 호출0, 대상당1이하, interruption/경합/stale 차단, 전체 실패 시 이전 결과·metadata·Derived 불변 |
 | TASK-040 복구 UI 연결 | 039 후. 실패/미완료/재사용/비용 미확인·예정 호출·legacy 전체 분석 안내와 candidate 선택 보존 | 없음 / mock·로컬 browser만 | reload/중단/저장/재시도 실패에서 draft·선택·이전 성공 보존, 숨은 AI 호출0 |
 | TASK-041 Copy 역할 정책 | 037 후, 권장 실행은040 다음. 공통 deterministic 판정·prompt·policy fingerprint 개선 | 없음 / mock만 | corpus의 명확한 반복/촬영 설명 판정, 정상 카피·스펙·옵션 false positive 회귀0, 추가AI pass0 |

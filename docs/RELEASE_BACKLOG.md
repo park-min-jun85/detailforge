@@ -2,6 +2,10 @@
 
 TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **MEDIUM 4 / LOW 1**, 이번 관찰 BLOCKER 0 / HIGH 0. L2는 해결했고 M2/M3는 일부 보완했지만 원래 문제 전체가 해결된 것으로 세지 않는다.
 
+## TASK-037 reproduction contract established
+
+M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M3_CONTRACTS.md)에 고정했다. 현재 전체 재분석 호출과 성공 보존을 mock service로 재현했고, 제목/본문 및 보고체 미검출4사례를 기록했다. production 수정이나 실제 API 호출은 없으며 **M2/M3 미해결, MEDIUM4/LOW1 유지**. 다음은 TASK-038 cache domain/persistence다.
+
 ## TASK-036 계획 연결 — 해결 상태 변경 없음
 
 - 현재 릴리스 기준은 v0.1.1 / `bd856d5`다. TASK-036에서 로컬 main·origin/main·tag의 commit 일치를 확인했다. 아래 TASK-035의 RC/commit 대기 문구는 당시 기록이며, 이번에 새 실제 AI/시각 QA를 수행했다는 뜻은 아니다.

@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-037 — M2/M3 Reproduction Corpus & Contract Freeze 완료. `feat/v0.2-repro-contracts` / `4f33eab`. M2 T1~T8과 M3 C1~C22(allow9/warning7/reject6), test-only validator·기존 helper/service characterization, identity/cache/state/legacy 계약과 case별 gap matrix를 작성했다. 실제 추출 경로는 `detail-extraction`이며 현재 tileId/cache/retry 구현은 없다. M3 미검출 C6/C10/C13/C19를 그대로 기록하고 M2/M3는 미해결 유지한다. **전체933 tests 및 typegen/typecheck/lint/build/diff·secret/bundle 검사 PASS**. 앱·prompt·UI·SQL·dependency·실제 API·원격 데이터 변경0, package0.1.1. [46개 항목·검사 결과](./TASK-037.md), [동결 계약](../V0_2_M2_M3_CONTRACTS.md). 다음 권장은 TASK-038 cache domain/persistence다.
+
+## 완료된 TASK-036 기반
+
 TASK-036 — v0.2.0 Scope Definition & Architecture Planning 완료. `plan/v0.2.0` / `bd856d5`, 로컬 main·origin/main·v0.1.1 tag 기준점 일치. 권장 방향은 **A: Internal Quality — 검토와 재시도의 예측 가능성**이며 M2 실패 타일 복구와 M3 제목/본문 역할 개선을 Must, L1을 Should로 제안한다. 코드 근거 inventory, A/B/C 비교, Auth/소유권/RLS/Storage 공개 차단, SQL0 목표의 bounded cache 계약, TASK-037~045와 회귀/실제 QA 계획을 작성했다. M4/L1 미해결 수·package0.1.1 유지. 앱·SQL·의존성·실제 API·원격 데이터·commit/merge/tag 변경 없음. [38개 항목 보고](./TASK-036.md), [v0.2.0 Roadmap](../V0_2_ROADMAP.md). 후속 기능 구현은 아직 시작하지 않았다.
 
 ## 완료된 TASK-035 기반
