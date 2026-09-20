@@ -1,5 +1,11 @@
 # AI Pipeline
 
+## TASK-034 카피 정책 보완
+
+Commerce Copy policy version 2는 새 생성/재생성에서 제한된 camera-framing 패턴(근접 모습·근접 구성·누른/잡은/촬영한 구도)을 거부한다. 기존 중립적인 제품 부위/디자인 표현과 exact spec/확정 옵션 값은 유지한다. 제목을 반복하는 visual 본문은 null을 권고하며, 효과·편안함 등 V-only claim으로 대체하지 않는다. 추가 AI pass/자동 retry/문구 후처리는 없다.
+
+기존 Plan의 commerceCopyVersion 1 또는 필드 누락은 계속 읽는다. 새 Plan과 재생성 입력 fingerprint에는 version 2가 반영되므로 이전 Plan이 stale로 표시될 수 있다. 저장 문구는 삭제·변경하지 않고 기존 검토 UI에서 경고하며 Final capture에는 경고를 포함하지 않는다. TASK-034는 mock과 실제 과거 canonical replay 검증이며 새 유료 AI 출력 품질 검증은 아니다.
+
 ## TASK-032 실제 호출 검증
 
 새 A 상품에서 추출8타일·이미지분석4·상품분석1·Fact검증1·Planner1·Section1의 첫 유효 결과를 평가했다. 재시도/좋은 결과 선별용 재호출/개별 재생성 호출은 없다. B 출력은 기존 canonical fixture 재현이며 새 AI 성공으로 세지 않는다. C의 제한 후보는 확정 옵션에 전달하지 않았다.

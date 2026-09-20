@@ -37,7 +37,7 @@ function CandidateReview({ result, ...props }: Props & { result: ExtractionResul
   }
   return <div className="mt-5 space-y-5">
     <p className="text-sm text-zinc-600">후보 {result.candidates.length}개 · 분석 {result.completedTiles}/{result.tileCount}구간 · 원본 {result.sourceDimensions.width} × {result.sourceDimensions.height}px</p>
-    {result.partialAnalysis && <p role="status" className="text-sm text-amber-800">일부 구간 분석 실패: {result.failedTiles.map(i => i + 1).join(", ")}. 현재 후보는 분석에 성공한 구간만 포함합니다. 필요한 경우 명시적으로 재분석하세요.</p>}
+    {result.partialAnalysis && <p role="status" className="text-sm text-amber-800">일부 구간 분석 실패: {result.failedTiles.map(i => i + 1).join(", ")}. 현재 후보는 성공한 구간만 포함하며 검토 후 저장할 수 있습니다. 누락된 구간이 필요하면 제품컷 재분석을 실행하세요. 실패 구간만이 아닌 전체 구간을 다시 분석하므로 AI 비용이 발생합니다. 재분석에 실패하면 이전 성공 후보와 저장 이미지는 유지됩니다.</p>}
     {result.truncatedCandidates && <p className="text-sm text-amber-800">품질 순위가 높은 최대 24개 후보를 원본 순서로 표시합니다.</p>}
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showExcluded} onChange={e => setShowExcluded(e.target.checked)} />제외 후보 보기</label>
     {!shown.length && <p className="py-6 text-sm text-zinc-500">저장 가능한 제품컷 후보가 없습니다. 제외 후보를 확인하거나 원본 이미지를 사용하세요.</p>}

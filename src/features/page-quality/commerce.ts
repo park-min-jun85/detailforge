@@ -1,7 +1,7 @@
 import type { PlannerAsset } from "@/features/page-planner/schemas";
 import type { GeneratedSection } from "@/features/section-engine/schemas";
 
-export const COMMERCE_COPY_VERSION = 1;
+export const COMMERCE_COPY_VERSION = 2;
 export const COPY_INTENTS = {
   hero: "identity", keyBenefits: "benefit_from_fact", feature: "feature_from_fact",
   imageText: "visual_description", gallery: "visual_description", detail: "detail_description",
@@ -24,6 +24,8 @@ export function detectMetaObservationCopy(text: string, context: { type?: string
   if (media.test(value) && inspect.test(value)) patterns.push("media_inspection");
   if (/(?:이미지|사진)(?:입니다|이다|에서.+보입니다|에.+보입니다)/.test(value)) patterns.push("media_report");
   const visual = ["identity", "visual_description", "detail_description", "feature_from_fact", "benefit_from_fact"].includes(intent);
+  // Bounded camera-framing phrases seen in QA; product construction/design remains valid.
+  if (visual && /(?:근접|클로즈업)(?:모습|구성)(?:[.!?。]|$)|(?:누른|잡은|들고있는|촬영한|담은)구도(?:[.!?。]|$)/u.test(value)) patterns.push("camera_framing");
   if (visual && /모습|형태|외관|디테일|제품|패드|착용|실루엣|배치|접힘선/.test(value)) {
     if (/확인할수있|확인해보|살펴볼수|보이는모습|보입니다|배치되어있/.test(value)) patterns.push("observation_narration");
   }
@@ -108,6 +110,7 @@ export function distinctVisualAssignments(sections: Pick<MessageSection, "key" |
 
 export const COMMERCE_COPY_POLICY = `Write a storefront page, not an image-analysis report. Follow each section's copy intent; strategy can differentiate roles but is NEVER evidence for a benefit.
 Never narrate the act of viewing an image: 이미지에서 확인/사진으로 확인/이미지를 통해/확인할 수 있습니다/확인해 보세요/살펴볼 수 있습니다/아래 이미지 참고. Never use titles such as 이미지로 보는 제품 or 사진으로 확인하는 디테일. Avoid 이미지입니다, 보입니다, 중앙에 배치되어 있습니다 narration.
+Avoid camera-framing filler such as 근접 모습, 근접 구성, 손으로 누른 구도. Name only the observed product part/design; omit a visual body (null) when it only repeats the title or describes the shot. Do not replace filler with a performance or comfort claim.
 Describe only an actually supplied V observation in a short neutral noun phrase: 앞면 지퍼 여밈 디자인, 착용 상태의 전체 실루엣. These are EXAMPLES, not facts about this product; use only when the observation actually contains that feature. Do not invent front/back views, stitching, colors or closures.
 V alone cannot justify 간편/편리/편안/따뜻/보온/가벼움/부드러움/흡수/내구/튼튼/고급/실용/안전/피부 benefits. Each such claim requires a relevant supported F. A visual hint is placement-only, so give it no invented descriptive assertion. A neutral title with null detail/imageText body or null gallery intro is preferable to filler.
 Hero is identity: retain a grounded product identity, no duplicated product-name subheadline, no report narration. A null subheadline and empty highlights are valid. imageText describes one distinct observed appearance. detail needs its own visual or new supported detail evidence. gallery may have only a concise title, no mandatory caption. useCase stays explicitly hypothetical with supported F. Actual notice/selection instructions such as 구매 전 옵션을 확인해 주세요 are not image reports; never invent a notice Fact.

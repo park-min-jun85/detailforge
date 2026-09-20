@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-034 — v0.1.1 Internal Polish & Release Backlog Burn-down 완료. 브랜치 `fix/v0.1.1-polish`, 기준 `06d80bb`/v0.1.0. L2 Editor 읽기/쓰기 진행 문구 구분 완료, M2 전체 재분석 비용/보존 안내와 M3 제한된 카피 패턴 검증 보완. M1~M4/L1은 근거와 함께 유지한다. 기존849+신규16=865 tests 및 typegen/typecheck/lint/build/diff 통과, A/B local canonical PNG/JPG860×1933/2744 검증, 실제 AI0·secret0·원격 데이터 변경0. **v0.1.1 Local/Internal MVP RC 추천**, B0/H0/M4/L1. package는0.1.0 유지, commit/merge/tag 없음. [37개 항목과 검증 한계](./TASK-034.md), [Backlog](../RELEASE_BACKLOG.md).
+
+## 완료된 TASK-033 기반
+
 TASK-033 — v0.1.0 Release Freeze & Final Checklist 완료. 브랜치 `release/v0.1.0`, 기준 `ee47cb7`은 main과 동일하다. 앱/의존성/migration 동결, README·CHANGELOG·Release Checklist와 env/ignore 안내 정리. 전체849 tests 및 typegen/typecheck/lint/build/diff 통과. 기존 canonical의 local smoke PNG/JPG860×2744, 이미지3개·옵션6개, 실제 키 노출0. **PASS — DetailForge v0.1.0 Local/Internal MVP Release**. 원격 migration 재조회(CLI 로그인 부재)와 fresh install/DB 검증은 미확인으로 표시했다. M4/L2 유지, 공개 SaaS는 Auth/owner_id/사용자별 RLS·Storage 전까지 차단. commit/merge/tag 미실행. [52개 항목 보고](./TASK-033.md), [Release Checklist](../RELEASE_CHECKLIST.md).
 
 ## 완료된 TASK-032 기반

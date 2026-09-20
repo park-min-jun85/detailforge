@@ -19,6 +19,7 @@ import styles from "./editor.module.css";
 import { requestCandidate, requestApplyCandidate } from "@/features/section-regeneration/client";
 import { MANUAL_REGEN_WARNING, type SignedCandidate } from "@/features/section-regeneration/schemas";
 import { CandidateComparison } from "@/features/section-regeneration/components/candidate-comparison";
+import { EditorStatus, type EditorAction } from "./editor-status";
 type Pending = { sectionId: string } | { href: string } | { move: { from: string; to: string } } | { saveOrder: true } | { refresh: true } | { options: true };
 
 export function DetailEditor({ initialView }: { initialView: EditorView }) {
@@ -34,8 +35,9 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
   const [previewWarning, setPreviewWarning] = useState(initialView.previewWarning);
   const [pending, setPending] = useState<Pending | null>(null);
   const [candidate, setCandidate] = useState<SignedCandidate | null>(null);
-  const [aiAction, setAiAction] = useState<"generate" | "apply" | null>(null);
-  const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
+  const [action, setAction] = useState<EditorAction | null>(null);
+  const busy = action !== null;
+  const [message, setMessage] = useState(""), [error, setError] = useState("");
   const [tab, setTab] = useState("preview"), [scale, setScale] = useState(1);
   const previewContainer = useRef<HTMLDivElement>(null), saving = useRef(false), guard = useRef(false);
   const confirmation = useRef<HTMLElement>(null), returnFocus = useRef<HTMLElement | null>(null);
@@ -83,10 +85,10 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
     const latest = await requestEditorView(view.projectId); setView(latest); canonicalRows(latest.sections, true); setAssets(latest.assets); setPreviewWarning(latest.previewWarning); setMessage("최신 섹션을 불러왔습니다.");
   }
   async function refresh() {
-    if (saving.current) return; saving.current = true; setBusy(true); setError("");
+    if (saving.current) return; saving.current = true; setAction("refresh"); setError("");
     try { await loadLatest(); }
-    catch { setError("최신 섹션을 불러오지 못했습니다. 변경사항은 유지됩니다."); }
-    finally { saving.current = false; setBusy(false); }
+    catch { setError("최신 섹션을 불러오지 못했습니다. 변경사항은 유지됩니다. 최신 섹션 다시 불러오기를 눌러 다시 시도해 주세요."); }
+    finally { saving.current = false; setAction(null); }
   }
   function proceed(target: Pending, discard = false) {
     setPending(null); setError("");
@@ -109,7 +111,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
   }
   async function save(next: Pending | null = null) {
     if (!selected || !draft || saving.current || view.blocked) return;
-    saving.current = true; setBusy(true); setError(""); setMessage("");
+    saving.current = true; setAction("save"); setError(""); setMessage("");
     try {
       let current = sections;
       if (dirty) {
@@ -128,37 +130,38 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
         canonicalRows(result.sections, true); setView(previous => ({ ...previous, manualOrder: true })); setMessage("섹션 순서를 저장했습니다.");
       }
       if (next && "refresh" in next) {
+        setAction("refresh");
         try { await loadLatest(); setPending(null); } catch { setError("최신 섹션을 불러오지 못했습니다. 다시 시도해 주세요."); }
       } else if (next && !("saveOrder" in next)) proceed(next); else setPending(null);
-    } finally { saving.current = false; setBusy(false); }
+    } finally { saving.current = false; setAction(null); }
   }
   async function recover() {
-    if (!view.detailPageId || saving.current) return; saving.current = true; setBusy(true); setError("");
+    if (!view.detailPageId || saving.current) return; saving.current = true; setAction("recover"); setError("");
     try {
       const result = await requestReorder(view.projectId, { detailPageId: view.detailPageId, recover: true });
       if (!result.ok) { setError(result.message); return; }
       canonicalRows(result.sections, !sameIds(orderDraft, result.sections.map(row => row.id)));
       setView(previous => ({ ...previous, blocked: false, reorderRecovery: false })); setMessage("이전 순서를 복구했습니다. 변경한 순서를 다시 저장할 수 있습니다.");
-    } finally { saving.current = false; setBusy(false); }
+    } finally { saving.current = false; setAction(null); }
   }
   async function generateCandidate() {
     if (!selected || saving.current || candidate || dirty || orderDirty || view.blocked || view.stale) return;
-    saving.current = true; setBusy(true); setAiAction("generate"); setError(""); setMessage("");
+    saving.current = true; setAction("generate"); setError(""); setMessage("");
     try {
       const result = await requestCandidate(view.projectId, selected.id, selected.updated_at);
       if (!result.ok) { setError(result.message); return; }
       setCandidate(result.value); setMessage("AI 후보를 생성했습니다. 비교 후 적용해 주세요.");
-    } finally { saving.current = false; setBusy(false); setAiAction(null); }
+    } finally { saving.current = false; setAction(null); }
   }
   async function applyCandidate() {
     if (!selected || !candidate || saving.current) return;
-    saving.current = true; setBusy(true); setAiAction("apply"); setError("");
+    saving.current = true; setAction("apply"); setError("");
     try {
       const result = await requestApplyCandidate(view.projectId, selected.id, candidate);
       if (!result.ok) { setError(result.message); return; }
       canonicalRows(sections.map(section => section.id === result.section.id ? result.section : section));
       setCandidate(null); setMessage("선택한 섹션에 새 AI 결과를 적용했습니다.");
-    } finally { saving.current = false; setBusy(false); setAiAction(null); }
+    } finally { saving.current = false; setAction(null); }
   }
   const ordered = orderDraft.flatMap(id => sections.find(section => section.id === id) ?? []);
   const displayed = ordered.map(section => section.id === selectedId && draft ? { ...section, content: previewContent(section, draft), style: draft.style } : section);
@@ -166,7 +169,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
     <header className="space-y-4 border-b border-zinc-200 bg-white p-5 lg:px-6">
       <div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><Link className="text-link text-xs" href={`/projects/${initialView.projectId}/sections`}>← 상세페이지 생성</Link>
         <h1 className="mt-3 text-xl font-semibold">상세페이지 편집</h1><p className="mt-1 break-words text-sm text-zinc-500">{initialView.projectName} · {initialView.productName}</p></div>
-        <div className="flex flex-wrap items-center gap-3"><p role="status" className="text-sm text-zinc-600">{aiAction === "generate" ? "AI가 이 섹션을 다시 작성하고 있습니다." : busy ? "저장 중…" : dirty ? "저장되지 않은 변경사항" : orderDirty ? "저장되지 않은 순서 변경" : message || "저장된 상태"}</p>
+        <div className="flex flex-wrap items-center gap-3"><EditorStatus action={action} dirty={dirty} orderDirty={orderDirty} message={message} />
           <Link prefetch={false} className="button-secondary" href={`/projects/${view.projectId}/render`}>최종 미리보기</Link>
           <button type="button" className="button-primary" disabled={!dirty || busy || view.blocked} onClick={() => save()}>저장</button>
           <button type="button" className="button-secondary" disabled={busy || !!candidate} onClick={() => needsDraftGuard(dirty, orderDirty, "leave") ? ask({ refresh: true }) : refresh()}>최신 섹션 다시 불러오기</button></div></div>
@@ -208,7 +211,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
           </div></div></div>
         </section>
         <aside className={styles.inspector} aria-label="Property Inspector"><h2 className={styles.panelTitle}>속성 <span className="font-normal text-zinc-500">{selected && SECTION_LABELS[selected.type]}</span></h2>
-          {selected && draft && <div className="p-4">{selected.type === "option" && <OptionInspector key={selected.id} projectId={view.projectId} section={selected} disabled={busy || !!candidate || view.blocked} onPlanStale={onPlanStale} hasUnsaved={dirty || orderDirty} openRequest={optionOpen} onOpen={() => needsDraftGuard(dirty, orderDirty, "leave") ? ask({ options: true }) : proceed({ options: true })} onBusy={value => { saving.current = value; setBusy(value); }} onSaved={(row, text) => { setOptionOpen(0); canonicalRows(sections.map(section => section.id === row.id ? row : section)); setMessage(text); }} />}<Inspector section={selected} draft={draft} assets={assets} disabled={busy || !!candidate || view.blocked} onChange={next => { setDraft(next); setMessage(""); }} /></div>}
+          {selected && draft && <div className="p-4">{selected.type === "option" && <OptionInspector key={selected.id} projectId={view.projectId} section={selected} disabled={busy || !!candidate || view.blocked} onPlanStale={onPlanStale} hasUnsaved={dirty || orderDirty} openRequest={optionOpen} onOpen={() => needsDraftGuard(dirty, orderDirty, "leave") ? ask({ options: true }) : proceed({ options: true })} onBusy={value => { saving.current = value; setAction(value ? "options" : null); }} onSaved={(row, text) => { setOptionOpen(0); canonicalRows(sections.map(section => section.id === row.id ? row : section)); setMessage(text); }} />}<Inspector section={selected} draft={draft} assets={assets} disabled={busy || !!candidate || view.blocked} onChange={next => { setDraft(next); setMessage(""); }} /></div>}
         </aside>
       </div>
     </>}
