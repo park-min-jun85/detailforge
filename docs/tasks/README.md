@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-033 — v0.1.0 Release Freeze & Final Checklist 완료. 브랜치 `release/v0.1.0`, 기준 `ee47cb7`은 main과 동일하다. 앱/의존성/migration 동결, README·CHANGELOG·Release Checklist와 env/ignore 안내 정리. 전체849 tests 및 typegen/typecheck/lint/build/diff 통과. 기존 canonical의 local smoke PNG/JPG860×2744, 이미지3개·옵션6개, 실제 키 노출0. **PASS — DetailForge v0.1.0 Local/Internal MVP Release**. 원격 migration 재조회(CLI 로그인 부재)와 fresh install/DB 검증은 미확인으로 표시했다. M4/L2 유지, 공개 SaaS는 Auth/owner_id/사용자별 RLS·Storage 전까지 차단. commit/merge/tag 미실행. [52개 항목 보고](./TASK-033.md), [Release Checklist](../RELEASE_CHECKLIST.md).
+
+## 완료된 TASK-032 기반
+
 TASK-032 — Release Candidate Polish & Multi-Product QA 완료. 브랜치 `feat/release-candidate-polish`. 상품 저장 후 옵션 source 갱신, 같은 crop의 역할 변경 중복 방지, 이미지 후속 안내를 보완했다. 실제 A67399861 새 Project의 Import부터 PNG/JPG860×1933까지 성공. B는 실제6옵션 저장+기존 canonical 출력860×2744 재현, C는 실제 restricted12후보 자동 적용 차단이며 후속 AI/Export 미실행. 전체849 tests/typegen/typecheck/lint/build/diff 통과, client26파일·3종키 일치0, QA3Project·5Storage 정리 및 기존14행 hash 일치. 관찰 B0/H0/M4/L2, **v0.1.0 local/internal MVP Release Candidate**. 공개 SaaS는 Auth/owner_id/사용자별 RLS·Storage 전까지 차단한다. Commit/merge/tag 없음. [60개 항목 보고와 검증 한계](./TASK-032.md), [후속 과제](../RELEASE_BACKLOG.md).
 
 ## 완료된 TASK-031 기반

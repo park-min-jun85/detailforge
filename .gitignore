@@ -12,6 +12,15 @@
 
 # testing
 /coverage
+/artifacts/
+/screenshots/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/browser-profiles/
+/tmp/
+/temp/
 
 # next.js
 /.next/
@@ -43,9 +52,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Supabase local temp files
-supabase/.temp/
 
 # Supabase local temp files
 supabase/.temp/
