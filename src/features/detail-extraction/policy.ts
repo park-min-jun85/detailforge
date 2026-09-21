@@ -11,6 +11,12 @@ export const TILE_HEIGHT = 2048;
 export const TILE_OVERLAP = 256;
 export const SNAP_WINDOW = 128;
 export const MAX_TILE_COUNT = 16;
+export const MAX_REGIONS_PER_TILE = 8;
+export const MAX_CHECKPOINT_BYTES = 256 * 1024;
+// Serialization/interpretation versions, independent of the application version.
+export const TILE_LAYOUT_VERSION = 1;
+export const EXTRACTION_PROMPT_VERSION = 1;
+export const NORMALIZATION_VERSION = 1;
 export const MAX_CANDIDATES = 24;
 export const MIN_CROP_WIDTH = 160;
 export const MIN_CROP_HEIGHT = 160;

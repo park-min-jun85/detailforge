@@ -1,5 +1,21 @@
 # v0.2.0 M2/M3 Reproduction Contracts — TASK-037
 
+## TASK-038 구현 델타 (2026-09-21)
+
+아래 TASK-037 본문은 BEFORE 계약/관찰이다. 현재 구현은 [checkpoint domain](../src/features/detail-extraction/checkpoint.ts), [persistence](../src/features/detail-extraction/persistence.ts), [TASK-038 보고](tasks/TASK-038.md)를 따른다. M2 checkpoint persistence를 구현했으며 failed-only 실행/UI는 아직 없다. M3 production/corpus는 변경하지 않았다.
+
+- `assets.metadata.detailExtraction` outer schema는 신규 실행부터 **v2**, `checkpoint.schemaVersion=1`; 기존 outer v1 및 `latestResult` v1/v2, Derived v1을 유지한다. 읽기만으로 migration/AI 호출/metadata 쓰기를 하지 않는다.
+- checkpoint: `runId`, `input`, 전체 canonical `layout`, terminal `tiles`. 각 tile은 `tileId/index/geometry/status`와 `completed.result` 또는 `failed.failure`를 가진다. result는 기존 tileOutput v2 Zod 검증 및 geometry 검사 후의 pre-NMS regions다. confidence/relevance/box를 다시 해석하거나 후보 ID를 변경하지 않는다.
+- Tile ID는 동결된 SHA-256 tuple 그대로다. 입력 호환성은 source/context/dimensions/orientation/coordinate space/model/schema·prompt·relevance·normalization version과 prompt/actual-layout/layout-policy fingerprint를 함께 비교한다. layout policy는 height/overlap/snap/maxTiles를 포함한다. geometry hash 검증과 현재 설정 비교를 분리하여 이전 정책 cache를 단순 손상으로 오인하지 않는다.
+- 새 persisted pending/in_flight 상태는 만들지 않는다. 전체 layout 중 terminal 기록이 없는 타일을 pending count로 계산하고 `incomplete`로 표시한다. 전부 terminal이면 complete/partial/failed를 derive한다. 중단 직전의 미기록 타일은 요청 미전송인지 응답 유실인지 알 수 없다. **TASK-039가 이 불확실성과 lease를 명시적으로 처리해야 하며, 미기록 타일은 현재 retryable IDs에 포함하지 않는다.**
+- 16 tiles × 8 regions / checkpoint JSON UTF-8 **262,144 bytes**. 실제 outer cache envelope/layout를 포함한 합성 최대 설명: 한글 **156,616B**, escaped control **271,816B**. 후자는 저장 전 거부한다. NUL/잘못된 surrogate는 JSONB 비호환으로 거부한다. 원격 PostgreSQL round-trip 검증은 이번 범위에서 하지 않았다.
+- 매 terminal 타일 직후 기존 revision CAS로 read-current/merge/write. claim + N checkpoints + finish = 기본 N+2회, 최대18 logical writes. CAS 재시도는 최대3회이며 provider를 재호출하지 않는다. input/run/storage scope가 맞지 않으면 거부한다. metadata 전체/기존 namespace는 보존한다.
+- failure는 enum `kind/code`, `retryable`, `billing`만 저장한다. 원본 예외/메시지/stack를 저장하지 않는다. success에도 URL/키 패턴/절대경로 등 위험 문자열을 거부한다. raw 응답/prompt/context/bytes를 checkpoint로 복제하지 않는다.
+- oversize/invalid/unsafe/JSONB 불가 cache는 이전 durable checkpoint를 유지하고 `checkpointWriteError`를 기록한다. 해당 run의 cache 쓰기를 중단하지만 정상 후보 생성은 완료할 수 있다. DB 내구성 실패는 다음 provider 호출을 중단하고 이전 성공 결과/cache를 보존한다. 명시 새 전체 분석은 한 cache 세대만 교체한다.
+- `latestResultInputFingerprint`를 cache와 따로 보존하여 실패한 새 run의 cache를 이전 성공 결과의 입력으로 오인하지 않는다. malformed checkpoint만으로 latestResult/Derived save를 차단하지 않는다. checkpoint를 자동 복구/삭제하지 않는다.
+- read model은 존재/validity/compatibility/runStatus/성공·실패·미기록 수/persistenceError/retryableTileIds를 제공한다. 입력이 주어지고 compatible이며 같은 run 소유, live analyzing이 아니고 persistenceError가 없는 경우에만 retryable terminal failure를 노출한다. 실제 retry executor는 없다.
+- T1~T8 기존 fixture를 production domain test에서 직접 재사용한다. T5/T8은 순수 전이 검증만 수행한다. 후보 결과·selection/relevance/Derived/source 보존과 loopback mock CAS/partial/all-failed/중간 DB 실패/oversize를 추가 검증한다.
+
 기준: `feat/v0.2-repro-contracts`, HEAD `4f33eab`, application version **0.1.1**. 이 문서는 문제·기대 동작과 BEFORE 관찰을 고정한다. **M2 retry/M3 role-aware 판정의 구현 또는 해결 보고가 아니다.** 앱·prompt·알고리즘·UI·DB schema 변경과 실제 외부 호출은 없다.
 
 현재 추출 경로는 `src/features/detail-extraction/`이다. 요청문의 `detail-image-extraction/` 디렉터리는 없다. 실제 source naming을 유지한다. [Roadmap](V0_2_ROADMAP.md), [Backlog](RELEASE_BACKLOG.md), TASK-024/026/028/031/034/035/036과 관련 schema/service/grounding/prompts를 대조했다. 기존 QA 기록은 최소 문구만 사용하며 과거 provider 응답을 복원했다고 주장하지 않는다.

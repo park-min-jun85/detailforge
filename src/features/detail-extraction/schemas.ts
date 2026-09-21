@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_CANDIDATES, MAX_TILE_COUNT, LEASE_MS } from "./policy";
+import { MAX_CANDIDATES, MAX_TILE_COUNT, MAX_REGIONS_PER_TILE, LEASE_MS } from "./policy";
 import { EXTRACTION_MESSAGES } from "./errors";
 const score = z.number().min(0).max(1);
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
@@ -12,7 +12,7 @@ export const regionSchema = z.strictObject({ regionType: regionTypeSchema, confi
 export const visualKindSchema = z.enum(["photo", "illustration", "diagram", "graphic", "mixed", "unknown"]);
 export const relevanceRegionSchema = regionSchema.extend({ visualKind: visualKindSchema, targetProductRelevance: score,
   containsTargetProduct: z.boolean(), relevanceReason: z.string().trim().min(1).max(120) });
-export const tileOutputSchema = z.strictObject({ schemaVersion: z.literal(2), regions: z.array(relevanceRegionSchema).max(8) });
+export const tileOutputSchema = z.strictObject({ schemaVersion: z.literal(2), regions: z.array(relevanceRegionSchema).max(MAX_REGIONS_PER_TILE) });
 export const rectSchema = z.strictObject({ x: z.number().int().nonnegative(), y: z.number().int().nonnegative(), width: z.number().int().positive(), height: z.number().int().positive() });
 export const dimensionsSchema = z.strictObject({ width: z.number().int().positive(), height: z.number().int().positive() });
 export const legacyCandidateSchema = regionSchema.omit({ box: true }).extend({ id: hash, rect: rectSchema,
@@ -29,10 +29,17 @@ export const relevanceResultSchema = legacyResultSchema.extend({ schemaVersion: 
   productContextFingerprint: hash, candidates: z.array(relevanceCandidateSchema).max(MAX_CANDIDATES) });
 export const resultSchema = z.discriminatedUnion("schemaVersion", [legacyResultSchema, relevanceResultSchema]);
 const codeSchema = z.enum(Object.keys(EXTRACTION_MESSAGES) as [keyof typeof EXTRACTION_MESSAGES, ...(keyof typeof EXTRACTION_MESSAGES)[]]);
-export const extractionStateSchema = z.strictObject({ schemaVersion: z.literal(1), revision: z.uuid(),
+const legacyExtractionStateSchema = z.strictObject({ schemaVersion: z.literal(1), revision: z.uuid(),
   saveLease: z.strictObject({ id: z.uuid(), startedAt: z.iso.datetime({ offset: true }) }).nullable().default(null),
   attempt: z.strictObject({ status: z.enum(["analyzing", "completed", "failed"]), runId: z.uuid(), startedAt: z.iso.datetime({ offset: true }),
     finishedAt: z.iso.datetime({ offset: true }).nullable(), errorCode: codeSchema.nullable() }), latestResult: resultSchema.nullable() });
+export const checkpointWriteErrorSchema = z.enum(["oversized", "invalid", "unsafe", "jsonb", "database"]);
+// The cache has its own server-side validator. A damaged cache must not hide valid candidates.
+// Preserve the opaque subtree on unrelated writes; never repair/delete it during a read.
+export const checkpointExtractionStateSchema = legacyExtractionStateSchema.extend({ schemaVersion: z.literal(2),
+  checkpoint: z.unknown().optional(), checkpointWriteError: checkpointWriteErrorSchema.nullable().optional(),
+  latestResultInputFingerprint: hash.nullable().optional() });
+export const extractionStateSchema = z.discriminatedUnion("schemaVersion", [legacyExtractionStateSchema, checkpointExtractionStateSchema]);
 export const analyzeRequestSchema = z.strictObject({ force: z.boolean().default(false) });
 export const saveRequestSchema = z.strictObject({ candidateIds: z.array(hash).min(1).max(MAX_CANDIDATES) }).refine(x=>new Set(x.candidateIds).size===x.candidateIds.length);
 export type Region = z.infer<typeof regionSchema> | z.infer<typeof relevanceRegionSchema>;

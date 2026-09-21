@@ -4,54 +4,30 @@ import { isDeepStrictEqual } from "node:util";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { exclusive, getAssetContext } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS, parseId, storagePath } from "@/features/assets/schemas";
-import { metadataUpdate } from "@/features/assets/metadata";
 import type { Asset } from "@/types/domain";
 import { ExtractionError } from "./errors";
 import { decodeSource, imageTiles, tileDataUrl, cropImage, sourceFingerprint } from "./images";
 import { candidateId, normalizeCandidates } from "./geometry";
 import { cropRectKey } from "./crop-identity";
 import { bounded, loadSource } from "./source";
-import { getExtractionProvider, type ExtractionProvider } from "./provider";
+import { getExtractionProvider, getExtractionModel, EXTRACTION_PROMPT, RELEVANCE_PROMPT, type ExtractionProvider } from "./provider";
 import { POLICY_VERSION, RUN_TIMEOUT_MS, TILE_TIMEOUT_MS } from "./policy";
 import { loadExtractionProductContext } from "./product-context";
-import { derivationSchema, isDerived, isExtractionActive, isSaveActive, readExtraction, resultSchema, saveRequestSchema, tileOutputSchema,
+import { derivationSchema, isExtractionActive, isSaveActive, readExtraction, resultSchema, saveRequestSchema, tileOutputSchema,
   type ExtractionState, type Candidate, type Region } from "./schemas";
+import { readExtractionAsset as readAsset, compareExtractionState as compareAndSave, updateExtractionRun as finish, persistTileCheckpoint } from "./persistence";
+import { buildCheckpointInput, checkpointInputFingerprint, createCheckpoint, completedTileCheckpoint, failedTileCheckpoint,
+  failureCheckpoint, CheckpointError, type TileCheckpoint } from "./checkpoint";
 
 type Client = ReturnType<typeof createSupabaseServerClient>;
-type Scope = { projectId: string; productId: string; assetId: string };
 const timeout = () => AbortSignal.timeout(10_000);
 const running = new Set<string>();
 const safeError = (e: unknown) => e instanceof ExtractionError ? e : new ExtractionError(e instanceof AssetError ? e.status === 404 ? "not_found" : e.status === 409 ? "busy" : "database" : "unexpected");
-async function readAsset(client: Client, scope: Scope) {
-  const row = await client.from("assets").select("*").eq("id", scope.assetId).eq("project_id", scope.projectId).eq("product_id", scope.productId).abortSignal(timeout()).maybeSingle();
-  if (row.error) throw new ExtractionError("database");
-  if (!row.data) throw new ExtractionError("not_found");
-  const asset = assetRowSchema.parse(row.data);
-  try { assertAssetScope(asset, scope.projectId, scope.productId); } catch { throw new ExtractionError("ownership"); }
-  if (isDerived(asset.metadata)) throw new ExtractionError("recursive");
-  return asset;
-}
 async function context(client: Client, projectId: string, assetId: string) {
   try { projectId = parseId(projectId); assetId = parseId(assetId); } catch { throw new ExtractionError("not_found"); }
   const value = await getAssetContext(projectId, client);
   if (!value.product) throw new ExtractionError("ownership");
   return { projectId, productId: value.product.id, assetId };
-}
-async function compareAndSave(client: Client, asset: Asset, state: ExtractionState) {
-  const saved = await metadataUpdate(client, asset, { ...asset.metadata, detailExtraction: state }).select("*").abortSignal(timeout()).maybeSingle();
-  if (!saved.error) return saved.data ? assetRowSchema.parse(saved.data) : null;
-  const actual = await readAsset(client, { projectId: asset.projectId, productId: asset.productId, assetId: asset.id });
-  const read = readExtraction(actual.metadata);
-  if (actual.storagePath === asset.storagePath && read && isDeepStrictEqual({ ...read, revision: state.revision }, state)) return actual;
-  throw new ExtractionError("database");
-}
-async function finish(client: Client, scope: Scope, original: Asset, runId: string, update: (state: ExtractionState) => ExtractionState) {
-  for (let index = 0; index < 3; index++) {
-    const latest = await readAsset(client, scope), state = readExtraction(latest.metadata);
-    if (latest.storagePath !== original.storagePath || !state || state.attempt.runId !== runId) throw new ExtractionError("conflict");
-    const saved = await compareAndSave(client, latest, update(state)); if (saved) return saved;
-  }
-  throw new ExtractionError("conflict");
 }
 
 export async function analyzeProductShots(projectId: string, assetId: string, force = false, providerFactory: () => ExtractionProvider = getExtractionProvider) {
@@ -64,29 +40,66 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
       if (isExtractionActive(previous) || isSaveActive(previous)) throw new ExtractionError("busy");
       const image = await decodeSource(await loadSource(client, source), source.mimeType);
       const productContext = await loadExtractionProductContext(client, scope);
+      let provider: ExtractionProvider | undefined;
+      const model = providerFactory === getExtractionProvider ? getExtractionModel() : (provider = providerFactory()).model;
+      const tiles = await imageTiles(image);
+      const checkpointInput = buildCheckpointInput(image, productContext.fingerprint, model, tiles, `${EXTRACTION_PROMPT}\n${RELEVANCE_PROMPT}`);
+      const inputFingerprint = checkpointInputFingerprint(checkpointInput);
       if (!force && previous?.latestResult?.schemaVersion === 2 && previous.latestResult.sourceFingerprint === image.fingerprint
-        && previous.latestResult.policyVersion === POLICY_VERSION && previous.latestResult.productContextFingerprint === productContext.fingerprint) return { asset: source, reused: true };
-      const tiles = await imageTiles(image), provider = providerFactory(), runId = randomUUID();
-      const state: ExtractionState = { schemaVersion: 1, revision: randomUUID(), saveLease: null,
+        && previous.latestResult.policyVersion === POLICY_VERSION && previous.latestResult.productContextFingerprint === productContext.fingerprint
+        && previous.latestResult.model === model && (previous.schemaVersion === 1 || previous.latestResultInputFingerprint === inputFingerprint)) return { asset: source, reused: true };
+      provider ??= providerFactory();
+      const activeProvider = provider;
+      const runId = randomUUID();
+      const state: ExtractionState = { schemaVersion: 2, revision: randomUUID(), saveLease: null,
+        checkpoint: createCheckpoint(checkpointInput, tiles, runId), checkpointWriteError: null,
+        latestResultInputFingerprint: previous?.schemaVersion === 2 ? previous.latestResultInputFingerprint ?? null : null,
         attempt: { status: "analyzing", runId, startedAt: new Date().toISOString(), finishedAt: null, errorCode: null }, latestResult: previous?.latestResult ?? null };
       if (!await compareAndSave(client, source, state)) throw new ExtractionError("conflict");
       try {
         const started = Date.now(), entries: { region: Region; tile: typeof tiles[number] }[] = [], failedTiles: number[] = [];
         let lastFailure = new ExtractionError("provider");
+        let checkpointDisabled = false;
         for (const tile of tiles) {
-          const remaining = RUN_TIMEOUT_MS - (Date.now() - started);
-          if (remaining <= 0) { failedTiles.push(tile.index); lastFailure = new ExtractionError("timeout"); continue; }
+          let checkpoint: TileCheckpoint;
+          let phase: "local" | "provider" | "validation" = "local", dispatched = false;
           try {
+            const remaining = RUN_TIMEOUT_MS - (Date.now() - started);
+            if (remaining <= 0) throw new ExtractionError("timeout");
             const dataUrl = await tileDataUrl(image, tile);
             const budget = RUN_TIMEOUT_MS - (Date.now() - started);
             if (budget <= 0) throw new ExtractionError("timeout");
-            const raw = await bounded(signal => provider.analyze(dataUrl, signal, productContext.context), Math.min(budget, TILE_TIMEOUT_MS));
+            phase = "provider"; dispatched = true;
+            const raw = await bounded(signal => activeProvider.analyze(dataUrl, signal, productContext.context), Math.min(budget, TILE_TIMEOUT_MS));
+            phase = "validation";
             const parsed = tileOutputSchema.safeParse(raw);
             if (!parsed.success) throw new ExtractionError("invalid_response");
             // Validate geometry before accepting ANY regions from this tile.
             normalizeCandidates(parsed.data.regions.map(region => ({ region, tile })), image.dimensions, image.fingerprint);
             entries.push(...parsed.data.regions.map(region => ({ region, tile })));
-          } catch (error) { failedTiles.push(tile.index); lastFailure = safeError(error); }
+            checkpoint = completedTileCheckpoint(checkpointInput, tile, parsed.data);
+          } catch (error) {
+            failedTiles.push(tile.index); lastFailure = safeError(error);
+            checkpoint = failedTileCheckpoint(checkpointInput, tile, failureCheckpoint(error, phase, dispatched));
+          }
+          if (!checkpointDisabled) {
+            try { await persistTileCheckpoint(client, scope, source, runId, inputFingerprint, checkpoint); }
+            catch (error) {
+              if (error instanceof CheckpointError) {
+                // Candidate analysis may still succeed. Keep the last durable cache, never truncate it.
+                await finish(client, scope, source, runId, latest => latest.schemaVersion === 2
+                  ? { ...latest, checkpointWriteError: error.code } : latest);
+                checkpointDisabled = true;
+              } else {
+                // Do not spend on further tiles after loss of durability/ownership.
+                if (!(error instanceof ExtractionError && error.code === "conflict")) {
+                  try { await finish(client, scope, source, runId, latest => latest.schemaVersion === 2
+                    ? { ...latest, checkpointWriteError: "database" } : latest); } catch { /* previous durable checkpoint remains */ }
+                }
+                throw error;
+              }
+            }
+          }
         }
         if (failedTiles.length === tiles.length) throw lastFailure;
         const normalized = normalizeCandidates(entries, image.dimensions, image.fingerprint);
@@ -95,6 +108,7 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
           analyzedAt: new Date().toISOString(), tileCount: tiles.length, completedTiles: tiles.length - failedTiles.length, failedTiles,
           partialAnalysis: failedTiles.length > 0, ...normalized });
         const asset = await finish(client, scope, source, runId, latest => ({ ...latest, latestResult: result,
+          ...(latest.schemaVersion === 2 ? { latestResultInputFingerprint: inputFingerprint } : {}),
           attempt: { ...latest.attempt, status: "completed", finishedAt: new Date().toISOString(), errorCode: null } }));
         return { asset, reused: false };
       } catch (error) {

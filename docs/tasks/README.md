@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-038 — Tile Checkpoint/Cache Domain Model & Persistence 완료. `feat/tile-checkpoint-cache`, 기준 `cfa7352`. 정상 전체 분석 중 타일별 성공/실패를 metadata에 저장하고, identity/stale/bounds/CAS/legacy·malformed 분리를 구현했다. **전체979 tests와 typegen/typecheck/lint/build/diff·secret 검사 PASS**. failed-only 실행/UI는 TASK-039 이후이며 M2/M3는 미해결이다. SQL/dependency/실제 외부 호출/원격 데이터 변경0, package0.1.1. [56개 항목 보고 및 최종 검사](./TASK-038.md).
+
+## 완료된 TASK-037 기반
+
 TASK-037 — M2/M3 Reproduction Corpus & Contract Freeze 완료. `feat/v0.2-repro-contracts` / `4f33eab`. M2 T1~T8과 M3 C1~C22(allow9/warning7/reject6), test-only validator·기존 helper/service characterization, identity/cache/state/legacy 계약과 case별 gap matrix를 작성했다. 실제 추출 경로는 `detail-extraction`이며 현재 tileId/cache/retry 구현은 없다. M3 미검출 C6/C10/C13/C19를 그대로 기록하고 M2/M3는 미해결 유지한다. **전체933 tests 및 typegen/typecheck/lint/build/diff·secret/bundle 검사 PASS**. 앱·prompt·UI·SQL·dependency·실제 API·원격 데이터 변경0, package0.1.1. [46개 항목·검사 결과](./TASK-037.md), [동결 계약](../V0_2_M2_M3_CONTRACTS.md). 다음 권장은 TASK-038 cache domain/persistence다.
 
 ## 완료된 TASK-036 기반

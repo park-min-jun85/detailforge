@@ -15,11 +15,15 @@ For EVERY region, distinguish visualKind (photo/illustration/diagram/graphic/mix
 targetProductRelevance is 0..1 for this target identity, NOT confidence or proof of any fact. containsTargetProduct is true only if the target product, its genuine close-up, wearing or use is visibly present; background props alone or a different main product are false. Preserve useful standalone product photos, model wearing shots, close-ups and variant photos without inventing option mappings. Report unrelated visible regions honestly with low relevance rather than relabeling them as photographs. If identity is unclear, use low relevance/unknown rather than guess. Provide only a short Korean visual relevanceReason (max120 chars), no OCR or product claims. Do not return defaultSelected; the server determines recommendations. Return schemaVersion2.`;
 
 export interface ExtractionProvider { model: string; analyze(dataUrl: string, signal: AbortSignal, context: ExtractionProductContext): Promise<unknown> }
+export function getExtractionModel() {
+  const model = process.env.OPENAI_DETAIL_EXTRACTION_MODEL?.trim() || "gpt-5.6-luna";
+  if (model.length > 200) throw new ExtractionError("not_configured");
+  return model;
+}
 export function getExtractionConfig() {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
-  const model = process.env.OPENAI_DETAIL_EXTRACTION_MODEL?.trim() || "gpt-5.6-luna";
-  if (!apiKey || model.length > 200) throw new ExtractionError("not_configured");
-  return { apiKey, model };
+  if (!apiKey) throw new ExtractionError("not_configured");
+  return { apiKey, model: getExtractionModel() };
 }
 export function createExtractionProvider(config: { apiKey: string; model: string }, transport?: typeof fetch): ExtractionProvider {
   const client = new OpenAI({ apiKey: config.apiKey, maxRetries: 0, timeout: TILE_TIMEOUT_MS, logLevel: "off", ...(transport ? { fetch: transport } : {}) });
