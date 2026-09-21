@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-039 — Explicit Failed-Only Tile Retry Server Logic 완료. `feat/failed-tile-retry`, 기준 `76a14e0`. 환경 오류 전의 미완료5파일을 보존하여 route·실패 전용 실행·회귀·문서를 완성했다. **전체1,034 tests와 typegen/typecheck/lint/build/diff·secret 검사 PASS**. 서버는 expectedRevision/현재 입력을 검증하고 선택 failed만 index 순서로 호출한다. retry UI/실제 E2E는 TASK-040이며 M2/M3는 미해결 유지. [66개 항목·최종 검사](./TASK-039.md). 실제 API/원격 mutation/SQL/dependency0, package0.1.1, commit/merge/tag 없음.
+
+## 완료된 TASK-038 기반
+
 TASK-038 — Tile Checkpoint/Cache Domain Model & Persistence 완료. `feat/tile-checkpoint-cache`, 기준 `cfa7352`. 정상 전체 분석 중 타일별 성공/실패를 metadata에 저장하고, identity/stale/bounds/CAS/legacy·malformed 분리를 구현했다. **전체979 tests와 typegen/typecheck/lint/build/diff·secret 검사 PASS**. failed-only 실행/UI는 TASK-039 이후이며 M2/M3는 미해결이다. SQL/dependency/실제 외부 호출/원격 데이터 변경0, package0.1.1. [56개 항목 보고 및 최종 검사](./TASK-038.md).
 
 ## 완료된 TASK-037 기반

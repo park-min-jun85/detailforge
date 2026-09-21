@@ -13,6 +13,12 @@ export const EXTRACTION_MESSAGES = {
   recovery: "저장 또는 파일 정리를 확인하지 못했습니다. 중복 저장 전에 이미지 목록을 확인해 주세요.",
   busy: "이미지 작업이 진행 중입니다. 완료 후 다시 시도해 주세요.", conflict: "이미지 상태가 변경됐습니다. 새로고침해 주세요.",
   forbidden: "허용되지 않은 요청입니다.", unexpected: "제품컷 추출을 완료하지 못했습니다.",
+  checkpoint_missing: "저장된 구간 분석이 없습니다. 전체 재분석이 필요합니다.",
+  checkpoint_invalid: "저장된 구간 분석을 사용할 수 없습니다. 전체 재분석이 필요합니다.",
+  checkpoint_stale: "분석 입력이 변경됐습니다. 전체 재분석이 필요합니다.",
+  checkpoint_incomplete: "완료 기록이 없는 구간이 있습니다. 전체 재분석이 필요합니다.",
+  invalid_retry_target: "현재 재시도할 수 있는 실패 구간만 선택해 주세요.",
+  persistence_failure: "재시도 결과를 저장하지 못했습니다. 이전 저장 결과는 유지됩니다. AI 요청 비용이 발생했을 수 있습니다.",
 } as const;
 export type ExtractionCode = keyof typeof EXTRACTION_MESSAGES;
 export class ExtractionError extends Error {

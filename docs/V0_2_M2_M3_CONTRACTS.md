@@ -1,5 +1,21 @@
 # v0.2.0 M2/M3 Reproduction Contracts — TASK-037
 
+## TASK-039 서버 실행 계약
+
+[Retry service](../src/features/detail-extraction/retry.ts)와 POST `.../extract-product-shots/retry`를 추가했다. 아래 TASK-037/038의 구현 부재는 당시 기록이다. 현재 M2는 **server logic implemented; UI/E2E pending**, M3는 변경 없다. [최종 검증/66개 항목](tasks/TASK-039.md).
+
+- 요청은 strict `{expectedRevision: UUID, requestedTileIds?: SHA256[1..16]}`. 생략은 현재 retryable failure 전체; 중복/빈 배열/성공·미등록·비재시도 ID/임의 model·geometry·fingerprint·checkpoint를 거부한다. 서버가 source bytes/context/model/policy/실제 layout을 다시 계산한다. stale는 provider 호출 전409이며 자동 전체 재분석은 없다.
+- 전체 source는 호환성 확인용으로 decode/작은 grayscale layout 계산을 수행한다. JPEG/base64 생성과 provider 전송은 선택된 failed geometry만 index 오름차순으로 한다. 정상 완료는 K대상→K호출, 성공 타일0호출, 각 대상≤1호출. 중단/로컬 실패/예산 초과에서는 아직 보내지 않은 대상은0호출이다. SDK maxRetries0 및429/500 transport mock1회 확인.
+- 기존 full analysis와 process slot/product exclusive를 공유한다. retry claim은 새 runId와 기존 success entries로 revision CAS한다. 매 전송 전·checkpoint 저장·최종 publish에서 cursor revision/run/input/scope를 확인한다. retry는 임의의 새 revision을 자동 채택하지 않고409로 멈춘다. provider 직전과 publish 전 source hash/context/model을 재확인한다. 분산 transaction/lock은 추가하지 않았다.
+- 매 terminal 결과를 즉시 저장하고 마지막에 전체 completed regions로 기존 normalizeCandidates/NMS/cap/selection을 재실행한다. latestResult/candidates를 append하지 않는다. 모두 재실패하면 기존 latestResult와 analyzedAt를 그대로 유지한다. 새로운 성공 후 집계/DB 실패도 durable successes와 이전 latestResult를 보존한다.
+- retry 중에는 checkpoint가 latestResult보다 앞설 수 있으며 attempt.analyzing/failed가 이를 나타낸다. 완료 publish는 latestResult/inputFingerprint/attempt를 한 metadata CAS로 저장한다. compatible complete cache의 명시 retry-all은 AI0의 no-op이고, 이전 집계 중단으로 결과가 뒤처져 있으면 AI0으로 재집계/publish한다.
+- response는 code=`retry_completed|provider_failure|no_retryable_tiles`, attempted/succeeded/failed/remainingFailedTileCount, runStatus, candidateCount, revision, latestResultUpdated, billingUncertain만 제공한다. 내부 cache/model/context/서명 URL/이미지/키는 반환하지 않는다. provider_failure는 처리된 실패 결과의 HTTP200이며 요청 거부/내구성 실패와 구분한다.
+- error는 checkpoint_missing/invalid/stale/incomplete→409, invalid_retry_target/invalid_input→400, busy/conflict→409, persistence_failure→503. 기존 ownership/origin/no-store/8KiB JSON body 제한 유지. 원본 provider/DB 오류는 공개하지 않는다.
+- live attempt/save lease는 busy. 만료된 retry lease는 새 revision으로 명시 요청할 때 terminal success를 보존하고 남은 failed만 실행한다. 이전 failure가 not_dispatched라면 호출 전에 unknown을 저장하여 중단 후 미과금으로 오인하지 않는다. 실제 과금 여부는 보증하지 않는다. 최초 full extraction의 sparse/incomplete cache는 미전송/응답 유실을 판별할 근거가 없으므로 전체 재분석을 안내하고 missing tile을 failure로 발명하지 않는다.
+- retry 기본 write는 claim+K terminals+finish=K+2. 이전 not_dispatched→unknown 기록이 필요한 K개에는 최대K writes 추가(최대34 logical writes); 첫 오류 뒤 추가 provider 호출 없음. source 다운로드는 시작+각 dispatch 직전+publish 전 최대K+2회이며 각 기존10MiB/20초 경계를 유지한다. 원격 성능/과금은 미측정이다.
+- 선택은 CandidateReview의 로컬 Set이고 analyzedAt key로 remount된다. 서버에 명시 선택 데이터가 없으므로 이번에는 저장 모델/UI를 바꾸지 않는다. **TASK-040 연결 전 stable candidate ID별 checked/unchecked를 보존하고 새 후보에만 default policy를 적용하는 UI 변경이 필수**다. 제거된 후보의 기존 Derived는 수정/삭제하지 않는다.
+- 원본 T1~T8을 실제 retry service fixture로 재사용. 신규 mock은 failed-only 수/순서, stale 각 차원, partial/mixed/all-failed, CAS/중단/응답 유실, byte cap, fresh full-run equality, NMS로 후보가 사라져도 Derived 보존, SDK 재시도0, actual route no-op/validation을 포함한다. 실제 OpenAI/도매 API/원격 DB·Storage 변경0.
+
 ## TASK-038 구현 델타 (2026-09-21)
 
 아래 TASK-037 본문은 BEFORE 계약/관찰이다. 현재 구현은 [checkpoint domain](../src/features/detail-extraction/checkpoint.ts), [persistence](../src/features/detail-extraction/persistence.ts), [TASK-038 보고](tasks/TASK-038.md)를 따른다. M2 checkpoint persistence를 구현했으며 failed-only 실행/UI는 아직 없다. M3 production/corpus는 변경하지 않았다.

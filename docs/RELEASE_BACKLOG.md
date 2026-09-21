@@ -4,6 +4,8 @@ TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **M
 
 ## TASK-037 reproduction contract established
 
+**TASK-039:** server logic implemented; UI/E2E pending. 명시 POST retry와 실패 대상 검증, 입력 재검증, 성공 즉시 저장, 전체 regions 재집계, strict revision/run CAS 및 중단 보호를 추가했다. 기존 성공 Tile 재호출0은 mock으로 검증했다. 실제 사용자 UI/유료 호출 E2E와 client-local 선택 보존 연결 전에는 **M2 완전 해결로 표시하지 않는다**. M3/미해결 MEDIUM4·LOW1 유지. [보고](tasks/TASK-039.md).
+
 **TASK-038:** checkpoint persistence implemented; failed-only retry UI/server pending. 정상 전체 분석에 terminal tile 저장, 입력 호환성, bounded serialization, CAS를 추가했다. 재분석의 provider 대상 선택은 여전히 전체 타일이므로 **M2 해결로 처리하지 않는다**. M3 변경 없음, MEDIUM4/LOW1 유지. [검증·제약](tasks/TASK-038.md).
 
 M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M3_CONTRACTS.md)에 고정했다. 현재 전체 재분석 호출과 성공 보존을 mock service로 재현했고, 제목/본문 및 보고체 미검출4사례를 기록했다. production 수정이나 실제 API 호출은 없으며 **M2/M3 미해결, MEDIUM4/LOW1 유지**. 다음은 TASK-038 cache domain/persistence다.

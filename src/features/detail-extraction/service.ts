@@ -6,6 +6,7 @@ import { exclusive, getAssetContext } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS, parseId, storagePath } from "@/features/assets/schemas";
 import type { Asset } from "@/types/domain";
 import { ExtractionError } from "./errors";
+import { withExtractionSlot } from "./execution";
 import { decodeSource, imageTiles, tileDataUrl, cropImage, sourceFingerprint } from "./images";
 import { candidateId, normalizeCandidates } from "./geometry";
 import { cropRectKey } from "./crop-identity";
@@ -21,7 +22,6 @@ import { buildCheckpointInput, checkpointInputFingerprint, createCheckpoint, com
 
 type Client = ReturnType<typeof createSupabaseServerClient>;
 const timeout = () => AbortSignal.timeout(10_000);
-const running = new Set<string>();
 const safeError = (e: unknown) => e instanceof ExtractionError ? e : new ExtractionError(e instanceof AssetError ? e.status === 404 ? "not_found" : e.status === 409 ? "busy" : "database" : "unexpected");
 async function context(client: Client, projectId: string, assetId: string) {
   try { projectId = parseId(projectId); assetId = parseId(assetId); } catch { throw new ExtractionError("not_found"); }
@@ -31,9 +31,7 @@ async function context(client: Client, projectId: string, assetId: string) {
 }
 
 export async function analyzeProductShots(projectId: string, assetId: string, force = false, providerFactory: () => ExtractionProvider = getExtractionProvider) {
-  if (running.size >= 1) throw new ExtractionError("busy");
-  running.add(assetId);
-  try {
+  return withExtractionSlot(async () => { try {
     const client = createSupabaseServerClient({ requestTimeoutMs: 30_000 }), scope = await context(client, projectId, assetId);
     return await exclusive(scope.productId, async () => {
       const source = await readAsset(client, scope), previous = readExtraction(source.metadata);
@@ -118,7 +116,7 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
         throw failure;
       }
     });
-  } catch (error) { throw safeError(error); } finally { running.delete(assetId); }
+  } catch (error) { throw safeError(error); } });
 }
 
 async function removeObject(client: Client, path: string) { try { return !(await client.storage.from("product-assets").remove([path])).error; } catch { return false; } }

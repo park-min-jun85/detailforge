@@ -17,8 +17,9 @@ export async function extractionResponse(request: Request, operation: (body: unk
     return Response.json(await operation(body), { headers });
   } catch (error) {
     const safe = error instanceof ExtractionError ? error : new ExtractionError("unexpected");
-    const status = safe.code === "forbidden" ? 403 : safe.code === "not_found" ? 404 : ["invalid_input", "invalid_rect"].includes(safe.code) ? 400
-      : ["busy", "conflict", "stale", "source_changed", "asset_limit", "recursive", "ineligible"].includes(safe.code) ? 409 : 503;
+    const status = safe.code === "forbidden" ? 403 : safe.code === "not_found" ? 404 : ["invalid_input", "invalid_rect", "invalid_retry_target"].includes(safe.code) ? 400
+      : ["busy", "conflict", "stale", "source_changed", "asset_limit", "recursive", "ineligible",
+        "checkpoint_missing", "checkpoint_invalid", "checkpoint_stale", "checkpoint_incomplete"].includes(safe.code) ? 409 : 503;
     return Response.json({ code: safe.code, message: safe.message, ...(safe.available !== undefined ? { available: safe.available } : {}) }, { status, headers });
   }
 }

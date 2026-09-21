@@ -4,6 +4,8 @@ TASK-036 설계 결정이다. **권장 방향은 A: Internal Quality Release**�
 
 ## TASK-037 계약 확정
 
+**TASK-039:** [명시 failed-only 서버 실행](tasks/TASK-039.md)을 구현했다. checkpoint와 현재 입력/expectedRevision을 검증하고 실패 대상만 호출, 즉시 성공 보존, 전체 성공 regions 재집계, 중단/CAS 보호를 제공한다. UI/실제 사용자 E2E는 미구현이므로 M2 미해결 유지. 다음 TASK-040은 명시 비용/불확실성 안내, stable-ID 선택 보존, 실제 최소 호출 E2E다. M3·package0.1.1·MEDIUM4/LOW1은 그대로다.
+
 **TASK-038 진행 결과:** [Tile checkpoint domain/persistence](tasks/TASK-038.md)를 구현했다. 새 전체 extraction은 타일 terminal 결과를 매번 bounded metadata에 저장하며, deterministic identity·입력 stale·legacy/malformed 분리·CAS·용량 초과 보존을 검증한다. failed-only 서버 실행/자동 호출/UI는 없다. M2는 미해결이며 다음 권장은 TASK-039 명시 retry다. 아래 TASK-036/037의 구현 부재/상한 제안은 당시 기준 기록이고, 현재 상한은 16×8 / UTF-8 256KiB로 적용한다. M3/미해결 MEDIUM4·LOW1/package0.1.1은 그대로다.
 
 [M2/M3 Contracts](V0_2_M2_M3_CONTRACTS.md)에 T1~T8/C1~C22, 실제 source naming, 현재 검출 gap과 기대 classification을 고정했다. M2/M3는 아직 미해결이며 retry/prompt/validator production 변경은 없다. cache256KiB는 독립 UTF-8 byte cap으로 유지한다. 16×8 최대 설명 길이 fixture는 한글155,616B, escaped control270,816B로 후자가 상한을 넘으므로 schema 통과만으로 크기를 보장하지 않는다. 조용한 truncation은 금지하며 실제 JSONB 저장 수용성과 전체 metadata 비용은 TASK-038에서 검증한다. Tile identity와 model/policy/layout cache 호환성을 구분하고 pending/in_flight는 failed-only 대상에서 제외한다.
