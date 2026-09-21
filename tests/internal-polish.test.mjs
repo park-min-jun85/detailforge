@@ -78,12 +78,12 @@ test('new copy policy writes version 2 while stored version 1 and missing versio
 }));
 
 test('partial extraction explains full reanalysis cost and preserved successful data',async()=>{
-  const {ExtractionPanel}=await import('../src/features/detail-extraction/components/extraction-panel.tsx');
+  const {RetryStatus}=await import('../src/features/detail-extraction/components/retry-status.tsx');
   const {extractionStateSchema}=await import('../src/features/detail-extraction/schemas.ts');
   const time='2026-09-20T00:00:00Z',hash='a'.repeat(64);
   const state=extractionStateSchema.parse({schemaVersion:1,revision:randomUUID(),saveLease:null,attempt:{status:'completed',runId:randomUUID(),startedAt:time,finishedAt:time,errorCode:null},latestResult:{schemaVersion:2,policyVersion:2,sourceFingerprint:hash,productContextFingerprint:hash,sourceDimensions:{width:400,height:4000},coordinateSpace:'orientation_normalized_pixels',sourceOrientation:1,provider:'openai',model:'mock',analyzedAt:time,tileCount:3,completedTiles:2,failedTiles:[1],partialAnalysis:true,truncatedCandidates:false,candidates:[]}});
   const asset={id:randomUUID(),originalFilename:'source.png',metadata:{detailExtraction:state}},before=structuredClone(asset);
-  const html=renderToStaticMarkup(createElement(ExtractionPanel,{projectId,asset,assets:[asset],previewUrl:null,busy:false,currentContextFingerprint:hash,begin:()=>true,end:()=>{},refresh:async()=>{},update:()=>{},close:()=>{}}));
-  assert.match(html,/전체 구간을 다시 분석/);assert.match(html,/AI 비용/);assert.match(html,/이전 성공 후보와 저장 이미지는 유지/);assert.match(html,/제품컷 재분석/);
+  const html=renderToStaticMarkup(createElement(RetryStatus,{review:{hasAttempt:true,status:"missing",total:0,successful:0,failed:0,retryable:0},busy:false,pending:false,retry:()=>{},reanalyze:()=>{}}));
+  assert.match(html,/전체 제품컷 재분석/);assert.match(html,/AI 비용/);assert.match(html,/기존 성공 후보와 저장 이미지는 유지/);assert.match(html,/제품컷 재분석/);
   assert.deepEqual(asset,before);
 });

@@ -1,5 +1,10 @@
 # v0.2.0 M2/M3 Reproduction Contracts — TASK-037
 
+## TASK-040 UI 및 실제 검증
+
+**TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).
+
+
 ## TASK-039 서버 실행 계약
 
 [Retry service](../src/features/detail-extraction/retry.ts)와 POST `.../extract-product-shots/retry`를 추가했다. 아래 TASK-037/038의 구현 부재는 당시 기록이다. 현재 M2는 **server logic implemented; UI/E2E pending**, M3는 변경 없다. [최종 검증/66개 항목](tasks/TASK-039.md).

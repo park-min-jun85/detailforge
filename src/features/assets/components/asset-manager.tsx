@@ -9,7 +9,8 @@ import { requestAssetAnalysis } from "@/features/asset-analysis/client";
 import { AnalysisResultCard, ASSET_TYPE_LABELS } from "@/features/asset-analysis/components/analysis-result";
 import { isActiveAnalysis, readAnalysis } from "@/features/asset-analysis/schemas";
 import { ExtractionPanel } from "@/features/detail-extraction/components/extraction-panel";
-import { isDerived, isExtractionActive, isSaveActive, readExtraction } from "@/features/detail-extraction/schemas";
+import { isDerived } from "@/features/detail-extraction/schemas";
+import { extractionDisplay } from "@/features/detail-extraction/review-model";
 import { assetProvenanceLabel } from "@/features/visual-assets/policy";
 import { imageCategory } from "@/features/detail-extraction/policy";
 
@@ -38,7 +39,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<{ done: number; total: number; success: number; failed: number } | null>(null);
-  const hasActiveAnalysis = list.items.some(({ asset }) => isActiveAnalysis(readAnalysis(asset.metadata), now) || isExtractionActive(readExtraction(asset.metadata), now) || isSaveActive(readExtraction(asset.metadata), now));
+  const hasActiveAnalysis = list.items.some(({ asset }) => isActiveAnalysis(readAnalysis(asset.metadata), now) || extractionDisplay(asset.metadata)?.active);
   const analysisTargets = list.items.filter(({ asset }) => {
     const state = readAnalysis(asset.metadata);
     return state?.status !== "completed" && !isActiveAnalysis(state, now);
@@ -213,7 +214,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
                   <p className="break-all text-sm font-medium">{index + 1}. {asset.originalFilename}</p>
                   <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 저장 분류: {ASSET_TYPE_LABELS[asset.assetType]}</p>
                   {isDerived(asset.metadata) ? <p className="text-xs font-medium text-zinc-600">{assetProvenanceLabel(asset, list.items.map(item => item.asset))} · {asset.width} × {asset.height}px</p>
-                    : (readExtraction(asset.metadata) || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => setExtractionId(asset.id)}>제품컷 추출{readExtraction(asset.metadata)?.latestResult ? " 후보 보기" : ""}</button>}
+                    : (extractionDisplay(asset.metadata)?.hasAttempt || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => setExtractionId(asset.id)}>제품컷 추출{extractionDisplay(asset.metadata)?.hasResult ? " 후보 보기" : ""}</button>}
                   <AnalysisResultCard asset={asset} now={now} pending={analyzingId === asset.id} disabled={busy}
                     error={analysisErrors[asset.id]} onAnalyze={() => analyze([asset.id])} />
                   {confirmId === asset.id ? <div className="space-y-3">
@@ -229,7 +230,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
-      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy} currentContextFingerprint={list.extractionContextFingerprint}
+      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy}
         begin={() => { if (locked.current) return false; locked.current = true; setBusy(true); return true; }} end={() => { locked.current = false; setBusy(false); setNow(Date.now()); }}
         refresh={refresh} update={asset => setList(current => ({ ...current, items: current.items.map(item => item.asset.id === asset.id ? { ...item, asset } : item) }))} close={() => setExtractionId(null)} />}
       <p className="text-sm leading-6 text-zinc-500">이미지 검토와 분석을 마쳤다면 다음 상품 분석 단계로 이동하세요. 이후 사실 검증과 페이지 설계를 거쳐 상세페이지를 만들 수 있습니다.</p>

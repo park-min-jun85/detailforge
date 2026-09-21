@@ -297,7 +297,8 @@ test('NMS may remove a prior candidate; its saved Derived and unrelated metadata
 test('existing selection is client-local; server does not invent or persist explicit selections', () => {
   const ui = readFileSync(new URL('../src/features/detail-extraction/components/extraction-panel.tsx', import.meta.url), 'utf8');
   assert.ok(ui.includes('const [selected, setSelected] = useState'));
-  assert.ok(ui.includes('key={result.analyzedAt}'));
+  assert.ok(!ui.includes('key={result.analyzedAt}'));
+  assert.ok(ui.includes('reconcileSelection(current, next.result?.candidates ?? [])'));
   assert.equal(ui.includes('retryProductShots'), false);
 });
 function routeRequest(body, overrides = {}) {

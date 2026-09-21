@@ -1,49 +1,52 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Asset } from "@/types/domain";
-import { requestCropSave, requestExtraction } from "../client";
+import { requestCropSave, requestExtraction, requestExtractionReview, requestExtractionRetry } from "../client";
 import { EXTRACTION_MESSAGES, ExtractionError } from "../errors";
 import { REGION_LABELS } from "../policy";
 import { cropRectKey } from "../crop-identity";
-import { defaultExclusionReason, EXCLUSION_LABELS, extractionContextStatus, VISUAL_KIND_LABELS } from "../selection";
-import { derivationSchema, isExtractionActive, isSaveActive, readExtraction, type Candidate, type ExtractionResult } from "../schemas";
+import { EXCLUSION_LABELS, VISUAL_KIND_LABELS } from "../selection";
+import { retryFeedback, reconcileSelection, selectedCandidateIds, extractionDisplay, type ExtractionReview } from "../review-model";
+import { RetryStatus } from "./retry-status";
 
-type Props = { projectId: string; asset: Asset; previewUrl: string | null; assets: Asset[]; busy: boolean; currentContextFingerprint?: string;
+type Props = { projectId: string; asset: Asset; previewUrl: string | null; assets: Asset[]; busy: boolean;
   begin: () => boolean; end: () => void; refresh: () => Promise<void>; update: (asset: Asset) => void; close: () => void };
 
-function CandidateReview({ result, ...props }: Props & { result: ExtractionResult }) {
-  const [selected, setSelected] = useState(() => new Set(result.candidates.filter(c => c.defaultSelected).map(c => c.id)));
-  const [showExcluded, setShowExcluded] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState(""), [stale, setStale] = useState(false);
-  const savedRects = new Set(props.assets.flatMap(asset => { const d = derivationSchema.safeParse(asset.metadata.derivation);
-    return d.success && d.data.parentAssetId === props.asset.id && d.data.sourceFingerprint === result.sourceFingerprint ? [cropRectKey(d.data.sourceRect)] : []; }));
-  const existing = new Set(result.candidates.filter(c => savedRects.has(cropRectKey(c.rect))).map(c => c.id));
-  const selectedIds = [...selected].filter(id => !existing.has(id));
-  const selectedCropCount = new Set(result.candidates.filter(c => selected.has(c.id) && !existing.has(c.id)).map(c => cropRectKey(c.rect))).size;
+function CandidateReview({ result, selected, setSelected, existingIds, ...props }: Props & {
+  result: NonNullable<ExtractionReview["result"]>; selected: Record<string, boolean>;
+  setSelected: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; existingIds: string[];
+}) {
+  const [showExcluded, setShowExcluded] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState(""), [blockedRevision, setBlockedRevision] = useState<string | null>(null);
+  const stale = blockedRevision !== null && blockedRevision === extractionDisplay(props.asset.metadata)?.revision;
+  const saving = useRef(false);
+  const existing = new Set(existingIds);
+  const selectedIds = selectedCandidateIds(selected, result.candidates, existingIds);
+  const selectedCropCount = new Set(result.candidates.filter(c => selectedIds.includes(c.id)).map(c => cropRectKey(c.rect))).size;
   const available = Math.max(0, 30 - props.assets.length);
-  const candidates: Candidate[] = result.candidates;
+  const candidates = result.candidates;
   const shown = candidates.filter(c => c.saveAllowed || showExcluded);
   async function save() {
-    if (!props.begin()) return;
+    if (saving.current || !props.begin()) return;
+    saving.current = true;
     setMessage(""); setError("");
     try {
       const reply = await requestCropSave(props.projectId, props.asset.id, selectedIds);
-      setSelected(current => new Set([...current].filter(id => !reply.saved.some(s => s.candidateId === id))));
+      setSelected(current => Object.fromEntries(Object.entries(current).map(([id, checked]) => [id, reply.saved.some(s => s.candidateId === id) ? false : checked])));
       setMessage(`추출 이미지 ${reply.saved.filter(s => !s.existing).length}개를 저장했습니다. · 기존 이미지 ${reply.saved.filter(s => s.existing).length}개 · 실패 ${reply.failed.length}개`);
       if (reply.failed.length) setError(reply.failed.map(f => `${result.candidates.findIndex(c => c.id === f.candidateId) + 1}번 후보: ${EXTRACTION_MESSAGES[f.code]}`).join(" / "));
     } catch (cause) {
       setError(cause instanceof ExtractionError ? cause.message + (cause.available !== undefined ? ` 남은 슬롯: ${cause.available}개.` : "") : EXTRACTION_MESSAGES.unexpected);
-      if (cause instanceof ExtractionError && ["source_changed", "stale"].includes(cause.code)) setStale(true);
-    } finally { try { await props.refresh(); } catch { setError("목록 갱신에 실패했습니다. 다시 저장하기 전에 목록을 새로고침해 주세요."); } props.end(); }
+      if (cause instanceof ExtractionError && ["source_changed", "stale"].includes(cause.code)) setBlockedRevision(extractionDisplay(props.asset.metadata)?.revision ?? null);
+    } finally { try { await props.refresh(); } catch { setError("목록 갱신에 실패했습니다. 다시 저장하기 전에 목록을 새로고침해 주세요."); } saving.current = false; props.end(); }
   }
   return <div className="mt-5 space-y-5">
-    <p className="text-sm text-zinc-600">후보 {result.candidates.length}개 · 분석 {result.completedTiles}/{result.tileCount}구간 · 원본 {result.sourceDimensions.width} × {result.sourceDimensions.height}px</p>
-    {result.partialAnalysis && <p role="status" className="text-sm text-amber-800">일부 구간 분석 실패: {result.failedTiles.map(i => i + 1).join(", ")}. 현재 후보는 성공한 구간만 포함하며 검토 후 저장할 수 있습니다. 누락된 구간이 필요하면 제품컷 재분석을 실행하세요. 실패 구간만이 아닌 전체 구간을 다시 분석하므로 AI 비용이 발생합니다. 재분석에 실패하면 이전 성공 후보와 저장 이미지는 유지됩니다.</p>}
+    <p className="text-sm text-zinc-600">후보 {result.candidates.length}개 · 원본 {result.sourceDimensions.width} × {result.sourceDimensions.height}px</p>
     {result.truncatedCandidates && <p className="text-sm text-amber-800">품질 순위가 높은 최대 24개 후보를 원본 순서로 표시합니다.</p>}
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showExcluded} onChange={e => setShowExcluded(e.target.checked)} />제외 후보 보기</label>
     {!shown.length && <p className="py-6 text-sm text-zinc-500">저장 가능한 제품컷 후보가 없습니다. 제외 후보를 확인하거나 원본 이미지를 사용하세요.</p>}
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {shown.map(candidate => { const number = candidates.indexOf(candidate) + 1, rect = candidate.rect, saved = existing.has(candidate.id);
-        const exclusion = defaultExclusionReason(candidate);
+        const exclusion = candidate.exclusion;
         return <li key={candidate.id} className="min-w-0 rounded-lg border border-zinc-200 p-3">
           <div className="flex h-64 items-center justify-center overflow-hidden rounded bg-zinc-100">
             {props.previewUrl ? <svg role="img" aria-label={`후보 ${number} 미리보기`} viewBox={`${rect.x} ${rect.y} ${rect.width} ${rect.height}`} className="h-full w-full overflow-hidden" preserveAspectRatio="xMidYMid meet">
@@ -52,9 +55,9 @@ function CandidateReview({ result, ...props }: Props & { result: ExtractionResul
             </svg> : <span className="text-sm">미리보기 갱신이 필요합니다.</span>}
           </div>
           <label className="mt-3 flex items-start gap-2 text-sm font-medium"><input type="checkbox" className="mt-1" disabled={props.busy || saved || stale || !candidate.saveAllowed}
-            checked={saved || selected.has(candidate.id)} onChange={e => setSelected(current => { const next = new Set(current); if (e.target.checked) next.add(candidate.id); else next.delete(candidate.id); return next; })} />
+            checked={saved || !!selected[candidate.id]} onChange={e => setSelected(current => ({ ...current, [candidate.id]: e.target.checked }))} />
             {number}. {REGION_LABELS[candidate.regionType]}{saved ? " · 저장됨" : !candidate.saveAllowed ? " · 저장 제외" : ""}</label>
-          {"visualKind" in candidate && <p className="mt-2 text-xs leading-5 text-zinc-600">{VISUAL_KIND_LABELS[candidate.visualKind]} · 제품 관련도 {Math.round(candidate.targetProductRelevance * 100)}%</p>}
+          {candidate.visualKind && <p className="mt-2 text-xs leading-5 text-zinc-600">{VISUAL_KIND_LABELS[candidate.visualKind]} · 제품 관련도 {Math.round((candidate.targetProductRelevance ?? 0) * 100)}%</p>}
           {!candidate.defaultSelected && exclusion && <p className="mt-1 text-xs leading-5 text-zinc-500">기본 제외 · {EXCLUSION_LABELS[exclusion]}{candidate.saveAllowed ? " · 직접 선택 가능" : ""}</p>}
           <p className="mt-2 text-xs leading-5 text-zinc-500">{rect.width} × {rect.height}px · 신뢰도 {Math.round(candidate.confidence * 100)}% · 텍스트 {({ none: "없음", low: "적음", medium: "보통", high: "많음" })[candidate.textDensity]}</p>
           {candidate.edgeTruncated && <p className="mt-1 text-xs text-amber-800">구간 경계에 닿아 있습니다. 제품이 잘리지 않았는지 확인하세요.</p>}
@@ -71,30 +74,77 @@ function CandidateReview({ result, ...props }: Props & { result: ExtractionResul
 }
 
 export function ExtractionPanel(props: Props) {
+  const [review, setReview] = useState<ExtractionReview | null>(null);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [error, setError] = useState(""), [message, setMessage] = useState("");
-  const state = readExtraction(props.asset.metadata), result = state?.latestResult;
-  const active = isExtractionActive(state) || isSaveActive(state);
-  const freshness = result ? extractionContextStatus(result, props.currentContextFingerprint) : null;
-  async function analyze(force: boolean) {
-    if (!props.begin()) return;
-    setError(""); setMessage("제품컷 후보를 분석하고 있습니다. 잠시 기다려 주세요.");
-    try { const reply = await requestExtraction(props.projectId, props.asset.id, force); props.update(reply.asset); setMessage(reply.reused ? "같은 원본의 저장된 분석 결과를 불러왔습니다." : "후보 분석을 완료했습니다. 미리보기를 확인하고 저장할 이미지를 선택하세요."); }
-    catch (cause) { setError(cause instanceof ExtractionError ? cause.message : EXTRACTION_MESSAGES.unexpected); setMessage(""); }
-    finally { try { await props.refresh(); } catch { setError("목록 갱신에 실패했습니다. 목록을 새로고침해 주세요."); } props.end(); }
+  const [pending, setPending] = useState(false), [refreshFailed, setRefreshFailed] = useState(false);
+  const locked = useRef(false), sequence = useRef(0);
+  const { projectId, asset } = props;
+  const revision = extractionDisplay(asset.metadata)?.revision;
+  async function load() {
+    const request = ++sequence.current;
+    try {
+      const next = await requestExtractionReview(projectId, asset.id);
+      if (request !== sequence.current) return false;
+      setSelected(current => reconcileSelection(current, next.result?.candidates ?? []));
+      setReview(next); setRefreshFailed(false); return true;
+    } catch (cause) { if (request === sequence.current) setRefreshFailed(true); throw cause; }
   }
+  useEffect(() => {
+    let disposed = false;
+    const request = ++sequence.current;
+    requestExtractionReview(projectId, asset.id).then(next => {
+      if (disposed || request !== sequence.current) return;
+      setSelected(current => reconcileSelection(current, next.result?.candidates ?? []));
+      setReview(next); setRefreshFailed(false);
+    }).catch(() => { if (!disposed && request === sequence.current) setRefreshFailed(true); });
+    return () => { disposed = true; };
+  }, [projectId, asset.id, revision]);
+  async function refresh() { await props.refresh(); if (!await load()) throw new ExtractionError("conflict"); }
+  async function run(action: "retry" | "analyze", force = false) {
+    if (locked.current || !props.begin()) return;
+    locked.current = true; setPending(action === "retry"); setError("");
+    setMessage(action === "retry" ? "실패 구간을 분석하고 있습니다. 성공 구간은 다시 요청하지 않습니다." : "제품컷 후보를 분석하고 있습니다.");
+    let conflict = false;
+    try {
+      if (action === "retry") {
+        if (!review?.revision) throw new ExtractionError("checkpoint_missing");
+        const reply = await requestExtractionRetry(projectId, asset.id, review.revision);
+        setMessage(retryFeedback(reply));
+      } else {
+        const reply = await requestExtraction(projectId, asset.id, force);
+        props.update(reply.asset);
+        setMessage(reply.reused ? "저장된 분석 결과를 불러왔습니다." : "분석 요청이 끝났습니다. 구간 상태와 후보를 확인하세요.");
+      }
+    } catch (cause) {
+      conflict = cause instanceof ExtractionError && cause.code === "conflict";
+      setError(cause instanceof ExtractionError ? cause.message : EXTRACTION_MESSAGES.unexpected); setMessage("");
+    } finally {
+      try { await refresh(); if (conflict) setMessage("충돌 후 최신 상태를 불러왔습니다. 선택을 확인한 뒤 필요한 작업을 직접 실행하세요."); }
+      catch { setRefreshFailed(true); setError("최신 상태를 불러오지 못했습니다. 현재 후보와 선택은 보존했습니다. 상태 새로고침 후 다시 진행하세요."); }
+      locked.current = false; setPending(false); props.end();
+    }
+  }
+  const disabled = props.busy || !!review?.active || refreshFailed || !review;
   return <section className="panel min-w-0 p-4 sm:p-6" aria-labelledby="extraction-title" aria-busy={props.busy}>
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 id="extraction-title" className="text-lg font-semibold">상세이미지에서 제품컷 추출</h2>
-      <p className="mt-1 break-all text-sm text-zinc-500">{props.asset.originalFilename}</p></div><button type="button" className="button-secondary" disabled={props.busy} onClick={props.close}>닫기</button></div>
-    <p className="mt-3 text-sm leading-6 text-zinc-600">AI가 원본 사진 영역을 제안합니다. 배경 제거·사진 생성은 하지 않습니다. 제품이 잘리지 않았는지 직접 확인한 뒤 선택해 주세요.</p>
-    {freshness === "legacy" && <p role="status" className="mt-3 text-sm leading-6 text-amber-800">이전 분석 결과입니다. 제품 관련도 검사를 적용하려면 다시 분석하세요. 기존 선택과 저장 이미지는 유지됩니다.</p>}
-    {freshness === "stale" && <p role="status" className="mt-3 text-sm leading-6 text-amber-800">상품정보가 변경되어 제품 관련도 분석을 다시 실행하는 것을 권장합니다. 저장한 이미지는 유지됩니다.</p>}
+      <p className="mt-1 break-all text-sm text-zinc-500">{asset.originalFilename}</p></div><button type="button" className="button-secondary" disabled={props.busy} onClick={props.close}>닫기</button></div>
+    <p className="mt-3 text-sm leading-6 text-zinc-600">AI가 원본 사진 영역을 제안합니다. 제품이 잘리지 않았는지 직접 확인한 뒤 선택해 주세요.</p>
+    {review && <RetryStatus review={review} busy={disabled} pending={pending} retry={() => run("retry")} reanalyze={() => run("analyze", true)} />}
     <div className="mt-4 flex flex-wrap gap-3">
-      {!result && <button type="button" className="button-primary" disabled={props.busy || active} onClick={() => analyze(false)}>제품컷 후보 분석</button>}
-      {result && <button type="button" className="button-secondary" disabled={props.busy || active} onClick={() => analyze(true)}>제품컷 재분석 (AI 재호출)</button>}
+      <button type="button" className="button-secondary max-w-full whitespace-normal" disabled={disabled} onClick={() => run("analyze", !!review?.hasAttempt)}>{review?.hasAttempt ? "제품컷 재분석 (AI 재호출)" : "제품컷 후보 분석"}</button>
+      <button type="button" className="button-secondary" disabled={props.busy} onClick={async () => {
+        if (locked.current || !props.begin()) return; locked.current = true;
+        try { await refresh(); setError(""); setMessage("최신 상태를 불러왔습니다."); }
+        catch { setRefreshFailed(true); setError("최신 상태를 불러오지 못했습니다. 현재 선택은 보존했습니다."); }
+        finally { locked.current = false; props.end(); }
+      }}>상태 새로고침</button>
     </div>
-    {active && <p role="status" className="mt-3 text-sm">추출 작업 진행 중입니다. 이 작업은 몇 분 걸릴 수 있습니다.</p>}
-    {state?.attempt.status === "failed" && <p className="mt-3 text-sm text-amber-800">최근 분석 실패: {EXTRACTION_MESSAGES[state.attempt.errorCode ?? "unexpected"]}{result ? " 이전 성공 후보는 유지됩니다." : ""}</p>}
-    {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}{message && <p role="status" className="mt-3 text-sm">{message}</p>}
-    {result && <CandidateReview key={result.analyzedAt} {...props} result={result} busy={props.busy || active} />}
+    {review?.active && <p role="status" className="mt-3 text-sm">추출 작업 진행 중입니다. 이 작업은 몇 분 걸릴 수 있습니다.</p>}
+    {refreshFailed && <p role="alert" className="mt-3 text-sm text-red-700">상태 확인이 필요합니다. 상태 새로고침을 실행하세요.</p>}
+    {!review && !refreshFailed && <p role="status">분석 상태를 불러오는 중입니다.</p>}
+    <div aria-live="polite">{error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}{message && <p role="status" className="mt-3 text-sm">{message}</p>}</div>
+    {review?.result && <CandidateReview {...props} result={review.result} selected={selected} setSelected={setSelected}
+      existingIds={review.savedCandidateIds} busy={disabled} refresh={refresh} />}
   </section>;
 }

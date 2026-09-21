@@ -1,3 +1,4 @@
+import { publicExtractionResponse } from "@/features/detail-extraction/public-response";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -37,7 +38,7 @@ export default async function ProductImagesPage({ params }: PageProps<"/projects
         <li aria-current="step" className="font-semibold text-zinc-950">2. 이미지</li>
         <li className="text-zinc-500">3. 상품 분석</li><li className="text-zinc-500">4. Fact 검증</li><li><Link href={`/projects/${projectId}/planner`} className="text-link">5. 페이지 설계</Link></li><li><Link href={`/projects/${projectId}/sections`} className="text-link">6. 상세페이지</Link></li>
       </ol>
-      {result.list ? <><AssetManager projectId={result.context.project.id} initialList={result.list} />
+      {result.list ? <><AssetManager projectId={result.context.project.id} initialList={publicExtractionResponse(result.list)} />
         <div className="flex justify-end"><Link href={`/projects/${projectId}/analysis`} className="button-primary">다음: 상품 분석 →</Link></div></> :
         <section className="panel space-y-4 p-8">
           <h2 className="text-lg font-semibold">상품정보가 필요합니다</h2>

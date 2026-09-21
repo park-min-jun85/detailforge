@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](./TASK-040.md).
+
+## 완료된 TASK-039 기반
+
 TASK-039 — Explicit Failed-Only Tile Retry Server Logic 완료. `feat/failed-tile-retry`, 기준 `76a14e0`. 환경 오류 전의 미완료5파일을 보존하여 route·실패 전용 실행·회귀·문서를 완성했다. **전체1,034 tests와 typegen/typecheck/lint/build/diff·secret 검사 PASS**. 서버는 expectedRevision/현재 입력을 검증하고 선택 failed만 index 순서로 호출한다. retry UI/실제 E2E는 TASK-040이며 M2/M3는 미해결 유지. [66개 항목·최종 검사](./TASK-039.md). 실제 API/원격 mutation/SQL/dependency0, package0.1.1, commit/merge/tag 없음.
 
 ## 완료된 TASK-038 기반

@@ -1,3 +1,4 @@
+import { publicExtractionResponse } from "@/features/detail-extraction/public-response";
 import "server-only";
 import { AssetError, IMAGE_MIME_TYPES, MAX_FILE_BYTES, normalizeFilename } from "./schemas";
 
@@ -41,7 +42,7 @@ export async function readImageBody(request: Request) {
 
 export async function assetResponse(operation: () => Promise<unknown>, successStatus = 200) {
   const headers = { "Cache-Control": "private, no-store" };
-  try { return Response.json(await operation(), { status: successStatus, headers }); }
+  try { return Response.json(publicExtractionResponse(await operation()), { status: successStatus, headers }); }
   catch (error) {
     return Response.json({ message: error instanceof AssetError ? error.message : "이미지 작업을 완료하지 못했습니다. 목록을 확인한 뒤 다시 시도해 주세요." },
       { status: error instanceof AssetError ? error.status : 503, headers });

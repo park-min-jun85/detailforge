@@ -1,3 +1,5 @@
+import { getExtractionReview } from "@/features/detail-extraction/review";
+import { extractionReadResponse } from "@/features/detail-extraction/http";
 import { extractionResponse } from "@/features/detail-extraction/http";
 import { analyzeProductShots } from "@/features/detail-extraction/service";
 import { analyzeRequestSchema } from "@/features/detail-extraction/schemas";
@@ -10,4 +12,8 @@ export async function POST(request: Request, { params }: RouteContext<"/api/proj
     const { projectId, assetId } = await params;
     return analyzeProductShots(projectId, assetId, parsed.data.force);
   });
+}
+
+export async function GET(_request: Request, { params }: RouteContext<"/api/projects/[projectId]/assets/[assetId]/extract-product-shots">) {
+  return extractionReadResponse(async () => { const { projectId, assetId } = await params; return getExtractionReview(projectId, assetId); });
 }

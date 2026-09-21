@@ -1,5 +1,10 @@
 # Release Backlog
 
+## TASK-040 UI 및 실제 검증
+
+**TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).
+
+
 TASK-032에서 시작한 내부 MVP 후속 과제다. TASK-035 후 미해결 **MEDIUM 4 / LOW 1**, 이번 관찰 BLOCKER 0 / HIGH 0. L2는 해결했고 M2/M3는 일부 보완했지만 원래 문제 전체가 해결된 것으로 세지 않는다.
 
 ## TASK-037 reproduction contract established

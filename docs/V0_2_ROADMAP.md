@@ -1,5 +1,10 @@
 # v0.2.0 Roadmap — 검토와 재시도의 예측 가능성
 
+## TASK-040 UI 및 실제 검증
+
+**TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).
+
+
 TASK-036 설계 결정이다. **권장 방향은 A: Internal Quality Release**이며, 구현 승인이 내려진 상태를 뜻하지 않는다. 실패 타일만 명시적으로 재시도하는 복구(M2)와 근거를 유지한 제목·본문 역할 개선(M3)을 릴리스의 핵심으로 삼는다. 공개 SaaS 전환이나 Commerce 기능 확장을 함께 묶지 않는다.
 
 ## TASK-037 계약 확정
