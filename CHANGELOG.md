@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-09-22
+
+검토와 재시도의 예측 가능성. Local/Internal MVP Release Candidate 검증 완료, v0.2.0 commit/merge/tag·GitHub Release는 사용자 검토 후 진행한다.
+
+### Added
+
+- 상세이미지 분석이 부분 실패했을 때 실패한 영역만 명시적으로 다시 분석한다. 자동 재시도 없이 대상 수와 결과를 안내한다.
+- 부분 분석 결과를 구간별로 보존하고, 후보가 갱신되거나 재정렬돼도 기존 체크·해제 선택을 유지한다.
+
+### Improved
+
+- Section 제목/본문 및 역할 간 반복을 검토 이유와 함께 표시한다. 수동 문구와 확정 스펙·옵션 원문은 자동 수정하지 않는다.
+- 촬영·관찰 보고체와 사진 수록을 설명하는 카피에 대한 생성 검증을 보완했다.
+- 정보가 적은 텍스트 Section의 세로 여백을 줄이고, 이미지 크기와 상세한 스펙·복수 옵션의 배치를 유지한다.
+
+### Safety / Data Integrity
+
+- 재시도는 성공 Tile checkpoint를 보존하고 실패 대상만 호출한다. 입력 변경·동시 작업 충돌·불완전 cache를 검사한다.
+- 실패 시 기존 성공 결과, Product Facts, 확정 Options, 원본 이미지와 Derived 출처를 보호한다.
+- 검토 이유와 retry/Editor controls를 최종 상품 이미지에 포함하지 않는다.
+
+### Validation
+
+- TASK-045 전체1156 tests·typegen/typecheck/lint/build 및 secret scan PASS. 상품67695797의 격리 fixture/service/browser 흐름과 TASK-043 첫 accepted 출력 재검증, A sparse fixture 회귀를 수행했다. 이번 외부 API/OpenAI0회이며 기존 실제 TASK-040/043 근거를 재사용했다.
+- A PNG/JPG860×2035, B PNG/JPG860×3057. B PNG2회의 크기·픽셀·bytes가 동일했다. M2/M3/L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2/LOW0.
+
+### Known Limitations
+
+- M1: 착용 인물 잘림과 제품 본체 잘림을 완전히 구분하지 못한다.
+- M4: 제품 픽셀 보호를 위해 원본의 회색·초록 등 유색 장식 프레임이 남을 수 있다.
+- Auth, owner_id, 사용자별 RLS와 Storage ownership policy가 없어 공개 SaaS 배포는 차단한다. 내부 RC PASS는 공개 운영 승인이 아니다.
+- AI 카피·시각 해석은 사람의 검토 대상이며, 규칙 검증이 모든 자연어 품질이나 사실의 외부 진위를 보장하지 않는다.
+
 ## 0.1.1 - 2026-09-20
 
 로컬·내부 MVP Release Candidate. 검증 완료, commit/merge/tag 대기.

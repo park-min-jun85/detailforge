@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-045:** v0.2.0 Final Release Candidate Validation & Release Preparation 완료. **RC PASS — Local/Internal MVP**, 전체1156 tests·필수 검사·단계별 fixture full smoke·Editor 실패/복구/명시 후보 적용·A/B Export·반복 출력·데이터 보호·secret scan·cleanup PASS. **M2/M3/L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. package/lock0.2.0, 외부 API0, 신규 기능/SQL/dependency0. commit/merge/tag/Release 게시 미실행. [62개 항목·Release notes·다음 Git 명령](./TASK-045.md).
+
+## 이전 TASK-044 기록
+
 **TASK-044:** Sparse Section Vertical Rhythm Polish 완료. deterministic 공유 Renderer policy, canonical mutation0. A sparse fixture2115→2035px/B visual-rich3057px 유지, 이미지 크기·Editor100% parity·PNG/JPG860px PASS. **1156 tests 및 typegen/typecheck/lint/build/diff/secret PASS**, **L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. M2/M3 해결 상태 유지. AI/migration/dependency/commit/merge/tag0. [57개 항목 보고](./TASK-044.md). 다음은 TASK-045 release 검증.
 
 ## 이전 TASK-043 기록

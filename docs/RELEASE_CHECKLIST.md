@@ -1,6 +1,35 @@
 # DetailForge Release Checklist
 
-## v0.1.1 — TASK-035 현재 판정
+## v0.2.0 — TASK-045 현재 판정
+
+2026-09-22 · `release/v0.2.0` · 시작 HEAD `b9f42f7`, 당시 main도 동일. **PASS — v0.2.0 Local/Internal MVP Release Candidate.** 현재 공식 tag는 v0.1.1이며 아래 release 작업은 사용자에게 남긴다. [상세 범위·근거](tasks/TASK-045.md).
+
+- [x] Release freeze: production/test/prompt/SQL 수정0, dependency0. package와 릴리스 문서만 변경.
+- [x] 전체1156 tests PASS, fail/skip/cancel0. M2 checkpoint/failed-only/provider 대상·selection·stale/CAS/no-op/Derived dedup 및 오류 보존 회귀 포함.
+- [x] M3 exact/normalized/title-body/cross-purpose/visual/camera/meta/capture/V-only guard 회귀. TASK-043 첫 accepted canonical 재평가의 해당 문제0.
+- [x] 67695797 단계별 full smoke: import preview→Product/Facts save→옵션 preview/apply/save는 현재 서비스+격리 DB로 실행. Images/Extraction/Derived/Analysis/Validation/Planner는 기존 실제 fixture 재사용과 현재 서비스/브라우저/회귀를 결합. Section Engine은 TASK-043 첫 출력 DI replay1회 accepted. 새 실제 외부 full E2E로 보고하지 않는다.
+- [x] M2 실제 provider 근거는 TASK-040 재사용. 이번 Browser retry는 합성 DTO2failure→complete·체크/해제/새 default·재정렬·stale·conflict-refresh failure 검증. 새 실제 retry 호출0.
+- [x] 실제 Editor 수동 반복 문구 dirty→저장 실패(입력 보존)→재시도 성공→한국어 warning reason→재조회. mock provider 정상 후보1개는 비교/명시 apply, capture narration 후보1개는 거부·기존 성공 보존.
+- [x] L1 A2035px/B3057px와 섹션 높이/첫 이미지 위치/이미지 크기/문구가 TASK-044 이후와 동일. Final 폭860, scale/zoom 없음.
+- [x] Final 상품 article 내부 controls/alerts/review/debug/candidate state0. warning은 review shell에만 존재.
+- [x] A PNG860×2035/615,039B, JPG860×2035/182,455B. B PNG860×3057/1,493,664B, JPG860×3057/357,016B. 스펙/옵션 exact, 이미지 누락/새 clipping/가로 overflow0.
+- [x] 같은 B canonical PNG2회 dimensions/pixels/bytes 동일. 이 환경의 관찰이며 모든 환경의 byte 재현성을 약속하지 않는다.
+- [x] Product/Facts/Validation 입력/Options 및 기존 Assets·Derived metadata deep equality, 원본 evidence/image 파일 hash 보존. 원격 DB/Storage mutation0.
+- [x] Extraction retry/Section reject/Regeneration reject/Export failure/CAS conflict에서 기존 성공 보존 회귀 PASS.
+- [x] 서버 전용 키·provider 오류·checkpoint cache DTO·SSRF 회귀 PASS. source/docs/client bundle/QA text의 configured secret3종·credential/signed-token 패턴 findings0.
+- [x] next typegen, tsc --noEmit, lint, production build, git diff --check PASS. 버전 변경 후 기본 production build 재확인.
+- [x] 검증 PASS 후 package0.1.1→0.2.0, lock top-level/packages root도0.2.0. version 필드 외 lock deep equality.
+- [x] CHANGELOG0.2.0/README/Backlog/Checklist/Roadmap/tasks 갱신. M2/M3/L1 RESOLVED, BLOCKER0/HIGH0/MEDIUM2/LOW0.
+- [x] QA 종료: 임시 편집/생성 상태를 baseline Sections로 복구, 메모리 DB/서버 종료, browser tab 닫음, listener0. gitignored artifacts만 보존, git stage0.
+- [ ] 새 실제 외부 API full flow 재실행 — 이번 범위에서는 불필요해 실행하지 않음.
+- [ ] 빈 머신의 fresh install / 새 Supabase DB·Storage 설치 — 이번 재검증 범위 밖.
+- [ ] Public SaaS Authentication / owner_id / 사용자별 RLS / Storage ownership policy — 계속 미완료.
+- [ ] 사용자 최종 diff 검토 후 `chore: prepare v0.2.0 release` commit.
+- [ ] 사용자 main fast-forward merge.
+- [ ] 사용자 annotated `v0.2.0` tag와 원격 push.
+- [ ] 사용자 GitHub Release 게시.
+
+## v0.1.1 — TASK-035 당시 판정
 
 2026-09-20 · `release/v0.1.1` · 기준 `19735a6`. **PASS — v0.1.1 Local/Internal MVP Release Candidate.** commit/main merge/tag는 미실행. 아래 v0.1.0 기록의 미확인 설치·원격 조회와 공개 SaaS 전제는 계속 미확인/미완료다.
 

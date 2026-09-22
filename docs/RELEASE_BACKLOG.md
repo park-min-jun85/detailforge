@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-045 — v0.2.0 RC PASS
+
+2026-09-22, Local/Internal MVP 후보 검증 완료. **M2 RESOLVED / M3 RESOLVED / L1 RESOLVED**, **BLOCKER0 / HIGH0 / MEDIUM2(M1/M4) / LOW0**. 전체1156 tests, 단계별 fixture 재사용 full smoke, Editor 저장 실패·복구·후보 적용, A/B Renderer·PNG/JPG·반복 출력·데이터 보호·보안 검사 통과. 이번 외부 API0회이며 실제 AI 근거는 TASK-040/043을 재사용했다. package/lock0.2.0, commit/merge/tag/Release 게시 대기. [검증 범위 및62개 항목](tasks/TASK-045.md).
+
+M1 잘림 구분과 M4 원본 유색 프레임은 의도적으로 이월한다. Auth/owner_id/사용자별 RLS/Storage ownership 미완료로 공개 SaaS 배포는 계속 차단한다. 아래 이전 TASK 수치는 당시 기록이다.
+
 ## TASK-044 — L1 RESOLVED
 
 짧은 text-only Section과 소수 스펙의 padding/내부 간격을 bounded CSS로 조정했다. A67399861 계열 deterministic fixture2115→2035px, B67695797 canonical3057px 유지. 이미지/글자 크기·스펙/옵션 원문·저장 style 불변, Editor100%/Final parity 및 PNG/JPG860px PASS. 전체1156 tests·필수 검사/secret scan PASS. **BLOCKER0/HIGH0, MEDIUM2(M1/M4), LOW0**. M2/M3 RESOLVED 유지. [57개 항목과 실측 범위](tasks/TASK-044.md). 아래 LOW1은 이전 관찰 당시 기록이다.

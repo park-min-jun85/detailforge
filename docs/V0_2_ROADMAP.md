@@ -1,5 +1,11 @@
 # v0.2.0 Roadmap — 검토와 재시도의 예측 가능성
 
+## TASK-045 완료 — v0.2.0 Local/Internal MVP RC PASS
+
+M2/M3 Must와 L1 Should의 최종 회귀, 단계별 fixture 재사용 full smoke, Editor/Renderer/Export·데이터 보호·secret scan·QA cleanup을 통과했다. 전체1156 tests, A860×2035/B860×3057 PNG/JPG, 동일 B PNG2회 픽셀·bytes 일치. 이번 실제 외부 API0회, 기존 TASK-040/043 실제 AI 검증을 재사용했다. **BLOCKER0/HIGH0, MEDIUM2(M1/M4), LOW0**. package/lock0.2.0으로 준비했으며 commit/main merge/tag/GitHub Release는 실행하지 않았다. [최종 보고·릴리스 초안](tasks/TASK-045.md).
+
+다음은 사용자 최종 diff 검토와 release commit→main 병합→v0.2.0 tag→GitHub Release다. M1/M4 구현과 Public SaaS 전제 작업을 이번 릴리스 범위로 확대하지 않는다. 아래 계획·pending 상태는 각 TASK 당시 기록이다.
+
 ## TASK-044 완료 — L1 RESOLVED
 
 공유 Renderer에 type/항목 수/visual reference/짧은 텍스트 기반 spacing hint를 추가했다. 저장 style을 변경하지 않고 compact/normal CSS mapping만 제한적으로 갱신하며 spacious·Hero·visual·단일 Option은 유지한다. 동일한 deterministic A fixture2115→2035px, 실제 B canonical3057→3057px, 이미지 크기/내용/860px export/Editor100% parity PASS. 전체1156 tests와 필수 검사 통과. **M2/M3/L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. AI/원격 mutation/migration/dependency0. [57개 항목·fixture 범위](tasks/TASK-044.md).
