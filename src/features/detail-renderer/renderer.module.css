@@ -82,3 +82,14 @@
 .section:is([data-section-type="specification"],[data-section-type="option"])[data-emphasis="strong"] h2 { font-size:32px; }
 .section:is([data-section-type="notice"],[data-option-mode="inline"])[data-emphasis="strong"] h2 { font-size:26px; }
 .section[data-fit="cover"] .image img { object-fit:cover; aspect-ratio:4/3; }
+
+/* Sparse text only. Keep saved spacious and TASK-029 inline options unchanged.
+   Tokens have no user/default provenance; this is a bounded CSS mapping, not a
+   replacement density. Typography, horizontal padding and image sizing stay fixed. */
+.section[data-rhythm="compact"]:not([data-density="spacious"]):not([data-section-type="option"]) { --compact:24px; --normal:36px; }
+.section[data-rhythm="compact"][data-section-type="specification"]:not([data-density="spacious"]) { --normal:32px; }
+.section[data-rhythm="compact"][data-section-type="notice"]:not([data-density="spacious"]) { --normal:28px; }
+.section[data-rhythm="compact"]:not([data-density="spacious"]):not([data-section-type="option"]) > .copy > h2:not(:last-child) { margin-bottom:16px; }
+.section[data-rhythm="compact"]:not([data-density="spacious"]) > .copy > table { margin-top:16px; }
+.section[data-rhythm="compact"]:not([data-density="spacious"]) > .copy > ul { margin-top:12px; }
+.section[data-rhythm="compact"][data-section-type="notice"]:not([data-density="spacious"]) > .copy { padding-top:16px; }

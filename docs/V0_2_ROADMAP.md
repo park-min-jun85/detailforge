@@ -1,5 +1,11 @@
 # v0.2.0 Roadmap — 검토와 재시도의 예측 가능성
 
+## TASK-044 완료 — L1 RESOLVED
+
+공유 Renderer에 type/항목 수/visual reference/짧은 텍스트 기반 spacing hint를 추가했다. 저장 style을 변경하지 않고 compact/normal CSS mapping만 제한적으로 갱신하며 spacious·Hero·visual·단일 Option은 유지한다. 동일한 deterministic A fixture2115→2035px, 실제 B canonical3057→3057px, 이미지 크기/내용/860px export/Editor100% parity PASS. 전체1156 tests와 필수 검사 통과. **M2/M3/L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. AI/원격 mutation/migration/dependency0. [57개 항목·fixture 범위](tasks/TASK-044.md).
+
+다음은 TASK-045 release 검증이다. 아래 LOW1/L1 선택 대기는 각 TASK 당시 기록이며 최신 상태는 이 절을 따른다. M1/M4는 기존 결정대로 v0.2.0 구현 범위 밖이다.
+
 ## TASK-043 완료 — M3 RESOLVED
 
 H1 관찰 보고체의 기존 detector를 bounded capture family로 보완했다. 기존22개·새 H1/variants/정상 allow19, 전체1142 tests·필수 검사 PASS. 실제 상품67695797 Section1회만 호출해 첫 accepted output에서 보고체/문제 반복/unsupported V-only0, Browser manual warning과 Final/PNG/JPG860×3057 purity를 확인했다. **H1 종료, M3 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW1(L1)**. prompt/Planner version3·M2 코드·package0.1.1 유지. [보고](tasks/TASK-043.md).

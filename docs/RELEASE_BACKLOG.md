@@ -1,5 +1,9 @@
 # Release Backlog
 
+## TASK-044 — L1 RESOLVED
+
+짧은 text-only Section과 소수 스펙의 padding/내부 간격을 bounded CSS로 조정했다. A67399861 계열 deterministic fixture2115→2035px, B67695797 canonical3057px 유지. 이미지/글자 크기·스펙/옵션 원문·저장 style 불변, Editor100%/Final parity 및 PNG/JPG860px PASS. 전체1156 tests·필수 검사/secret scan PASS. **BLOCKER0/HIGH0, MEDIUM2(M1/M4), LOW0**. M2/M3 RESOLVED 유지. [57개 항목과 실측 범위](tasks/TASK-044.md). 아래 LOW1은 이전 관찰 당시 기록이다.
+
 ## TASK-043 — H1 및 M3 RESOLVED
 
 기존 관찰 보고체 detector에 시각 대상·capture 동사·매체 문맥의 bounded 패턴을 추가했다. TASK-042 H1 replay/유사 reject19·allow19·기존 report6 및 frozen22개 분류 PASS, 전체1142 tests와 필수 검사/secret scan PASS. 실제 상품67695797 **Section Engine1회, Planner0/regen0**, 첫 accepted output의 meta/camera/capture narration·문제 title/body/cross-section 반복·unsupported V-only0. Browser manual warning/원문 보존, Final article·PNG/JPG 내부 경고0, 둘 다860×3057을 확인했다. [56개 항목·검증 한계](tasks/TASK-043.md).
@@ -73,7 +77,7 @@ M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M
 
 ## Nice-to-have
 
-- **L1 — sparse Section 여백**: A는4개1933px, B replay는5개2744px. 빈 Section이나 사진 반복은 없지만 사진 아래 여백·텍스트가 적은 split의 균형은 더 다듬을 수 있다. `section-renderer` bounded CSS만 고려하고 860px/1.5배 cap/PNG-JPG 동일 레이아웃 회귀 유지.
+- **L1 — sparse Section 여백: RESOLVED by TASK-044**. type/visual/항목 수/short text에 따른 공유 Renderer spacing mapping으로 해결. 초기 A4개1933px/B5개2744px는 과거 관찰값이며 이번 고정 A6개2115→2035px/B4개3057px 비교와 구분한다. saved token/visual/860px/1.5배 cap/PNG-JPG 회귀 유지, 열린 LOW 수에서 제외한다.
 - 단계별 안전한 wall-clock/token usage 관측. 현재 저장하지 않는 수치를 과거 결과에서 추정하지 않는다.
 
 ## TASK-032에서 처리한 항목

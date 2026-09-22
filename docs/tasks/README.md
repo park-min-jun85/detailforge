@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-044:** Sparse Section Vertical Rhythm Polish 완료. deterministic 공유 Renderer policy, canonical mutation0. A sparse fixture2115→2035px/B visual-rich3057px 유지, 이미지 크기·Editor100% parity·PNG/JPG860px PASS. **1156 tests 및 typegen/typecheck/lint/build/diff/secret PASS**, **L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. M2/M3 해결 상태 유지. AI/migration/dependency/commit/merge/tag0. [57개 항목 보고](./TASK-044.md). 다음은 TASK-045 release 검증.
+
+## 이전 TASK-043 기록
+
 **TASK-043:** Observation-Narration Guard Patch & Actual AI Revalidation 완료. 기존 detector의 bounded capture 구문·한국어 warning만 보완. **H1 resolved by TASK-043, M3 RESOLVED**, 기존22개·신규51 포함 **1142 tests와 typegen/typecheck/lint/build/diff/secret PASS**. 실제 Section1회, Planner/regen0, 첫 accepted output의 보고체/문제 반복/unsupported V-only0. Browser manual 원문·warning 보존, Final/PNG/JPG860×3057 경고0. **BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW1(L1)**. M2/원본 데이터 보존, migration/dependency/commit/merge/tag0. [56개 항목 보고](./TASK-043.md). 다음은 선택 TASK-044 또는 TASK-045다.
 
 ## 이전 TASK-042 실제 QA
