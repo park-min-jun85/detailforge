@@ -61,10 +61,11 @@ async function verifyCrop(raw,expected){const bytes=await sharp(raw,{raw:{width:
   const expectedPixels=await sharp(bytes).extract({left:insets.left,top:insets.top,width:W-insets.left-insets.right,height:H-insets.top-insets.bottom}).ensureAlpha().raw().toBuffer();
   assert.deepEqual(await sharp(out.bytes).ensureAlpha().raw().toBuffer(),expectedPixels);assert.deepEqual(bytes,before);return insets;
 }
-test('crop fixture: uniform white border shrinks while source pixels remain exact',()=>verifyCrop(pixels(5),{top:5,right:5,bottom:5,left:5}));
-test('crop fixture: thin light-gray border shrinks; darker ambiguous frame stays',async()=>{await verifyCrop(pixels(3,240),{top:3,right:3,bottom:3,left:3});await verifyCrop(pixels(3,200),zero);});
-test('crop fixture: product touching edge prevents trim through that product',async()=>{const raw=pixels(5);paint(raw,0,100,100,200,[180,195,220,255]);await verifyCrop(raw,{top:5,right:5,bottom:5,left:0});});
-test('crop fixture: text next to product survives instead of being treated as whitespace',async()=>{const raw=pixels(5);paint(raw,0,145,3,28,[35,35,35,255]);await verifyCrop(raw,{top:5,right:5,bottom:5,left:0});});
+// TASK-047: original pixels unchanged; opaque bands without distinguishing signals now preserve.
+test('crop fixture: ambiguous uniform white border preserves source pixels',()=>verifyCrop(pixels(5),zero));
+test('crop fixture: ambiguous light-gray and darker borders stay',async()=>{await verifyCrop(pixels(3,240),zero);await verifyCrop(pixels(3,200),zero);});
+test('crop fixture: product touching edge prevents trim through that product',async()=>{const raw=pixels(5);paint(raw,0,100,100,200,[180,195,220,255]);await verifyCrop(raw,zero);});
+test('crop fixture: text next to product survives instead of being treated as whitespace',async()=>{const raw=pixels(5);paint(raw,0,145,3,28,[35,35,35,255]);await verifyCrop(raw,zero);});
 test('crop fixture: multiple panels and internal separator remain intact',async()=>{const raw=pixels();paint(raw,195,0,10,400,[255,255,255,255]);await verifyCrop(raw,zero);});
 test('crop fixture: already clean crop remains unchanged',()=>verifyCrop(pixels(),zero));
 

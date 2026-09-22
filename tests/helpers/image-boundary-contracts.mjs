@@ -20,7 +20,7 @@ export function validateBoundaryCorpus(fixtures) {
   assert.ok(Array.isArray(fixtures) && fixtures.length > 0, 'Empty corpus');
   const ids = new Set();
   for (const f of fixtures) {
-    assert.match(f.caseId, /^M[14]-[A-Z]$/);
+    assert.match(f.caseId, /^M[14]-[A-Z]2?$/);
     assert.ok(!ids.has(f.caseId), 'Duplicate caseId'); ids.add(f.caseId);
     assert.ok(typeof f.description === 'string' && f.description.trim(), 'Missing description');
     assert.ok(classes[f.caseId.slice(0, 2)].includes(f.expectedClass), 'Missing/invalid expectation');

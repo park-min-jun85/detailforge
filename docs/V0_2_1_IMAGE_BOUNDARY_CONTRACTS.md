@@ -1,6 +1,57 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
-2026-09-22. 기준 `df312b6` / tag `v0.2.0`, branch `feat/image-boundary-quality-contracts`. **재현 corpus·계약 동결만 완료**. production detector/threshold/AI/persistence/Renderer/UI 변경 없음. package **0.2.0**, **MEDIUM2(M1/M4 미해결), LOW0** 유지.
+## TASK-047 우선 계약 — 사용자 승인으로 조정
+
+아래 TASK-046 기록은 당시 baseline이다. TASK-047에서는 **same pixels + same config => same decision**을 최우선 불변식으로 적용한다. M1-A/H와 M4-A/H는 동일 bytes이므로 모두 production `ambiguous/preserve` 대상이다. 원래 fixture의 의미 label/knownContentBounds/과거 관측은 보존하며 이를 production 입력이나 분기에 사용하지 않는다.
+
+제거율보다 content-loss0을 우선한다. 단색 띠와 내부의 단일 색 전환만으로는 불투명 frame 제거를 승인하지 않는다. 실제 pixel-level 구별 신호가 있는 별도 A2 계열(일정 폭 band, 연속하는 얇은 separator, 그 너머의 다른 textured interior)을 추가한다. separator 자체는 남기며 그 바깥의 band만 제거한다. 이 신호도 물체 인식이나 모든 실제 사진에 대한 무손실 증명은 아니므로 실제 QA는 별도다.
+
+기존 A~D와 crop6종은 원본 fixture를 그대로 유지하되, 근거 없는 opaque trim 기대를 preserve로 조정한다. 투명 띠와 A2 white/gray/colored/noisy/asymmetric fixture로 제거 능력을 따로 검증한다. TASK-047 완료 기준은 기존22종 content-loss0, 동일-input 동일-decision, A2 안전 제거, cap/최소크기/원본 픽셀·provenance·legacy 보존이다. 원래 M4-A~E의 무조건 제거는 완료 조건에서 제외한다. UI/원격 호출/새 dependency는 추가하지 않는다.
+
+### TASK-047 구현 정책 v2
+
+`frame-analysis.ts:analyzeCropEdge/analyzeCropEdges`는 RGBA/width/height만 받는다. `edge-trim.ts:detectTrim`은 decision에서 inset만 취한다. `trimCrop`에서 한 번 Sharp decode하고4변이 같은 raw buffer를 재사용한다. 진단은 metadata/DTO/UI에 저장하지 않는다.
+
+- **Stage A:** 전체 제거 후보 띠(모서리 포함)의 모든 픽셀 검사. alpha0만 완전 투명으로 인정한다. alpha1~254, contrast pocket, 글자/미세 stroke는 보존 쪽으로 판정한다. 불투명 띠는 채널 range≤12, 최대 채널 variance≤6, 최대 인접 delta≤12, 첫 줄과 RGB 거리≤6을 요구한다. 밝기 proxy180 미만의 dark edge는 유지한다.
+- 바깥에서 안쪽으로2px~floor(axis×.03)만 찾으며, cap을 넘는 띠를 cap까지 부분 제거하지 않는다. 단순 band→texture 전환은 `ambiguous/no_separator`. 연속1~3px separator가 있고 band와 RGB Euclidean 거리≥60이어야 다음 단계로 간다. **separator는 crop 안에 남는다.**
+- **Stage B:** separator 안쪽4줄이 불투명하고 separator 대비 RGB 거리≥40/band 대비≥30, 한 줄 이상 variance≥max(8,band variance×3), separator 명도가 양쪽보다25 이상 낮거나 높은 extrema여야 `confirmed_frame`이다. 모든 조건을 충족한 frameConfidence1만 trim한다. .25/.5는 부분 근거를 뜻하며 통계적 확률이 아니다.
+- separator/interior 통계만 양 끝 `ceil(perpendicularLength×.03)+3`을 제외해 다른 변과 만나는 모서리를 피한다. **제거할 띠 검사에서는 모서리나 작은 detail을 샘플링으로 건너뛰지 않는다.** 넓은 수직 프레임 때문에 이 범위 밖의 separator가 불명확하면 다른 변도 보수적으로 남을 수 있다.
+- 반대편 일치는 의미 안전성 증명이 아니므로 필수조건/가산점으로 사용하지 않는다. 좌우만/위쪽만 및 회전된 한 변도 독립 판정한다. gradient·shadow·단색 벽·유사 제품색은 이 신호를 충족하지 않아 보존된다.
+- 투명 경계는 alpha0인 연속 띠만 제거한다. 이전 v1의 alpha≤2/opaque≥253보다 보수적이다. 기존 최대3%/최소 폭·높이160/면적64000은 유지한다. 결과가 최소크기를 위반하면 모든 inset0으로 돌아간다.
+- `trim.policyVersion`은 새 적용 결과에 **2**, reader는 기존1/2/trim 없음 지원. sourceRect/parent/hash/candidate/role/insets/postTrimDimensions 구조 유지. 기존 Derived를 조회하거나 같은 crop을 재요청해도 자동 재가공하지 않는다.
+
+픽셀 신호가 주어져도 의미 안전성을 일반적으로 증명할 수는 없다. A2는 신호가 실제로 구별되는 한정 corpus의 양성 검증이며, 모든 테두리·실제 상품의 무손실 보장은 아니다. product-like 동일 입력을 semantic label로 예외 처리하지 않는다.
+
+### TASK-047 현재 결과 matrix
+
+원래22개 fixture의 bytes·semantic label·knownContentBounds·v1 관측을 그대로 유지했다. test-only `currentBoundaryInsets`가 승인된 v2 **적용 기대**를 분리한다. 기존6개 crop test도 같은 bytes에서 보존 기대를 검사하며, 예전 제거 성능이 그대로라는 주장은 하지 않는다.
+
+| Case | v2 decision / inset(T/R/B/L) | 내용 손실 | 원래 의미 계약과 차이 |
+| --- | --- | --- | --- |
+| M1-A/H | 둘 다 ambiguous/preserve,0 | 0; H9,728→0 | 동일 입력을 구분하지 않음 |
+| M1-B/D | ambiguous/preserve,0 | 0 | 구분 신호 없는 회색/noise 띠도 보존 |
+| M1-C | transparent_band,16/16/16/16 | 0 | 투명 trim 유지 |
+| M1-E/F/G/I/J | 위험/모호함으로 보존,0 | 0 | 보호 변뿐 아니라 근거 없는 다른 변도 유지 |
+| M1-K/L | preserve,0 | 0 | 내부 separator 유지 |
+| M4-A/H | 둘 다 ambiguous/preserve,0 | 0 | 동색 장식/제품 구분 불가 |
+| M4-B/C/D/E | ambiguous/preserve,0 | 0 | 원래 단일 전환으로는 제거 승인하지 않음 |
+| M4-F/G/I/J | preserve,0 | 0 | 유사색/벽/글자/gradient 보존 |
+| M1-A2 | confirmed_frame,16/16/16/16 | 0 | 흰 띠+구분선 양성 |
+| M1-B2 | confirmed_frame,16/16/16/16 | 0 | 회색 띠+구분선 양성 |
+| M1-D2 | confirmed_frame,16/16/16/16 | 0 | near-uniform noise+구분선 |
+| M4-A2 | confirmed_frame,12/12/12/12 | 0 | 베이지+구분선 |
+| M4-B2 | confirmed_frame,12/12/12/12 | 0 | 핑크+구분선 |
+| M4-C2 | confirmed_frame,16/16/16/16 | 0 | 실제 JPEG95 noise+구분선; 원래 C12px는 보존 |
+| M4-D2 | confirmed_frame,0/12/0/12 | 0 | 좌우만 유색 프레임 |
+| M4-E2 | confirmed_frame,12/0/0/0 | 0 | 위쪽만; 회전3방향도 검증 |
+
+**원래22 + A2 8 =30종 content-loss0**. M4 원래 F~J의 content-loss false positive0. A2 8종은 band 전부 제거하되2px separator는 유지한다. 기존 opaque 단색 사례의 frame residue는 의도적으로 남는다. A2는 원래 fixture를 덮어쓰지 않는 [별도 생성기](../tests/fixtures/v0.2.1/separated-frames.mjs)이며 [production 회귀](../tests/conservative-frame-trim.test.mjs)에서 pixel identity와 versioned crop까지 검사한다.
+
+M1/M4 상태는 **implementation complete / real QA pending**, MEDIUM2/LOW0 유지. 다음 TASK-048에서 흰/어두운 제품·컬러 frame·착용·close-up의 실제 여러 원본 전후를 비교한다. 아래 §1~8과 matrix는 **TASK-046 당시 v1 기록**이며, v2 판정은 이 절과 [TASK-047](tasks/TASK-047.md)이 우선한다.
+
+---
+
+2026-09-22. 기준 `df312b6` / tag `v0.2.0`, branch `feat/image-boundary-quality-contracts`. **TASK-046 당시: 재현 corpus·계약 동결만 완료**. production detector/threshold/AI/persistence/Renderer/UI 변경 없음. package **0.2.0**, **MEDIUM2(M1/M4 미해결), LOW0** 유지.
 
 ## 1. 범위와 근거
 

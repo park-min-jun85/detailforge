@@ -6,6 +6,7 @@ import { validateBoundaryCorpus, renderBoundaryFixture, trimmedRect, contains, h
 import { detectTrim, trimCrop } from '../src/features/detail-extraction/edge-trim.ts';
 import { cropImage, sourceFingerprint } from '../src/features/detail-extraction/images.ts';
 import { MAX_TRIM_FRACTION, OUTPUT_QUALITY } from '../src/features/detail-extraction/policy.ts';
+import { currentBoundaryInsets, separatedFrames, renderSeparatedFrame } from './fixtures/v0.2.1/separated-frames.mjs';
 
 test('boundary corpus freezes 12 M1 and 10 M4 cases and every contract class', () => {
   validateBoundaryCorpus(boundaryCases);
@@ -31,9 +32,9 @@ for (const f of boundaryCases) {
     const { raw, bytes, mime } = await renderBoundaryFixture(f);
     const original = Buffer.from(bytes), pixels = Buffer.from(raw), fingerprint = sourceFingerprint(bytes);
     const actual = detectTrim(raw, f.width, f.height);
-    assert.deepEqual(actual, f.currentInsets);
+    assert.deepEqual(actual, currentBoundaryInsets(f));
     assert.deepEqual(raw, pixels, 'Detector must not mutate pixels');
-    assert.equal(hasContentLoss(f, actual), f.currentContentLoss, 'Known gap must stay visible');
+    assert.equal(hasContentLoss(f, actual), false, 'Revised safety-first contract');
     const trim = await trimCrop(bytes, f.width, f.height);
     assert.deepEqual(trim.insets, actual);
     const image = { bytes, mime, fingerprint, orientation: 1, dimensions: { width: f.width, height: f.height } };
@@ -46,7 +47,7 @@ for (const f of boundaryCases) {
     assert.deepEqual([metadata.width, metadata.height], [expectedRect.width, expectedRect.height]);
     assert.deepEqual([output.width, output.height], [metadata.width, metadata.height]);
     if (output.trim) {
-      assert.equal(output.trim.policyVersion, 1);
+      assert.equal(output.trim.policyVersion, 2);
       assert.deepEqual(output.trim.postTrimDimensions, { width: output.width, height: output.height });
     }
     assert.equal(MAX_TRIM_FRACTION, .03);
@@ -63,7 +64,7 @@ for (const f of boundaryCases) {
   });
 }
 
-test('identical white-frame/fabric pixels expose semantic ambiguity and the current unsafe cut', async () => {
+test('identical white-frame/fabric pixels retain the historical unsafe baseline as evidence', async () => {
   const safe = m1Cases.find(f => f.caseId === 'M1-A'), ambiguous = m1Cases.find(f => f.caseId === 'M1-H');
   assert.deepEqual((await renderBoundaryFixture(safe)).bytes, (await renderBoundaryFixture(ambiguous)).bytes);
   assert.equal(hasContentLoss(safe, safe.currentInsets), false);
@@ -79,7 +80,7 @@ test('identical colored frame/product edge pixels forbid treating uniformity as 
 });
 
 test('crop offset composes into source coordinates without rewriting candidate rect or source bytes', async () => {
-  const f = m1Cases[0], { bytes } = await renderBoundaryFixture(f);
+  const f = separatedFrames[0], { bytes } = await renderSeparatedFrame(f);
   const source = await sharp({ create: { width: 768, height: 800, channels: 4, background: '#587088' } })
     .composite([{ input: bytes, left: 32, top: 64 }]).png().toBuffer();
   const fingerprint = sourceFingerprint(source), rect = { x: 32, y: 64, width: 640, height: 640 }, before = { ...rect };

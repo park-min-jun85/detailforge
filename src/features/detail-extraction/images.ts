@@ -4,7 +4,7 @@ import { trimCrop } from "./edge-trim";
 import { createHash } from "node:crypto";
 import { MAX_FILE_BYTES, validateFile, validateSignature, type ImageMime } from "@/features/assets/schemas";
 import { ExtractionError } from "./errors";
-import { imageCategory, MAX_INPUT_PIXELS, MAX_SOURCE_WIDTH, MAX_SOURCE_HEIGHT, TILE_HEIGHT, TILE_OVERLAP, MAX_TILE_COUNT, SNAP_WINDOW, OUTPUT_QUALITY } from "./policy";
+import { imageCategory, MAX_INPUT_PIXELS, MAX_SOURCE_WIDTH, MAX_SOURCE_HEIGHT, TILE_HEIGHT, TILE_OVERLAP, MAX_TILE_COUNT, SNAP_WINDOW, OUTPUT_QUALITY, TRIM_POLICY_VERSION } from "./policy";
 import type { Dimensions, Rect } from "./schemas";
 import type { TileRect } from "./geometry";
 
@@ -87,6 +87,6 @@ export async function cropImage(image: WorkingImage, rect: Rect) {
     const actual = await input(bytes).metadata();
     if (bytes.length > MAX_FILE_BYTES || actual.width !== trimmed.width || actual.height !== trimmed.height) throw new ExtractionError("crop");
     return { bytes, width: actual.width, height: actual.height, mime: image.mime,
-      ...(trimmed.applied ? { trim: { policyVersion: 1 as const, insets: trimmed.insets, postTrimDimensions: { width: trimmed.width, height: trimmed.height } } } : {}) };
+      ...(trimmed.applied ? { trim: { policyVersion: TRIM_POLICY_VERSION, insets: trimmed.insets, postTrimDimensions: { width: trimmed.width, height: trimmed.height } } } : {}) };
   } catch (error) { throw error instanceof ExtractionError ? error : new ExtractionError("crop"); }
 }

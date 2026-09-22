@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-047 — v2 conservative frame trim 구현 / 실제 QA 대기
+
+사용자 승인으로 **same pixels + same config => same decision** 계약을 적용했다. M1-A/H·M4-A/H는 동일 픽셀이라 모두 ambiguous/preserve, 기존22종에서 content-loss0(M1-H9,728→0). 신호 없는 opaque frame 잔존은 허용하고, 실제 separator/interior 구분이 있는 A2 8종에서 white/gray/beige/pink/JPEG noise/비대칭 band만 제거한다. 구분선 자체·원본 픽셀은 유지한다. 위험/alpha/미세 detail 우선, 최대3%·최소크기 유지, 새 trim version2/legacy1·없음 읽기 지원, 기존 Derived 자동 변경0.
+
+**M1/M4 implementation complete / real QA pending, MEDIUM2/LOW0 유지. RESOLVED 아님.** 전체1253 tests·typegen/typecheck/lint/build/diff·secret scan PASS. package0.2.0, AI/원격 DB·Storage/UI/Renderer/migration/dependency0. 다음 TASK-048에서 흰/어두운 제품·컬러 frame·착용·close-up 실제 원본 전후를 비교한다. [정책·30종 결과](V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md), [67항목 보고](tasks/TASK-047.md). 아래는 각 TASK 당시 기록이다.
+
 ## TASK-046 — v0.2.1 M1/M4 corpus·계약 동결
 
 2026-09-22, 기준 release tag `v0.2.0` / `df312b6`. M1 12종/M4 10종 deterministic synthetic fixture와 test-only content-loss oracle, 용어·안전 계약·case별 current gap matrix를 고정했다. **M1/M4 미해결, MEDIUM2/LOW0 유지**. 현재 M1-H 흰 제품 edge 손실과 M4-A~E 유색 frame 잔존을 characterization으로 기록했으며 해결로 표시하지 않는다. 같은 pixels의 frame/제품 반례는 보존·abstain 정책이 필요함을 보여 준다.

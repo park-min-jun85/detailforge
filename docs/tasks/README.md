@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-047:** Conservative Colored-frame Detection & Content-loss Guard 완료. `feat/conservative-frame-trim` / 기준 `f693151`. 사용자 승인에 따라 같은 pixels/config의A/H는 모두 보존. 기존22종 content-loss0, separator가 있는A2 8종 safe trim, 위험 변 veto·최대3%·pixel identity·legacy/new provenance 검증. **1253 tests 및 필수 검사 PASS**, M1/M4는 **implementation complete / real QA pending, MEDIUM2/LOW0**. version0.2.0, AI/원격/UI/Renderer/SQL/dependency/commit/merge/tag0. [67항목 보고](./TASK-047.md), [승인된 계약과현재 matrix](../V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md). 다음 TASK-048은 실제 여러 상품 원본 전후 QA다.
+
+## 이전 TASK-046 기록
+
 **TASK-046:** M1/M4 Image Boundary Quality Reproduction Corpus & Contract Freeze 완료. 기준 tag `v0.2.0` / `df312b6`, branch `feat/image-boundary-quality-contracts`. M1 12종/M4 10종 synthetic corpus·내용 보존 oracle·안전 계약·gap matrix 고정. 현재 M1-H 손실/M4-A~E 잔존은 미수정이며 **MEDIUM2(M1/M4 미해결)/LOW0 유지**. 신규61 포함 **1217 tests 및 typegen/typecheck/lint/build/diff/secret PASS**. production/AI/원격 mutation/SQL/dependency/version 변경0, package0.2.0, commit/merge/tag 없음. [48개 항목 보고](./TASK-046.md), [계약](../V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md). 다음은 TASK-047 conservative colored-frame detector + content-loss risk guard.
 
 ## 이전 TASK-045 기록
