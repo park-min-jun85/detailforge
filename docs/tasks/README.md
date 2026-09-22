@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-046:** M1/M4 Image Boundary Quality Reproduction Corpus & Contract Freeze 완료. 기준 tag `v0.2.0` / `df312b6`, branch `feat/image-boundary-quality-contracts`. M1 12종/M4 10종 synthetic corpus·내용 보존 oracle·안전 계약·gap matrix 고정. 현재 M1-H 손실/M4-A~E 잔존은 미수정이며 **MEDIUM2(M1/M4 미해결)/LOW0 유지**. 신규61 포함 **1217 tests 및 typegen/typecheck/lint/build/diff/secret PASS**. production/AI/원격 mutation/SQL/dependency/version 변경0, package0.2.0, commit/merge/tag 없음. [48개 항목 보고](./TASK-046.md), [계약](../V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md). 다음은 TASK-047 conservative colored-frame detector + content-loss risk guard.
+
+## 이전 TASK-045 기록
+
 **TASK-045:** v0.2.0 Final Release Candidate Validation & Release Preparation 완료. **RC PASS — Local/Internal MVP**, 전체1156 tests·필수 검사·단계별 fixture full smoke·Editor 실패/복구/명시 후보 적용·A/B Export·반복 출력·데이터 보호·secret scan·cleanup PASS. **M2/M3/L1 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW0**. package/lock0.2.0, 외부 API0, 신규 기능/SQL/dependency0. commit/merge/tag/Release 게시 미실행. [62개 항목·Release notes·다음 Git 명령](./TASK-045.md).
 
 ## 이전 TASK-044 기록

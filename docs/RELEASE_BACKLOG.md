@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-046 — v0.2.1 M1/M4 corpus·계약 동결
+
+2026-09-22, 기준 release tag `v0.2.0` / `df312b6`. M1 12종/M4 10종 deterministic synthetic fixture와 test-only content-loss oracle, 용어·안전 계약·case별 current gap matrix를 고정했다. **M1/M4 미해결, MEDIUM2/LOW0 유지**. 현재 M1-H 흰 제품 edge 손실과 M4-A~E 유색 frame 잔존을 characterization으로 기록했으며 해결로 표시하지 않는다. 같은 pixels의 frame/제품 반례는 보존·abstain 정책이 필요함을 보여 준다.
+
+신규61 포함 **전체1217 tests**, typegen/typecheck/lint/build/diff·secret scan PASS. production/prompt/UI/Renderer/SQL/dependency/version 변경0, OpenAI/Domeggook/원격 DB·Storage0, package0.2.0. 다음은 TASK-047 detector+content-loss risk guard, TASK-048 crop 적용/검토, TASK-049 실제 혼합 상품 QA다. [계약과22행 matrix](V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md), [48항목 보고](tasks/TASK-046.md). 아래 release 대기·과거 backlog 수치는 해당 TASK 당시 기록이다.
+
 ## TASK-045 — v0.2.0 RC PASS
 
 2026-09-22, Local/Internal MVP 후보 검증 완료. **M2 RESOLVED / M3 RESOLVED / L1 RESOLVED**, **BLOCKER0 / HIGH0 / MEDIUM2(M1/M4) / LOW0**. 전체1156 tests, 단계별 fixture 재사용 full smoke, Editor 저장 실패·복구·후보 적용, A/B Renderer·PNG/JPG·반복 출력·데이터 보호·보안 검사 통과. 이번 외부 API0회이며 실제 AI 근거는 TASK-040/043을 재사용했다. package/lock0.2.0, commit/merge/tag/Release 게시 대기. [검증 범위 및62개 항목](tasks/TASK-045.md).
