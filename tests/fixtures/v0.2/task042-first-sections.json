@@ -1,0 +1,144 @@
+{
+  "source": "TASK-042 first accepted canonical commerce content; provider envelope omitted",
+  "sections": [
+    {
+      "plannerKey": "hero",
+      "evidenceIds": [
+        "F1"
+      ],
+      "assetIds": [
+        "344d9a39-1181-46c7-9480-3410fb00755d"
+      ],
+      "type": "hero",
+      "headline": "여성 양털 후리스 뽀글이 조끼 퍼 베스트 수면조끼",
+      "subheadline": null,
+      "highlights": []
+    },
+    {
+      "plannerKey": "visual-gallery",
+      "evidenceIds": [
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "assetIds": [
+        "6486cb5b-aeb6-4a52-bad1-42ced34f11c5",
+        "785e8ad6-e2f2-4b6a-a929-9b6aac377091",
+        "927a9163-bcc2-4695-8abb-bca309b1b2bb"
+      ],
+      "type": "gallery",
+      "title": "착용 및 목둘레 디테일",
+      "intro": "전면과 등 쪽 착용 실루엣, 목둘레·앞여밈 부분의 외관을 담았습니다."
+    },
+    {
+      "plannerKey": "specification",
+      "evidenceIds": [
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8"
+      ],
+      "assetIds": [],
+      "type": "specification",
+      "title": "상품 및 제조 정보",
+      "rows": [
+        {
+          "label": "카테고리",
+          "value": "의류/언더웨어 > 여성의류 > 조끼",
+          "evidenceIds": [
+            "F3"
+          ]
+        },
+        {
+          "label": "원산지",
+          "value": "수입산 / 아시아 / 중국",
+          "evidenceIds": [
+            "F4"
+          ]
+        },
+        {
+          "label": "제조사",
+          "value": "디에이치트레이딩",
+          "evidenceIds": [
+            "F5"
+          ]
+        },
+        {
+          "label": "품명 및 모델명",
+          "value": "컬리 집업 베스트",
+          "evidenceIds": [
+            "F6"
+          ]
+        },
+        {
+          "label": "제조국 또는 원산지",
+          "value": "중국",
+          "evidenceIds": [
+            "F7"
+          ]
+        },
+        {
+          "label": "상품번호",
+          "value": "67695797",
+          "evidenceIds": [
+            "F8"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "option",
+      "plannerKey": "options",
+      "title": "옵션 안내",
+      "evidenceIds": [],
+      "assetIds": [],
+      "optionSnapshot": {
+        "source": "confirmed_options",
+        "appliedAt": "2026-09-22T03:34:38.643Z",
+        "confirmed": {
+          "schemaVersion": 1,
+          "policyVersion": 1,
+          "productId": "c1ac4acb-90a1-485b-b8c5-ea27018d29c5",
+          "rowId": "9026e321-1a65-44ed-b8e8-cebe4ce8c646",
+          "version": 1,
+          "state": "present",
+          "groups": [
+            {
+              "id": "a9526b3c-7d85-4be8-ac62-05f18775f9e8",
+              "name": "옵션",
+              "values": [
+                {
+                  "id": "a78826f1-5238-4449-929a-bc32a10ef5d1",
+                  "label": "아이보리 90"
+                },
+                {
+                  "id": "f56dab39-d1b7-4bdf-aaac-3339e6968088",
+                  "label": "아이보리 95"
+                },
+                {
+                  "id": "09ec8f25-000c-44ec-8ecb-a2eab490c78d",
+                  "label": "코코아 90"
+                },
+                {
+                  "id": "fc3ad698-d962-403f-8dfc-a0137da8dc9a",
+                  "label": "코코아 95"
+                },
+                {
+                  "id": "32a04ccd-d9bf-4c84-8eb0-b3033fd739a2",
+                  "label": "브라운 90"
+                },
+                {
+                  "id": "e297edfc-56c0-40ed-a375-b6eeb41954e7",
+                  "label": "브라운 95"
+                }
+              ]
+            }
+          ],
+          "fingerprint": "ebe8be116b97b4abb12ae7d65a4da66bf478247161d59a74ad5c9850312796c5"
+        }
+      }
+    }
+  ]
+}

@@ -71,7 +71,7 @@ export function validatePagePlan(value: unknown, evidence: PlannerEvidence[], as
 export const PLANNER_ERROR_CODES = ["not_found", "product_required", "facts_required", "validation_required", "content_required", "invalid_input", "ownership", "database", "busy", "conflict", "input_changed", "not_configured", "provider", "invalid_response", "timeout", "forbidden", "unexpected"] as const;
 export type PlannerErrorCode = (typeof PLANNER_ERROR_CODES)[number];
 export const latestPlanSchema = z.strictObject({ provider: z.literal("openai"), model: text(200), plannedAt: z.iso.datetime({ offset: true }),
-  presentationVersion: z.literal(1).optional(), commerceCopyVersion: z.union([z.literal(1), z.literal(2)]).optional(),
+  presentationVersion: z.literal(1).optional(), commerceCopyVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/), evidenceSnapshot: z.array(plannerEvidenceSchema).max(83),
   factPolicySnapshot: plannerFactPolicySchema, assetSnapshot: z.array(plannerAssetSchema).max(30),
   strategySnapshot: productAnalysisSchema.nullable(), optionsSnapshot: confirmedOptionsSchema.optional(), plan: pagePlanSchema,

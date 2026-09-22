@@ -68,13 +68,14 @@ test('crop fixture: text next to product survives instead of being treated as wh
 test('crop fixture: multiple panels and internal separator remain intact',async()=>{const raw=pixels();paint(raw,195,0,10,400,[255,255,255,255]);await verifyCrop(raw,zero);});
 test('crop fixture: already clean crop remains unchanged',()=>verifyCrop(pixels(),zero));
 
-test('new copy policy writes version 2 while stored version 1 and missing version remain readable',()=>fixture(async state=>{
+test('new copy policy writes version 3 while stored versions 1/2 and missing version remain readable',()=>fixture(async state=>{
   const {latestPlanSchema}=await import('../src/features/page-planner/schemas.ts');
-  const current=structuredClone(state.page.plan.latestResult);assert.equal(current.commerceCopyVersion,2);
+  const current=structuredClone(state.page.plan.latestResult);assert.equal(current.commerceCopyVersion,3);
   assert.ok(latestPlanSchema.safeParse(current).success);
   assert.ok(latestPlanSchema.safeParse({...current,commerceCopyVersion:1}).success);
+  assert.ok(latestPlanSchema.safeParse({...current,commerceCopyVersion:2}).success);
   const {commerceCopyVersion,...legacy}=current;void commerceCopyVersion;assert.ok(latestPlanSchema.safeParse(legacy).success);
-  assert.equal(latestPlanSchema.safeParse({...current,commerceCopyVersion:3}).success,false);
+  assert.equal(latestPlanSchema.safeParse({...current,commerceCopyVersion:4}).success,false);
 }));
 
 test('partial extraction explains full reanalysis cost and preserved successful data',async()=>{

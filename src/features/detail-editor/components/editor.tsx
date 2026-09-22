@@ -192,7 +192,7 @@ export function DetailEditor({ initialView }: { initialView: EditorView }) {
         <div className="flex flex-wrap gap-4 text-xs"><Link className="text-link" href={`/projects/${view.projectId}/planner`}>페이지 설계 확인</Link><Link className="text-link" href={`/projects/${view.projectId}/validation`}>사실 검증 확인</Link></div>
       </section>}
     </header>
-    {candidate && selected && <CandidateComparison current={selected} candidate={candidate.candidate} busy={busy} onApply={applyCandidate} onKeep={() => { setCandidate(null); setError(""); setMessage("AI 후보를 버리고 기존 내용을 유지했습니다."); }} />}
+    {candidate && selected && <CandidateComparison current={selected} candidate={candidate.candidate} sections={ordered} busy={busy} onApply={applyCandidate} onKeep={() => { setCandidate(null); setError(""); setMessage("AI 후보를 버리고 기존 내용을 유지했습니다."); }} />}
     {pending && <section ref={confirmation} tabIndex={-1} role="group" aria-label="저장되지 않은 변경사항 확인" className="space-y-3 border-b border-amber-200 bg-amber-50 p-5">
       <p className="text-sm">저장되지 않은 변경사항이 있습니다. {"move" in pending || "saveOrder" in pending ? "순서를 변경하기 전에 현재 문구·스타일을 처리해 주세요." : "이동하기 전에 처리해 주세요."}</p><div className="flex flex-wrap gap-3">
         <button type="button" className="button-primary" disabled={busy || view.blocked} onClick={() => save(pending)}>변경사항 저장 후 계속</button>

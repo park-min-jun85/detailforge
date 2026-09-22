@@ -1,5 +1,11 @@
 # AI Pipeline
 
+## TASK-041 역할 검토 정책 v3
+
+Planner/Section/Regen은 제목과 본문의 역할을 나누고 추가 근거 없는 선택 본문을 null로 권고한다. 제한된 착용 모습 보고체는 공통 guard에서 거부한다. 제목/본문 재진술과 여러 marketing 역할의 같은 F는 경고이며 새 효과·성능 주장을 만들어 분량을 채우지 않는다.
+
+Planner/Regeneration fingerprint는 commerceCopyVersion3을 포함한다. 누락/v1/v2 Plan도 읽되 stale와 명시 재설계를 유지한다. 조회만으로 문구·Fact·Options 변경/AI 실행은 없으며 기존 grounding/이전 성공 보존·추가 pass/자동 retry0 경계를 유지한다. [TASK-041](tasks/TASK-041.md).
+
 ## TASK-034 카피 정책 보완
 
 Commerce Copy policy version 2는 새 생성/재생성에서 제한된 camera-framing 패턴(근접 모습·근접 구성·누른/잡은/촬영한 구도)을 거부한다. 기존 중립적인 제품 부위/디자인 표현과 exact spec/확정 옵션 값은 유지한다. 제목을 반복하는 visual 본문은 null을 권고하며, 효과·편안함 등 V-only claim으로 대체하지 않는다. 추가 AI pass/자동 retry/문구 후처리는 없다.

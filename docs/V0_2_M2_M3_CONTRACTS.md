@@ -1,5 +1,29 @@
 # v0.2.0 M2/M3 Reproduction Contracts — TASK-037
 
+## TASK-043 H1 guard 및 실제 재검증 완료
+
+기존 `detectMetaObservationCopy`에 `capture_narration` 패턴을 추가했다. 시각 대상+제한된 수식어+capture 종결/매체 명사구를 검출하고, 보여줍니다/나타납니다는 같은 절의 명시적 매체를 요구한다. 정확한 Fact/Option 값은 계속 제외한다. 전체 생성·regeneration 생성/apply는 reject/이전 성공 보존, manual은 warning only/원문 보존. 기존 meta warning의 한국어만 갱신했고 UI/Final 구조는 유지했다.
+
+H1 포함 reject19/allow19/기존 family6과 실제 TASK-0424섹션 replay를 추가했다. **frozen22개100% PASS, 신규51개 포함 전체1142 PASS**. Fact grounding/기존 M2 코드는 불변. guard 누락 보완이므로 prompt·Planner 의미 계약/version3은 유지했고 이전 서명 H1 후보도 apply에서 재검증하여 거부함을 확인했다.
+
+실제 Section1회(Planner 최신으로0, regen0)의 첫 output accepted, meta/camera/capture·문제 title/body/cross-section·unsupported V-only0. 실제 manual warning/Final purity 및 새 PNG/JPG 각1회860×3057 PASS. **H1 resolved by TASK-043, M3 RESOLVED, BLOCKER0/HIGH0, MEDIUM2/LOW1**. 아래 H1/M3 NEEDS_WORK는 발견 당시 기록이다. [범위와56개 항목](tasks/TASK-043.md).
+
+## TASK-042 실제 QA 델타
+
+사용자 지정 실제 QA를 TASK-042에서 실행했다. 상품67695797 격리 loopback fixture의 첫 Planner1/Section1/regen1, 실제 Editor 수동 중복 저장/경고·candidate-first/명시 apply, canonical Final/PNG/JPG를 검증했다. C1~C22 **22/22 PASS, allow9/warning7/reject6, frozen gap0/allow false positive0**. 최초 canonical의 문제 반복6범주0, unsupported V-only0, generation false-positive reject0.
+
+실제 gallery intro “전면과 등 쪽 착용 실루엣, 목둘레·앞여밈 부분의 외관을 담았습니다.”는 **자동 meta0 / human meta1(H1)**이다. 기대 corpus를 변경하거나 threshold를 조정하지 않았고 새 실제 결과를 재호출하지 않았다. 실제 정상 후보는 title 변경/intro=null. warning-positive 후보와 reject/apply 불가·원본 보존은 synthetic 응답2개를 사용한 실제 Browser 및 mock/SSR로 보완했고 추가 실제 AI0이다. **M3 NEEDS_WORK**, 동결22개 PASS와 모든 실제 표현의 검출은 구별한다. 다음은 H1 최소 재현·정상 negative와 bounded 개선이다.
+
+Editor와 `/render` Review shell의 warning은 허용되지만 canonical `article[data-detail-render-surface="1"]`와 capture에는 없다. 실제 수동 warning 상태의 article0, 최초 canonical PNG/JPG 각1회 **860×3057**, 검토문구/controls/debug/누락 이미지0, 스펙6행·확정옵션6개 exact. [TASK-042의59개 항목·데이터 보호·검사](tasks/TASK-042.md).
+
+TASK-040 controlled E2E와 이번 원본1091 tests·typegen/typecheck/lint/build PASS로 남은 finalization 조건을 해소하여 **M2 RESOLVED**. M2 코드 변경0. 최신 backlog MEDIUM3/LOW1 유지, QA BLOCKER0/HIGH1은 M3에 연결한다. 아래 M2/M3 미구현·actual pending·MEDIUM4 표현은 각 TASK 당시 기록이다.
+
+## TASK-041 M3 구현 델타
+
+아래 §7~§8과 fixture의 BEFORE는 TASK-037 당시 기록이다. 현재 copy policy v3는 C6/C10/C19 제목·본문 및 C9/C11 반복 F를 역할별 경고로 표시하고 C13 착용 모습 보고체를 새 AI 출력에서 거부한다. 기존 정상9개·경고·거부를 유지해 **allow9/warning7/reject6**을 충족한다. 경고를 hard reject로 승격하거나 원문을 자동 수정하지 않는다.
+
+동결 fixture/expected/currentBaseline은 그대로이며 characterization의 C13 변경만 명시 delta로 기록한다. Editor/Final review shell·재생성 후보는 공통 runtime finding으로 섹션/역할/검토 이유를 표시한다. fingerprint v3 및 누락/v1/v2 읽기 유지. TASK-041 자체는 실제 외부 호출0이고 후속 실제 QA는 위 TASK-042 절을 따른다. [TASK-041](tasks/TASK-041.md).
+
 ## TASK-040 UI 및 실제 검증
 
 **TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).

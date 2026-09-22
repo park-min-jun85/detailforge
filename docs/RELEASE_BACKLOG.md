@@ -1,5 +1,21 @@
 # Release Backlog
 
+## TASK-043 — H1 및 M3 RESOLVED
+
+기존 관찰 보고체 detector에 시각 대상·capture 동사·매체 문맥의 bounded 패턴을 추가했다. TASK-042 H1 replay/유사 reject19·allow19·기존 report6 및 frozen22개 분류 PASS, 전체1142 tests와 필수 검사/secret scan PASS. 실제 상품67695797 **Section Engine1회, Planner0/regen0**, 첫 accepted output의 meta/camera/capture narration·문제 title/body/cross-section 반복·unsupported V-only0. Browser manual warning/원문 보존, Final article·PNG/JPG 내부 경고0, 둘 다860×3057을 확인했다. [56개 항목·검증 한계](tasks/TASK-043.md).
+
+**H1 resolved by TASK-043, M3 RESOLVED. 현재 BLOCKER0/HIGH0, MEDIUM2(M1/M4), LOW1(L1)**. M2 RESOLVED 유지. 아래 TASK-042의 HIGH1/MEDIUM3 및 이전 pending은 발견 당시 기록이다. 이번 종료는 고정 corpus와 실제 단일 상품의 명시 gate에 한정하며 모든 한국어 표현에 대한 보장은 아니다.
+
+## TASK-042 실제 QA — M3 NEEDS_WORK
+
+상품67695797의 격리 fixture에서 첫 실제 Planner1/Section1/regen1과 Desktop Editor·수동 중복 경고·명시 후보 적용·Final/PNG/JPG를 검증했다. 첫 output의 문제 반복6범주0, Final article/PNG/JPG 내부 warning0, 두 export860×3057, 스펙6행/옵션6개 exact. 그러나 gallery의 “외관을 담았습니다”는 자동 meta 검출0에 대해 human 관찰 보고체1로 남는다. **BLOCKER0/HIGH1(H1, 기존 M3 연결), M3 NEEDS_WORK**. 정상 regen의 null intro로 첫 결과를 대체해 판정하지 않았다. [59개 항목 및 검증 범위](tasks/TASK-042.md).
+
+전체1091 tests·typegen/typecheck/lint·원본 기본 production build PASS로 TASK-040의 문서 적용/원본 build 대기를 해소했다. 기존 실제 controlled E2E 근거와 합쳐 **M2 RESOLVED**. 현재 backlog는 **MEDIUM3(M1/M3/M4), LOW1(L1)**이다. HIGH1은 M3에 연결한 QA finding 등급이며 과제를 중복 추가한 수치가 아니다. M3 해결에 따른3→2 감소는 하지 않는다. 아래 MEDIUM4·M2 finalization pending·TASK-043 actual pending은 당시 기록이며 최신 상태는 이 절을 따른다.
+
+## TASK-041 M3 deterministic 개선
+
+제목/본문·반복 F의 역할별 검토와 착용 모습 보고체 guard를 보완했다. C1~C22 allow9/warning7/reject6, 수동/legacy 비차단, 원문·이전 성공 보존을 mock으로 검증했다. TASK-041 당시 실제 QA는 미실행이었으며 후속 TASK-042 결과는 위 절에 기록했다. [구현과 한계](tasks/TASK-041.md).
+
 ## TASK-040 UI 및 실제 검증
 
 **TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).
@@ -49,8 +65,8 @@ M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M
 ## Post-MVP enhancement
 
 - **M1 — 인물/제품 잘림 구분**: Asset AI의 cropped 경고가 착용 인물의 얼굴 잘림과 제품 본체 잘림을 구분하지 못한다. TASK030 B 및 이번 A 대표/근접 분석에서 관찰. `asset-analysis`, `page-quality/images`의 판단·평가 corpus 개선. 기존 Facts 손상 없음, 역할/대표성 mock 회귀 필요.
-- **M2 — 부분 타일 실패 복구**: 현재 일부 성공 후보 보존과 명시적 전체 재분석을 제공한다. 실패 타일만 재시도하는 복구는 없음. 이번 A8/8 성공이 과거 실패 문제의 해결 증거는 아니다. `detail-extraction`의 비용·cache 계약을 먼저 설계. 기존 성공 보존 tests 유지.
-- **M3 — 보고체에 가까운 짧은 카피**: A 첫 imageText 제목 ‘패드 표면 근접 모습’, 본문 ‘흰색 패드 표면 일부와 손으로 누른 구도.’는 hard detector를 통과했지만 판매 문구로는 건조하다. B replay의 ‘근접 구성’도 동일 계열. `page-quality/commerce`, Planner/Section prompt의 별도 품질 TASK. 근거 부족을 과장 카피로 보충하지 않으며 첫 결과 평가 corpus와 V-only claim 회귀 필요.
+- **M2 — 부분 타일 실패 복구: RESOLVED**. TASK-038~040 checkpoint/failed-only retry/선택 보존 및 실제 controlled E2E에 TASK-042 원본 최종 검사를 더해 종료했다. 전체 성공 타일을 재호출하지 않는 비용·입력·CAS·이전 성공 보존 회귀를 유지한다. 열린 MEDIUM 수에서 제외한다.
+- **M3 — 보고체에 가까운 짧은 카피: RESOLVED by TASK-043**. TASK-041 frozen22개 보완에 TASK-042 H1의 bounded guard/정상 negative/실제 첫 출력 재검증을 더해 종료했다. 과거 H1 accepted 이력은 TASK-042에 보존한다. 문구 자동 rewrite/과장 benefit/추가 생성으로 실패 숨김 없음. 열린 MEDIUM 수에서 제외한다.
 - **M4 — 원본 장식 경계 보존**: A Hero 실제 사진의 회색·초록 프레임이 crop에 남는다. `detail-extraction/images`의 보수적 rect/trim 한계. source pixels 자체이므로 CSS stretch 문제가 아니며 제품을 자르는 임의 trim은 금지. 최대3% edge·원본 불변 회귀와 수동 가장자리 검토 필요.
 - 추가 도매 Adapter, SKU/가격/재고·종속 조합 모델, PDF/분할 출력, theme/template는 각각 별도 명시 요청 시 검토한다.
 - AI upscale/background removal은 현재 금지 범위다. 원본 이미지·제품 동일성 보장을 별도 설계하기 전 추가하지 않는다.
@@ -71,5 +87,7 @@ M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M
 - **L2 — 읽기 갱신 중 상태 문구**: Editor의 refresh/save/recover/generate/apply/options 상태를 구분한다. 느린 읽기의 ‘최신 섹션을 불러오는 중…’, 읽기 실패 후 미저장 draft 보존·재시도 안내·취소 및 성공 재조회까지 로컬 브라우저로 확인했다. 기존 CAS/후보 적용/저장 경계는 유지한다.
 
 ## 권장 순서
+
+현재 M2/M3 Must gate는 통과했다. 다음은 선택 TASK-044 L1 bounded spacing 또는 TASK-045 release 검증이며 M1/M4는 유지한다. 아래 TASK-036 순서는 최초 계획 기록이다.
 
 v0.1.0은 `06d80bb`, v0.1.1은 `bd856d5`로 확인됐다. 다음 권장은 TASK-037의 M2/M3 재현 corpus·계약 확정 → cache/복구 → copy 정책/검토 UI → 실제 QA이며, L1은 Must 통과 후 선택한다. 상세 순서와 완료 기준은 [Roadmap](V0_2_ROADMAP.md)을 따른다. M1/M4의 보수적 사진 경계는 유지한다. 외부 공개가 우선 목표로 바뀌면 Auth/owner_id/RLS/Storage·비용 격리를 독립 릴리스로 먼저 승인해야 한다. TASK-036은 문서 계획만 수행하며 commit/merge/tag는 하지 않는다.

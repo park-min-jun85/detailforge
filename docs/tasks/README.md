@@ -2,6 +2,18 @@
 
 ## 현재 단계
 
+**TASK-043:** Observation-Narration Guard Patch & Actual AI Revalidation 완료. 기존 detector의 bounded capture 구문·한국어 warning만 보완. **H1 resolved by TASK-043, M3 RESOLVED**, 기존22개·신규51 포함 **1142 tests와 typegen/typecheck/lint/build/diff/secret PASS**. 실제 Section1회, Planner/regen0, 첫 accepted output의 보고체/문제 반복/unsupported V-only0. Browser manual 원문·warning 보존, Final/PNG/JPG860×3057 경고0. **BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW1(L1)**. M2/원본 데이터 보존, migration/dependency/commit/merge/tag0. [56개 항목 보고](./TASK-043.md). 다음은 선택 TASK-044 또는 TASK-045다.
+
+## 이전 TASK-042 실제 QA
+
+**TASK-042:** 실제 AI/Browser/Final/Export QA 실행 완료, **M3 NEEDS_WORK**. 상품67695797 첫 Planner1/Section1/regen1, 반복6범주0, manual warning/명시 후보 적용 PASS, Final article/PNG/JPG 검토문구0·860×3057·스펙/옵션 exact. gallery ‘외관을 담았습니다’는 자동 meta0/human1(HIGH1)로 남긴다. **1091 tests·typegen/typecheck/lint/build/diff·secret PASS**. 기존 데이터 불변·QA cleanup, commit/merge/tag 없음. TASK-040 원본 build 대기는 해소돼 M2 RESOLVED, MEDIUM3/LOW1 유지. [59개 항목 보고](./TASK-042.md). 다음은 H1 최소 재현/정상 negative와 bounded guard 보완이다.
+
+## 이전 TASK-041 구현
+
+**TASK-041:** Copy Role Separation & Review 구현. C1~C22 allow9/warning7/reject6, 제목/본문·반복 F의 역할별 경고, C13 보고체 거부를 검증했다. Editor/Final review shell·재생성 후보에서 검토 이유를 표시한다. **1091 tests·typegen/typecheck/lint/build/diff PASS**. Copy policy v3, legacy 읽기/수동 저장/사실·옵션·이전 성공 보존. TASK-041 외부 호출0, 실제 판정은 위 TASK-042 참조. [구현·검증·한계](./TASK-041.md).
+
+## 이전 TASK-040 기록
+
 **TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](./TASK-040.md).
 
 ## 완료된 TASK-039 기반

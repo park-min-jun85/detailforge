@@ -11,10 +11,12 @@ test('M3 corpus integrity and all 22 desired labels are data, not a future seman
   assert.equal(m3Corpus.filter(c => c.expected.classification === 'warning').length, 7);
   assert.equal(m3Corpus.filter(c => c.expected.classification === 'reject').length, 6);
 });
-for (const c of m3Corpus) test(`BEFORE ${c.id}: ${c.title}`, () => {
+// TASK-041 preserves the frozen BEFORE data; only C13's hard-meta observation changed.
+const task041Delta = { C13: [[0], [], [], 0] };
+for (const c of m3Corpus) test(`CURRENT vs frozen BEFORE ${c.id}: ${c.title}`, () => {
   const before = structuredClone(c), observed = observeCurrentCopy(c);
   assert.deepEqual([observed.commerceRejects.map(x => x.index), observed.duplicatePairs.map(x => [x.first, x.second]),
-    observed.factOverBudgetIds, observed.duplicateCopyCount], currentBaseline[c.id]);
+    observed.factOverBudgetIds, observed.duplicateCopyCount], task041Delta[c.id] ?? currentBaseline[c.id]);
   assert.equal(observed.duplicateTitleCount, 0);
   observed.commerceRejects.forEach(x => assert.equal(x.reason, 'meta_observation'));
   const messages = c.sections.map(s => ({ ...s.content, purpose: s.purpose }));

@@ -1,5 +1,21 @@
 # v0.2.0 Roadmap — 검토와 재시도의 예측 가능성
 
+## TASK-043 완료 — M3 RESOLVED
+
+H1 관찰 보고체의 기존 detector를 bounded capture family로 보완했다. 기존22개·새 H1/variants/정상 allow19, 전체1142 tests·필수 검사 PASS. 실제 상품67695797 Section1회만 호출해 첫 accepted output에서 보고체/문제 반복/unsupported V-only0, Browser manual warning과 Final/PNG/JPG860×3057 purity를 확인했다. **H1 종료, M3 RESOLVED, BLOCKER0/HIGH0, MEDIUM2(M1/M4)/LOW1(L1)**. prompt/Planner version3·M2 코드·package0.1.1 유지. [보고](tasks/TASK-043.md).
+
+다음 선택지는 TASK-044 L1 bounded spacing 또는 TASK-045 release 검증이다. 아래 TASK-042 H1과 초기 계획은 역사적 기록이며 미해결 상태를 뜻하지 않는다. 이번 실제 QA는 요청한 단일 상품/Section1회 범위다. 원래 계획의2상품 또는 새 실제 regeneration을 모두 수행했다고 보고하지 않는다.
+
+## TASK-042 실제 QA 결과와 다음 우선순위
+
+사용자 지정 TASK-042는 TASK-041 실제 AI/Browser/Final/Export QA다. 상품67695797 첫 Planner1/Section1/regen1, Desktop 수동 중복 warning·후보 명시 적용, Final article warning0 및 PNG/JPG 각1회860×3057을 확인했다. 전체1091 tests/typegen/typecheck/lint/build PASS. **M3 NEEDS_WORK**: gallery의 ‘외관을 담았습니다’가 자동 meta0/human1로 남는다(HIGH1). 첫 출력 반복6범주0과 frozen22개 PASS만으로 종료하지 않는다. [보고](tasks/TASK-042.md).
+
+TASK-040 실제 controlled E2E에 남았던 원본 최종 build 대기는 이번 검사로 해소되어 **M2 RESOLVED**, MEDIUM3(M1/M3/M4)/LOW1 유지. 아래 MEDIUM4와 M2 pending은 과거 기록이다. 다음은 H1 최소 재현·정상 negative/guard 보완과 남은 M3 품질 gate이며 L1/릴리스보다 우선한다. 기존041 미커밋 구현은 보존했고042 production 변경·추가 dependency/migration0.
+
+## TASK-041 역할 정책 구현
+
+Copy policy v3와 공통 역할별 검토, Editor/Final review shell·후보 비교 UI를 구현했다. C1~C22 allow9/warning7/reject6을 충족하며, 수동/legacy 경고와 새 생성의 hard guard를 구분한다. TASK-041은 실제 외부 호출0이며 실제 판정은 후속 TASK-042에서 수행했다. [결과와 한계](tasks/TASK-041.md).
+
 ## TASK-040 UI 및 실제 검증
 
 **TASK-040:** failed-Tile retry UI와 최소 read-only DTO, stable-ID true/false 선택 보존을 구현했다. 실제 도매상품67695797의 연속800×3600 source2-Tile에서 partial→complete, retry OpenAI1회(준비 포함2), 후보5→10, Derived3개 저장/중복 방어를 확인했다. 전체1054 tests PASS. 문서 적용 및 원본 최종 build 재확인은 workspace 쓰기 권한 제한으로 대기 중이다. M2는 기능 gate 충족/최종 확정 대기, M3·MEDIUM4/LOW1은 아직 유지한다. [67개 항목과 한계](tasks/TASK-040.md).
@@ -227,12 +243,12 @@ AI 비용 감소 목표는 M2의 재사용 가능한 성공 타일에 한정된�
 | TASK-039 실패 타일 재시도 서버 | 038 후. checkpoint/CAS/runId/lease와 명시 retry endpoint를 기존 service에 연결 | 없음 / 자동 tests는 mock만 | 완료 타일 호출0, 대상당1이하, interruption/경합/stale 차단, 전체 실패 시 이전 결과·metadata·Derived 불변 |
 | TASK-040 복구 UI 연결 | 039 후. 실패/미완료/재사용/비용 미확인·예정 호출·legacy 전체 분석 안내와 candidate 선택 보존 | 없음 / mock·로컬 browser만 | reload/중단/저장/재시도 실패에서 draft·선택·이전 성공 보존, 숨은 AI 호출0 |
 | TASK-041 Copy 역할 정책 | 037 후, 권장 실행은040 다음. 공통 deterministic 판정·prompt·policy fingerprint 개선 | 없음 / mock만 | corpus의 명확한 반복/촬영 설명 판정, 정상 카피·스펙·옵션 false positive 회귀0, 추가AI pass0 |
-| TASK-042 Copy 검토 UX | 041 후. 기존 Editor/후보 비교·review 경계에 이유 표시, null body의 명시 편집 확인 | 없음 / mock·로컬 browser만 | legacy 자동 수정0, 사용자 draft/CAS/후보 적용 보존, 검토 경고가 Export article에 들어가지 않음 |
-| TASK-043 실제 AI·복구 통합 QA | 040/042 후. 2상품 첫 출력, 제한된 실제 타일 복구, 동일 canonical PNG/JPG 및 기존 데이터 보호 검증 | 없음 / 승인 범위의 최소 OpenAI; 신규 Import가 필요한 경우만 공식 API | 아래 호출 예산·품질 gate와 전체 회귀 통과, mock/replay/실호출 구분 보고; 미달 시 NEEDS_WORK |
+| TASK-042 M3 Actual AI Output & Browser Validation | 사용자 지정 범위. 041 구현 검토 UX를 실제 상품67695797/Editor/Final/Export로 검증 | 없음 / 실제 Planner1+Section1+regen1 | 실행 완료, 1091 tests PASS. H1 관찰 보고체 미검출로 M3 NEEDS_WORK; 상세 TASK-042 참조 |
+| TASK-043 Observation-Narration Guard Patch & Actual AI Revalidation | 사용자 지정 H1 최소 patch·focused corpus·실제 재검증 완료 | 없음 / 실제 Section1, Planner0/regen0 | 1142 tests·Browser/Final/Export PASS, H1 종료·M3 RESOLVED; TASK-043 참조 |
 | TASK-044 선택 L1 sparse spacing | 043 Must 통과 후 선택. 원인 확인된 sparse variant의 bounded CSS만 | 없음 / 없음 | 같은 canonical 전후와 장문/다중 사진/옵션/860px PNG/JPG 비교 통과; 실패하면 이 TASK만 이월 |
 | TASK-045 v0.2.0 Release 검증·문서 | 043 및 채택한044 후. 최종 전체검사·freeze·release notes·환경/롤백 기록 | 없음 / 원칙0, 새 회귀가 있으면 별도 최소 승인 | 남은 backlog 정직한 상태, B/H0과 scope gate, 보안 불변 확인. 실제 release 직전에만 package version 변경; commit/merge/tag는 별도 요청 |
 
-순서: **원인·계약037 → 순수 로직038 → 서버039 → UI040 → copy 정책041 → 검토UI042 → 실제QA043 → 선택044 → release045**. 위험이 큰 DB/보안 변경을 앞부분에 몰아넣지 않는다. 043에서 문제를 찾으면 해당 모듈 TASK로 돌아가고 다른 Commerce 기능을 추가하지 않는다.
+현재 순서: **원인·계약037 → 순수 로직038 → 서버039 → UI040 → copy 정책/검토UI041 → 실제QA042 → 잔여 M3 gap/통합QA043 → 선택044 → release045**. 042의 H1을 해당 copy 모듈에서 먼저 해결하고 다른 Commerce 기능을 추가하지 않는다.
 
 ## 12. 검증·호출·데이터 보호 계획
 
@@ -274,4 +290,4 @@ AI 비용 감소 목표는 M2의 재사용 가능한 성공 타일에 한정된�
 
 A의 주요 위험은 cache 입력 불일치에 따른 잘못된 재사용, checkpoint 경합으로 다른 metadata 유실, 숨은 중복 비용, copy guard false positive다. 이 때문에 계약→순수 로직→서버→UI→실제 QA 순서를 고정한다. 보안 한도·same-origin·서버 키 경계는 약화하지 않고 공개 SaaS는 계속 금지한다.
 
-다음 권장 작업은 **TASK-037 — M2/M3 재현 corpus와 계약 확정**이다. 이 roadmap 자체는 기능 구현, 실제 API 호출, migration 또는 공개 배포에 대한 포괄 승인으로 취급하지 않는다.
+현재 다음 권장 작업은 **선택 TASK-044 L1 bounded spacing 또는 TASK-045 release 검증**이다. 위 TASK-036의 초기 조사와 호출 계획은 역사적 설계이며 후속 실제 API 호출, migration 또는 공개 배포에 대한 포괄 승인이 아니다.

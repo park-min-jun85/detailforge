@@ -1,7 +1,7 @@
 import type { PlannerAsset } from "@/features/page-planner/schemas";
 import type { GeneratedSection } from "@/features/section-engine/schemas";
 
-export const COMMERCE_COPY_VERSION = 2;
+export const COMMERCE_COPY_VERSION = 3;
 export const COPY_INTENTS = {
   hero: "identity", keyBenefits: "benefit_from_fact", feature: "feature_from_fact",
   imageText: "visual_description", gallery: "visual_description", detail: "detail_description",
@@ -24,8 +24,18 @@ export function detectMetaObservationCopy(text: string, context: { type?: string
   if (media.test(value) && inspect.test(value)) patterns.push("media_inspection");
   if (/(?:이미지|사진)(?:입니다|이다|에서.+보입니다|에.+보입니다)/.test(value)) patterns.push("media_report");
   const visual = ["identity", "visual_description", "detail_description", "feature_from_fact", "benefit_from_fact"].includes(intent);
+  if (visual && /(?:모델|사람)(?:이|가)?착용하고있는모습(?:입니다|이다)(?:[.!?。]|$)/u.test(value)) patterns.push("wearing_scene_report");
   // Bounded camera-framing phrases seen in QA; product construction/design remains valid.
-  if (visual && /(?:근접|클로즈업)(?:모습|구성)(?:[.!?。]|$)|(?:누른|잡은|들고있는|촬영한|담은)구도(?:[.!?。]|$)/u.test(value)) patterns.push("camera_framing");
+  if (visual && /(?:근접|클로즈업)(?:모습|구성)(?:[.!?。]|$)|(?:누른|잡은|들고있는|촬영한|담은)구도(?:입니다|이다)?(?:[.!?。]|$)/u.test(value)) patterns.push("camera_framing");
+  // A visual object + capture report can imply a photo without naming it (TASK-042 H1).
+  // Keep adjacency/modifiers bounded: packaging/storage 담다 and design noun phrases are not reports.
+  const visualObject = "(?:외관|모습|실루엣|디테일|장면|구도|전면|후면)";
+  const captureModifier = "(?:(?:사진|이미지|화면|컷|한장)(?:에|으로)|가까이|자세히|선명하게|생생하게|함께|한눈에){0,2}";
+  const captureVerb = "(?:담았습니다|담아냈습니다|촬영했습니다|포착했습니다|(?:담은|담아낸)(?:(?:사진|이미지|컷|화면|모습|장면|구도)(?:입니다|이다)?)?)";
+  const captureReport = new RegExp(`${visualObject}(?:을|를)${captureModifier}${captureVerb}(?:[.!?。,;:]|$)`, "u");
+  // 보여줍니다/나타납니다 alone can describe a product. Require an explicit medium in the same clause.
+  const mediumReport = new RegExp(`(?:사진|이미지|컷|화면)(?:에서는|에는|에서|은|는|이|가|에)[^.!?。;,\\n]{0,32}${visualObject}(?:을|를|이|가)${captureModifier}(?:보여줍니다|나타납니다)(?:[.!?。,;:]|$)`, "u");
+  if (captureReport.test(value) || text.split(/[.!?。;,\n]/u).some(clause => mediumReport.test(normalize(clause)))) patterns.push("capture_narration");
   if (visual && /모습|형태|외관|디테일|제품|패드|착용|실루엣|배치|접힘선/.test(value)) {
     if (/확인할수있|확인해보|살펴볼수|보이는모습|보입니다|배치되어있/.test(value)) patterns.push("observation_narration");
   }
@@ -114,4 +124,6 @@ Avoid camera-framing filler such as 근접 모습, 근접 구성, 손으로 누�
 Describe only an actually supplied V observation in a short neutral noun phrase: 앞면 지퍼 여밈 디자인, 착용 상태의 전체 실루엣. These are EXAMPLES, not facts about this product; use only when the observation actually contains that feature. Do not invent front/back views, stitching, colors or closures.
 V alone cannot justify 간편/편리/편안/따뜻/보온/가벼움/부드러움/흡수/내구/튼튼/고급/실용/안전/피부 benefits. Each such claim requires a relevant supported F. A visual hint is placement-only, so give it no invented descriptive assertion. A neutral title with null detail/imageText body or null gallery intro is preferable to filler.
 Hero is identity: retain a grounded product identity, no duplicated product-name subheadline, no report narration. A null subheadline and empty highlights are valid. imageText describes one distinct observed appearance. detail needs its own visual or new supported detail evidence. gallery may have only a concise title, no mandatory caption. useCase stays explicitly hypothetical with supported F. Actual notice/selection instructions such as 구매 전 옵션을 확인해 주세요 are not image reports; never invent a notice Fact.
+Separate title and body roles: the title names the point; the body adds a DIFFERENT supplied observation or supported fact. Product-name + 소개합니다, closure title + 적용되어 있습니다, and the same closure/pocket list + 착용 외관 do not add information. If nothing else is supported, use the schema's nullable subheadline/body/intro instead of a restatement. Never null a required field or delete canonical data. 모델이 착용하고 있는 모습입니다 is scene-report filler; 착용 상태의 전체 실루엣 is allowed only with that actual V observation.
+A shared F across marketing sections is a review risk even with different photos or wording (for example, the same quantity or dimensions). Assign its primary marketing role and keep exact canonical specification/option repetition. Shared product nouns alone do not imply duplicate meaning; distinct supplied observations and new supported F remain useful.
 Use sectionIntents, factPresentation and otherSections only for differentiation, not new evidence. Same image plus same V is not another meaningful detail. Prefer distinct suitable approved photos or fewer sections; do not fill a count. Never rewrite exact specifications or confirmed choices. No post-processing, extra AI pass or automatic retries.`;
