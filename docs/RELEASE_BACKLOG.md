@@ -1,5 +1,13 @@
 # Release Backlog
 
+## TASK-048 — M1 RESOLVED / M4 NEEDS_WORK
+
+2026-09-23, 실제 상품67399861/67695797 source2개, 중복 없는 crop26개를 동일 source bytes/candidate로 pre047과 비교했다. AFTER26개 모두 preserve: clear/possible new content loss0, false-positive trim0. 합성30종·전체1253 tests·typegen/typecheck/lint/build/diff/secret 및 실제 AFTER3개 save/read/Planner/Renderer/PNG·JPG860px PASS. **BLOCKER0/HIGH0/MEDIUM1(M4)/LOW0**. M1 종료는 고정 후보에 대한 추가 trim 안전성 gate 범위이며 기존 후보의 인물/제품 의미 구분 전체 해결은 아니다.
+
+**M4 NEEDS_WORK:** cleaner0/same17/minor worse9, obvious residue3→3(A01 녹색 테두리/B01 갈색 L자 패널/B02 내부 카드 조각). frame/background 후보6개에서 실제 개선을 확인하지 못했다. 모호한 배경 보존과 보기 나쁜 패널 miss를 분리하고, 후자를 제거하려고 threshold/cap을 완화하지 않았다. 실제 적극 trim 표본0이라는 한계도 명시한다. 시각 판정은 Codex 검토이며 사용자 sign-off 아님. [66항목·26개 전수 QA](tasks/TASK-048.md), [최신 계약 상태](V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md).
+
+다음 권장은 **TASK-049 M4 실제 frame/panel miss 구분 및 최소 재현 계약**이다. pixel-level 구별 가능성을 먼저 확인하고 일반화되는 안전한 최소 수정만 검토한다. Final Release Validation으로 바로 가지 않는다. production/fixture/UI/Renderer/migration/dependency/version 변경0, AI/Domeggook/원격 DB·Storage0, package0.2.0, 기존 Derived 보존, commit/merge/tag0. 아래 각 TASK의 MEDIUM2/QA pending은 당시 기록이다.
+
 ## TASK-047 — v2 conservative frame trim 구현 / 실제 QA 대기
 
 사용자 승인으로 **same pixels + same config => same decision** 계약을 적용했다. M1-A/H·M4-A/H는 동일 픽셀이라 모두 ambiguous/preserve, 기존22종에서 content-loss0(M1-H9,728→0). 신호 없는 opaque frame 잔존은 허용하고, 실제 separator/interior 구분이 있는 A2 8종에서 white/gray/beige/pink/JPEG noise/비대칭 band만 제거한다. 구분선 자체·원본 픽셀은 유지한다. 위험/alpha/미세 detail 우선, 최대3%·최소크기 유지, 새 trim version2/legacy1·없음 읽기 지원, 기존 Derived 자동 변경0.

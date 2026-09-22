@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-048:** 실제 Image Boundary Before/After QA 완료. `feat/image-boundary-real-qa` / `cea04fd`, source2/상품2/crop26. **M1 RESOLVED(추가 trim 안전성 gate), M4 NEEDS_WORK, MEDIUM1/LOW0**. AFTER 모두 preserve, clear/possible loss0, same17/cleaner0/minor worse9, obvious residue3→3. 합성30종·전체1253 tests·필수 검사·AFTER3개 저장/Planner/Renderer·PNG/JPG860px PASS. 적극 trim의 실제 안전성/기존 후보의 의미 인식 전체 해결 주장은 하지 않는다. production/fixture/AI/원격/version 변경0, 기존 Derived 보존, commit/merge/tag0. [66항목 및26개 전수 기록](./TASK-048.md), [최신 계약 상태](../V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md). 다음은 **TASK-049 M4 실제 frame/panel miss 구분·최소 재현 계약**, release 검증은 보류한다.
+
+## 이전 TASK-047 기록
+
 **TASK-047:** Conservative Colored-frame Detection & Content-loss Guard 완료. `feat/conservative-frame-trim` / 기준 `f693151`. 사용자 승인에 따라 같은 pixels/config의A/H는 모두 보존. 기존22종 content-loss0, separator가 있는A2 8종 safe trim, 위험 변 veto·최대3%·pixel identity·legacy/new provenance 검증. **1253 tests 및 필수 검사 PASS**, M1/M4는 **implementation complete / real QA pending, MEDIUM2/LOW0**. version0.2.0, AI/원격/UI/Renderer/SQL/dependency/commit/merge/tag0. [67항목 보고](./TASK-047.md), [승인된 계약과현재 matrix](../V0_2_1_IMAGE_BOUNDARY_CONTRACTS.md). 다음 TASK-048은 실제 여러 상품 원본 전후 QA다.
 
 ## 이전 TASK-046 기록

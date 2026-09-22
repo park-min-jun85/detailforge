@@ -1,5 +1,13 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
+## TASK-048 실제 QA 결과 — 최신 상태
+
+2026-09-23, 실제 source2/상품2의 서로 다른 crop26개를 같은 bytes/candidate로 pre047 `f693151`과 현재 `cea04fd`에서 비교했다. **M1 RESOLVED(추가 trim 안전성 gate), M4 NEEDS_WORK, MEDIUM1/LOW0.** AFTER는26개 모두 preserve/inset0, clear/possible new loss0, false-positive trim0. same17/cleaner0/worse9(흰 띠 minor residue 증가), obvious frame/panel residue3→3. 유색 frame 후보6개에서 실제 개선이 확인되지 않아 M4 해결로 세지 않는다. 아래 TASK-047 안전 규칙/fixture 계약은 변경하지 않았다.
+
+실제 입력에서 적극 trim이 안전했다는 증거는 없으며, 기존 후보에 이미 있는 인물/문자 잘림의 의미 인식 전체를 해결한 것도 아니다. 시각 분류는 Codex 직접 검토 기록으로 사용자 human sign-off와 구분한다. 고정 candidate 내부 픽셀 보존26/26, 반복26/26, JPEG encoding 및 PNG companion identity PASS. 실제 저장3개는 trim metadata 없음이 정상이고, 별도 A2 저장에서 version2를 확인했다. 합성 M1 15종/M4 15종·전체1253 tests·필수 검사·860px PNG/JPG PASS. production/threshold/fixture 변경0, 원격 호출0, 기존 Derived 변경0. [66항목 및26개 전수 기록](tasks/TASK-048.md).
+
+다음은 release gate가 아니라 **M4 실제 frame/panel miss의 pixel-only 구별 가능성과 최소 재현 계약**이다. A01 외곽 frame과 B01/B02 불연속/내부 패널을 분리해 다룬다. content-loss0과 `same pixels + same config => same decision`을 제거율보다 우선한다.
+
 ## TASK-047 우선 계약 — 사용자 승인으로 조정
 
 아래 TASK-046 기록은 당시 baseline이다. TASK-047에서는 **same pixels + same config => same decision**을 최우선 불변식으로 적용한다. M1-A/H와 M4-A/H는 동일 bytes이므로 모두 production `ambiguous/preserve` 대상이다. 원래 fixture의 의미 label/knownContentBounds/과거 관측은 보존하며 이를 production 입력이나 분기에 사용하지 않는다.
