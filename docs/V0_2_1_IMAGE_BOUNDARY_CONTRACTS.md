@@ -1,5 +1,11 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
+## TASK-053 실제 Manual Crop QA — M1/M4 RESOLVED
+
+실제 local 원본의 A01 L16/T17/R15/B18→790×790, B01 L8/T0/R0/B26→372×546 수동 저장은 cleaner/관찰한 추가 손실0. A01 녹색 separator는 보존했고 B01 bottom26은 auto cap17에 의해 축소되지 않았다. B02 bottom38은 texture 손실 위험으로 Cancel/preserve, 후속 auto 저장도691×547/추가 trim0. Browser preview F와 실제 JPEG95 인코딩 기준 결과 exact, manual provenance·중복·부분 실패·stale/CAS·Desktop/375px·Renderer/PNG/JPG860×2468 PASS. [72항목 보고](tasks/TASK-053.md).
+
+**M1 RESOLVED 유지 / M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 해결은 자동 안전 trim+ambiguous preserve+사용자의 명시적 manual review/save 기준이며 모든 colored frame의 자동 제거가 아니다. A/H preserve, A2 safe trim, same pixels/config invariant, content-loss 우선·3% 자동 cap은 변경0. production/기존 fixture/AI/원격 DB·Storage0, package0.2.0. 다음 TASK-054 release 검증이며 이번 commit/merge/tag0. 아래 TASK-052 이하 내용은 당시 상태다.
+
 ## TASK-052 UI 구현 상태
 
 Manual Crop Editor/ID·basis draft/selection·retry/V2 save 및 Desktop·375px 로컬 Browser QA를 완료했다. zero manual 승인과 override 제거를 구분하며 성공·재사용만 pending state를 지우고 실패를 보존한다. 자동 detector/3%/A-H preserve/A2 safe trim/`same pixels + same config => same decision` 계약은 그대로다. **M1 RESOLVED / M4 NEEDS_WORK, MEDIUM1/LOW0**: TASK-053 실제 A01/B01/B02 review/save QA가 남았다. [최신 계약](V0_2_1_MANUAL_CROP_DESIGN.md), [75항목 보고](tasks/TASK-052.md). 아래는 각 TASK 당시 기록이다.

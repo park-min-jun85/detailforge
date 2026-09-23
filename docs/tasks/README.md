@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-053:** Actual Manual Crop Browser, Derived Save & Export QA 완료. `feat/manual-crop-real-qa` / 기준 `30e5a6f`. 실제 A01/B01 cleaner·추가 손실0, B02 Cancel/preserve, 신규 Derived6개 exact source-F 인코딩 기준·provenance·duplicate·partial/stale/CAS·Desktop/375px·Renderer·PNG/JPG860×2468 PASS. **M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 기존1417 tests·필수검사 PASS. production/AI/원격 mutation/migration/dependency0, package0.2.0, commit/merge/tag0. [72항목 보고](./TASK-053.md), [최신 계약](../V0_2_1_MANUAL_CROP_DESIGN.md). 다음 **TASK-054 v0.2.1 Final Release Validation**.
+
+## 이전 TASK-052 기록
+
 **TASK-052:** Manual Crop Editor UI, Selection & Retry Integration 완료. `feat/manual-crop-editor-ui` / 기준 `f2d0518`. saveAllowed 카드/대화상자/SVG/4edge pointer+numeric/keyboard/focus/375px, ID·basis draft merge와 V2 save,0px/remove 분리, 성공·재사용 clear/실패 preserve를 구현했다. 새28 포함 **1417 tests·필수검사·Desktop/375px local Browser QA PASS**. **M1 RESOLVED / M4 NEEDS_WORK, MEDIUM1/LOW0.** migration/dependency/AI/원격 mutation0, package0.2.0, commit/merge/tag0. [75항목 보고](./TASK-052.md), [실행 계약](../V0_2_1_MANUAL_CROP_DESIGN.md). 다음 **TASK-053 실제 A01/B01/B02 Manual Crop Browser & Save QA**, 이후 gate 충족 시054 release 검증.
 
 ## 이전 TASK-051 기록

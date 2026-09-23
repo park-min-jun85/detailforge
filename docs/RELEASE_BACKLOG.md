@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-053 — 실제 Manual Crop QA 완료 / M4 RESOLVED
+
+2026-09-23. 실제 원본2개 A01/B01/B02를 production UI/save route/service/Sharp와 격리 loopback persistence에서 검증했다. A01 회색 외곽 제거(녹색 선 보존)790×790, B01 패널 제거372×546/bottom26>cap17은 cleaner·추가 내용 손실0. B02는 위험한 bottom38을 취소하고691×547 보존. manual/zero exact F, 신규 Derived6개 reference bytes exact, provenance·duplicate·variant·partial failure·stale/CAS·Desktop/375px·Renderer·PNG/JPG860×2468 PASS. [72항목 보고](tasks/TASK-053.md).
+
+**M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** M4의 종료 범위는 보수 자동 trim+ambiguous preserve+실제 사용 가능한 manual review/save이며 모든 frame 자동 제거가 아니다. 기존1417 tests 및 필수검사 PASS, production/detector/기존fixture/migration/dependency 변경0. OpenAI/Domeggook/원격 DB·Storage0, 원본 보호·격리 QA 종료 확인. 다음 **TASK-054 v0.2.1 Final Release Validation**. package0.2.0, stage/commit/main merge/tag0. 아래 기록은 각 TASK 당시 상태다.
+
 ## TASK-052 — Manual Crop UI 구현 / 실제 상품 QA 대기
 
 2026-09-23. Candidate Review의 saveAllowed 카드 진입, bounded dialog/SVG clip/dim/4 edge pointer+numeric, keyboard/focus/375px, source pixel draft와 selection/retry/URL reconciliation, V2 save를 구현했다. `[후보 전체로]`는0px manual 승인, `[수동 조정 해제]`는 auto 경로 복귀다. 성공·재사용 selection/draft 제거와 F receipt, 실패 selection/draft 유지, stale/conflict 갱신 후 재승인을 검증했다. [75항목 보고](tasks/TASK-052.md), [최신 계약](V0_2_1_MANUAL_CROP_DESIGN.md).

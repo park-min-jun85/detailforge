@@ -1,8 +1,22 @@
 # v0.2.1 Manual Crop Review UX & Data Contract — TASK-050
 
-2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051 서버/domain/save/readers, TASK-052 Crop Editor UI와 로컬 Browser QA 완료. 실제 상품 QA는 TASK-053 대기**다. 아래 §1의 현재 구현은 TASK-050 조사 당시 기록이며, 변경된 실행 계약은 바로 아래 최신 상태를 따른다.
+2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051 서버, TASK-052 UI, TASK-053 실제 원본 Browser/save/export QA 완료. M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 아래 §1은 설계 당시 기록이며 현재 상태는 바로 아래 TASK-053을 따른다.
 
-## TASK-052 실행 상태와 계약 변경
+## TASK-053 실제 원본 QA 결과
+
+`feat/manual-crop-real-qa` / 기준 `30e5a6f`. Production 변경 전에 현재 UI→V2 route→실제 save service/Sharp→격리 loopback persistence→재조회→Renderer/export를 실행했다. 원본2개와 A01/B01/B02 좌표·hash는048/049 그대로다. 원격 사용자 DB/Storage 호출0, 기존 사용자 데이터 불변. isolated source row의 candidate metadata는 기존 ID/rect로 재구성했고 AI 재분석0이다.
+
+- **A01:** L16/T17/R15/B18, F `(35,522,790,790)`, saved790×790. 바깥 회색 띠를 제거하고 제품·강아지와 인접한 녹색 separator는 남겼다. cleaner, 관찰한 추가 content loss0. 모든 녹색 선 제거를 목표로 하지 않는다.
+- **B01:** L8/T0/R0/B26, F `(368,2000,372,546)`, saved372×546. 왼쪽·하단 갈색 L자 패널 제거, bottom26>자동 cap17 유지. cleaner, 인물·의류 추가 손실0.
+- **B02:** bottom38 preview에서 양옆 실제 texture가 함께 제외되는 것을 확인하고 Escape/Cancel. preserve는 정상 결과다. 후속 override 제거/auto 저장도 full691×547/trim없음으로 확인, same.
+
+Desktop1440×1000와375×812에서 실제 source의 Apply/선택/저장, explicit false, keyboard/focus, 같은 session의 reorder/URL 갱신을 확인했다. 신규 Derived6개(manual4/automatic2)는 preview F와 dimensions 일치, source F를 동일 JPEG95/4:4:4로 encode한 기준 bytes/decoded pixels와 exact다. 원래 JPEG decode 픽셀과의 무손실 압축을 뜻하지 않는다. 별도 실제 source helper instrumentation에서 manual/zero의 auto-trim 호출0, auto 경로1을 확인했다.
+
+동일 manual F 재사용, auto/manual 동일 F 재사용 및 provenance 불변, zero의 별도 variant, 실제 service 부분 저장(upload fault1)과 stale/최소/CAS 오류 후 초안 보존을 확인했다. asset_limit 메시지는 mock, 슬롯 enforcement는 기존 domain/service 전체 회귀로 확인했다. manual은 inventory에 정상 포함되며 여러 유사 변형 중 일부가 기존 near-duplicate 순위에서 억제되는 것은 mode와 무관한 기존 정책이다. 단독 대표 변형은 각각 available이다.
+
+A/B canonical renderer 정상, B PNG/JPG **860×2468**, 누락·overflow·control0. 실제 source는 EXIF1이며1~8 domain 회귀와 구분한다. 시각 판정은 Codex의 검토이며 사용자 human sign-off를 대신하지 않는다. [72항목·증거·한계](tasks/TASK-053.md). **M4 RESOLVED**는 안전 자동 trim+ambiguous preserve+명시 manual review/save의 결합 기준이다. 모든 residue 자동 제거 보장은 아니다. 다음 TASK-054 Final Release Validation, version0.2.0/commit·merge·tag0 유지.
+
+## TASK-052 당시 실행 상태와 계약 변경
 
 `feat/manual-crop-editor-ui` / 기준 `f2d0518`. Candidate Review의 saveAllowed 카드에만 `[자르기 조정]`을 표시한다. native dialog/SVG 후보 clip/제외 dim/4 edge pointer capture/4 numeric 입력, integer source pixels와 shared `manualCropRect`를 사용한다. Arrow 1px/Shift 10px, 44 CSS px 핸들, focus trap/복귀, 375px contain, image load/dimensions/error gate를 구현했다. 편집·적용은 local-only이며 새 이미지나 임시 Storage를 만들지 않는다.
 
@@ -237,7 +251,7 @@ signed URL은 기존 TTL300초/만료 전 갱신 흐름을 사용한다. draft�
 
 M1은 기존 자동 추가 trim 안전성 gate의 RESOLVED를 유지한다. manual explicit input이 자동 guard 약화/semantic exception 근거가 되지 않는다. original A/H 동일 pixels/config 보존, A2 white/colored safe trim, alpha/detail/최소/cap 회귀를 유지한다.
 
-**M4 RESOLVED는 아직 아니다.** 확실한 frame의 보수적 자동 trim + ambiguous preserve + 실제 사용할 수 있는 Candidate manual review/save가 구현되고, 다음 QA gate를 통과해야 한다. 설계나 mock만으로 종료하지 않는다.
+**TASK-053에서 M4 RESOLVED.** 아래는 설계 시 정한 gate이며, 실제 source의 Browser/service/Derived/Renderer/export와 기존 regression 증거를 위 결과에 기록했다. 범위는 확실한 frame의 보수적 자동 trim + ambiguous preserve + 사용할 수 있는 Candidate manual review/save다. 모든 자동 frame 제거 또는 임의 사용자 입력의 의미적 무손실을 보장하지 않는다.
 
 1. A01/B01/B02 generalized 실제 scenario를 Browser에서 검토하고 Apply/Cancel/Reset/선택/저장 흐름을 확인한다. B02 preserve 선택도 기록하며 모든 residue 제거를 강요하지 않는다.
 2. 실제 manual save에서 preview/source F/Asset dimensions/decoded 결과/새 v2 provenance 일치, additional auto trim0, 3% 초과 manual 양성, 동일 F 재사용/다른 F 새 변형/30슬롯 경계를 확인한다.
@@ -249,7 +263,7 @@ M1은 기존 자동 추가 trim 안전성 gate의 RESOLVED를 유지한다. manu
 
 - **TASK-051 domain/API/save/provenance:** strict V2+legacy union, bounded inset→F, canonical/revision/CAS, manual no-auto 경로, default legacy reuse/final identity/capacity, v1/v2 reader·review projection·visual inventory 호환. schema/tampering/0px/3%초과/최소/EXIF/duplicate/partial/CAS/lost-ack/legacy tests. UI 없음. 24개 최대 request8KiB 검증. M4 NEEDS_WORK 유지.
 - **TASK-052 Candidate Review UI 완료:** 4 edge+numeric editor, local Apply/Cancel, full-zero/remove 분리, F preview/receipt, ID/basis reconciliation, selection false 보존, 저장됨 variant/슬롯 추정, a11y/responsive/URL lifetime. dependency0, local/mock browser pointer·touch·keyboard·retry·failure 검증. 실제 상품 종료 QA는 TASK-053.
-- **TASK-053 Actual Browser + Derived save QA:** 기존 실제 A01/B01/B02 입력 재사용, 최소 명시 저장·중복/변형/실패 복구, source/old data 보호, EXIF/좌표와 Renderer/export 확인. 새로운 AI는 이 UX 검증에 필요하지 않다. 실제 QA 증거로 M4 종료 여부 결정.
+- **TASK-053 Actual Browser + Derived save QA 완료:** 실제 A01/B01 cleaner·추가 손실0, B02 Cancel/preserve, exact F/인코딩 기준/새 metadata, duplicate/부분 실패/모바일/Renderer·export 확인. M4 RESOLVED. 실제 EXIF1 source와 EXIF1~8 domain regression을 구분하며 물리 기기 전체 QA를 주장하지 않는다.
 - **TASK-054 v0.2.1 Release Validation:** 051~053 gate 충족/M4 해결 시 진행. package bump/release/Git publish는 별도 TASK 요청 범위에서만 수행한다. 현재 v0.2.0을 변경하지 않는다.
 
 future backlog: 이미 저장된 Derived의 편집/version/Page 참조 교체, outward 복구, 복잡한 transform/segmentation은 별도 계약이 필요하다. TASK-050은 문서만 바꾸며 이 목록의 구현을 시작하지 않는다. 실행 검사·69항목 완료 보고는 [TASK-050](tasks/TASK-050.md)에 기록한다.
