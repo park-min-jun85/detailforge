@@ -1,5 +1,13 @@
 # Release Backlog
 
+## TASK-050 — Manual Crop 설계 확정 / 구현 전
+
+2026-09-23. Candidate Review 저장 전 `[자르기 조정]`, inward-only 4 edge+numeric, normalized pixel inset, local Apply/Cancel/Reset, ID/basis별 draft와 explicit true/false selection 보존을 설계했다. 수동 override는0px도 자동 trim을 대체하고3% 초과를 허용하되 최소160×160·면적64000을 검증한다. strict V2 save/기존 revision CAS, manual v2 provenance/legacy reader, 최종 영역 duplicate/30슬롯/기존 automatic 승인 결과 재사용을 명시했다. [설계](V0_2_1_MANUAL_CROP_DESIGN.md), [69항목 보고](tasks/TASK-050.md).
+
+**M1 RESOLVED 유지 / M4 NEEDS_WORK, BLOCKER0/HIGH0/MEDIUM1/LOW0.** M4는 보수 자동 trim과 ambiguous preserve를 유지하면서, 사용자가 실제 manual review/save로 원하는 영역을 승인하고 preview와 저장 결과가 일치하는 흐름을 실제 QA로 검증해야 닫는다. 설계만으로 해결 처리하지 않는다. A01/B01/B02 분류·자동3%·동일 pixels/config 동일 decision·A2 회귀는 유지한다.
+
+다음은 **TASK-051 domain/API/save/provenance 및 reader 호환**, TASK-052 crop UI/selection/retry, TASK-053 실제 A01/B01/B02 Browser/저장 QA, 해결 시 TASK-054 release 검증이다. 기존 Derived 편집(version/Page 참조 교체), outward crop 복구, free transform은 별도 future backlog다. 이번 production/tests/migration/dependency/version 변경0, AI/원격 mutation0, package0.2.0, commit/merge/tag0. 전체1291 tests·typegen/typecheck/lint/build PASS. 아래 TASK-049의 다음050 안내는 당시 기록이다.
+
 ## TASK-049 — M4 원인·안전 분류 계약 확정
 
 2026-09-23. A01의 layered frame은 자동 승인 근거 부족으로 ambiguous, B01은 불연속 panel_background(완전 제거26px>cap17), B02는 제품 texture와 연결된 내부 card/content_touching_edge(38px>cap16)로 고정했다. 실제 helper 반환값과 pixel 통계, bounded real patch3개, positive3/paired negative3/real analogue3/동일-pixels alias1을 보존 계약으로 검증했다. positive는 기존 v2 양성 대조이며 실제 개선0이다. **M1 RESOLVED 유지 / M4 NEEDS_WORK — root cause/classification established. BLOCKER0/HIGH0/MEDIUM1/LOW0.** [실측·3행 gap matrix·57항목](tasks/TASK-049.md).

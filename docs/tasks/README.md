@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-050:** Manual Crop Review UX & Data Contract 설계 완료, 구현 전. `plan/manual-crop-review-ux` / 기준 `078ebf6`. Candidate Review inward-only/4 edge+numeric, 명시 manual no-auto trim/WYSIWYG, draft·retry·selection 보존, strict save V2/revision CAS, provenance/duplicate/legacy 호환·a11y/375px/오류·실제 QA gate를 확정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0.** 문서만 변경, production/migration/dependency/version/AI/원격 mutation0, 전체1291 tests·typegen/typecheck/lint/build PASS. commit/merge/tag0. [설계](../V0_2_1_MANUAL_CROP_DESIGN.md), [69항목 보고](./TASK-050.md). 다음은 **TASK-051 domain/API/save/provenance**, 이후052 UI → 053 실제 QA → gate 충족 시054 release 검증이다.
+
+## 이전 TASK-049 기록
+
 **TASK-049:** M4 Real Colored-frame Miss Reproduction & Safe Classification Contract 완료. `feat/colored-frame-real-miss-contracts` / 기준 `c62fe89`. A01 ambiguous, B01 panel_background, B02 content_touching_edge; 실제 자동 trim 승인 패턴0. 작은 real patch3개(100,676bytes)/합성10개/current·desired 분리 검증, 새38 포함 **1291 tests 및 필수검사 PASS**. **M1 RESOLVED 유지 / M4 NEEDS_WORK — root cause/classification established, MEDIUM1/LOW0.** production/threshold/기존fixture/UI/AI/원격/package0, commit/merge/tag0. [57항목·수치·gap matrix](./TASK-049.md). 다음은 **TASK-050 Review/Manual Crop UX 설계**, detector 확장·release 검증으로 바로 진행하지 않는다.
 
 ## 이전 TASK-048 기록

@@ -1,6 +1,18 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
-## TASK-049 실제 miss 분류 계약 — 최신 상태
+## TASK-050 Manual Crop 계약 — 최신 상태 / 구현 전
+
+2026-09-23. [Manual Crop 설계](V0_2_1_MANUAL_CROP_DESIGN.md)를 확정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0.** TASK-049의 실제 safe automatic extension 근거0을 받아들여 threshold를 완화하지 않고 Candidate Review의 명시적 inward 조정을 후속 구현한다. 이번 변경은 문서뿐이다.
+
+- 자동 detector는 기존3%·최소크기·content preservation·`same pixels + same config => same decision` 유지. A/H 동일 입력 보존, A2 구별 신호의 safe trim 및 knownContentBounds/semantic label의 test-only 경계를 바꾸지 않는다.
+- 수동은 canonical Candidate 기준 정수 L/T/R/B inset, normalized source pixel 좌표. 3% 초과를 허용하되 결과 폭/높이≥160·면적≥64000 및 내부 bounds를 검증한다. 임의 source rect/outward/resize/회전은 금지한다.
+- manual override 없음은 현재 automatic. 명시 override는0px도 포함하여 **추가 auto trim 없이 preview F를 정확히 저장**한다. Apply/Cancel/Reset은 local draft이며 최종 선택 저장만 mutation한다. selection true/false는 Apply로 바꾸지 않는다.
+- 서버 canonical 조회·strict V2 request/expectedRevision·기존 CAS/lease·source bytes 검증을 사용한다. 제안 manual provenance v2는 sourceRect=base 의미를 유지하고 adjustment.mode/manual insets만 추가한다. v1 automatic/trim1·2/없음 읽기와 기존 Derived 불변을 유지한다.
+- 현재 duplicate는 base rect 기준임을 확인했다. 후속 구현은 parent+source hash+effective final rect로 manual 변형을 구분한다. 기본 automatic 재요청의 기존 승인 결과는 재crop 없이 재사용하고, manual은 명시 F로만 비교한다. 역할만 다른 동일 F는 새 파일을 만들지 않으며 전체30슬롯을 유지한다.
+
+M4 종료 정의는 **확실한 frame의 보수 자동 trim + ambiguous 보존 + 실제 사용 가능한 manual review/save + preview/저장 영역 일치 + 새 manual provenance + 기존 데이터 불변**이다. B02처럼 의미 texture가 제거될 수 있으면 preserve/Cancel도 정상 결정이며 모든 residue 자동 제거를 요구하지 않는다. 실제 Browser/저장 QA가 필요하다. TASK-051 domain/API/readers → TASK-052 UI → TASK-053 A01/B01/B02 실제 QA → 충족 시 TASK-054 release 검증. [69항목 보고](tasks/TASK-050.md). 아래 기록은 각 TASK 당시 상태다.
+
+## TASK-049 실제 miss 분류 계약
 
 2026-09-23, A01/B01/B02 원본 bytes/candidate에서 실제 preserve 이유·pixel 통계·작은 lossless patch3개와 generalized analogue10개를 고정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK — root cause/classification established, MEDIUM1/LOW0.** production/threshold/crop/기존fixture 변경0. 새38 포함1291 tests 및 필수검사 PASS. [57항목·실측·gap matrix](tasks/TASK-049.md).
 
