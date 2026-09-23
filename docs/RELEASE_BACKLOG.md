@@ -1,5 +1,13 @@
 # Release Backlog
 
+## TASK-054 — v0.2.1 RC PASS / Image Extraction Quality 목표 완료
+
+2026-09-23 · `release/v0.2.1` · 기준 `240a943`. **M1 RESOLVED / M4 RESOLVED. 기존 품질 backlog BLOCKER0/HIGH0/MEDIUM0/LOW0.** M2/M3 회귀 PASS. 보수적 자동 trim + ambiguous preserve + 명시 manual review/save 결합 범위로 완료했다. 인물/제품 의미 인식 전체 해결이나 모든 frame 자동 제거를 뜻하지 않는다.
+
+실제 local A01/B01 cleaner·관찰한 추가 손실0, B02 Cancel/preserve, Desktop/375px·실제 저장·provenance/duplicate/stale/CAS·Renderer·PNG/JPG860×2468을 재검증했다. 전체1417 tests와 필수검사·secret/data protection/cleanup PASS 뒤 package/lock을0.2.1로 갱신했다. 앱/test/fixture/dependency/migration 변경0, OpenAI/Domeggook/원격 mutation0. [68항목·Release notes·다음 Git 명령](tasks/TASK-054.md).
+
+**Local/Internal MVP**다. 공개 SaaS의 Auth/owner_id/user-specific RLS/Storage ownership policy는 위 품질 severity 집계와 별개의 미완료 배포 blocker다. stage/commit/main merge/tag/Release 게시0. 아래 TASK 기록의 수치와 버전은 당시 상태다.
+
 ## TASK-053 — 실제 Manual Crop QA 완료 / M4 RESOLVED
 
 2026-09-23. 실제 원본2개 A01/B01/B02를 production UI/save route/service/Sharp와 격리 loopback persistence에서 검증했다. A01 회색 외곽 제거(녹색 선 보존)790×790, B01 패널 제거372×546/bottom26>cap17은 cleaner·추가 내용 손실0. B02는 위험한 bottom38을 취소하고691×547 보존. manual/zero exact F, 신규 Derived6개 reference bytes exact, provenance·duplicate·variant·partial failure·stale/CAS·Desktop/375px·Renderer·PNG/JPG860×2468 PASS. [72항목 보고](tasks/TASK-053.md).
@@ -126,10 +134,10 @@ M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M
 
 ## Post-MVP enhancement
 
-- **M1 — 인물/제품 잘림 구분**: Asset AI의 cropped 경고가 착용 인물의 얼굴 잘림과 제품 본체 잘림을 구분하지 못한다. TASK030 B 및 이번 A 대표/근접 분석에서 관찰. `asset-analysis`, `page-quality/images`의 판단·평가 corpus 개선. 기존 Facts 손상 없음, 역할/대표성 mock 회귀 필요.
+- **M1 — 추가 crop content-loss safety: RESOLVED**. TASK-047~048 자동 보존 우선 계약과 TASK-053~054 실제 수동 QA로 종료했다. 기존 Candidate 밖의 내용 복원이나 Asset AI의 인물/제품 의미 구분 일반화를 보장하지 않는다. 그 의미 인식 연구는 별도 future enhancement이며 닫힌 M1을 열린 품질 항목으로 중복 집계하지 않는다.
 - **M2 — 부분 타일 실패 복구: RESOLVED**. TASK-038~040 checkpoint/failed-only retry/선택 보존 및 실제 controlled E2E에 TASK-042 원본 최종 검사를 더해 종료했다. 전체 성공 타일을 재호출하지 않는 비용·입력·CAS·이전 성공 보존 회귀를 유지한다. 열린 MEDIUM 수에서 제외한다.
 - **M3 — 보고체에 가까운 짧은 카피: RESOLVED by TASK-043**. TASK-041 frozen22개 보완에 TASK-042 H1의 bounded guard/정상 negative/실제 첫 출력 재검증을 더해 종료했다. 과거 H1 accepted 이력은 TASK-042에 보존한다. 문구 자동 rewrite/과장 benefit/추가 생성으로 실패 숨김 없음. 열린 MEDIUM 수에서 제외한다.
-- **M4 — 원본 장식 경계 보존**: A Hero 실제 사진의 회색·초록 프레임이 crop에 남는다. `detail-extraction/images`의 보수적 rect/trim 한계. source pixels 자체이므로 CSS stretch 문제가 아니며 제품을 자르는 임의 trim은 금지. 최대3% edge·원본 불변 회귀와 수동 가장자리 검토 필요.
+- **M4 — 유색 프레임 처리: RESOLVED**. safe automatic trim/ambiguous preserve/명시 manual Crop/WYSIWYG/출처·중복·stale/CAS 보호와 실제 A01/B01 cleaner·B02 preserve, Desktop/Mobile·Renderer/Export gate를 통과했다. 모든 프레임 자동 제거가 목표는 아니며 기존 Derived 직접 편집·outward 확장은 별도 future enhancement다.
 - 추가 도매 Adapter, SKU/가격/재고·종속 조합 모델, PDF/분할 출력, theme/template는 각각 별도 명시 요청 시 검토한다.
 - AI upscale/background removal은 현재 금지 범위다. 원본 이미지·제품 동일성 보장을 별도 설계하기 전 추가하지 않는다.
 

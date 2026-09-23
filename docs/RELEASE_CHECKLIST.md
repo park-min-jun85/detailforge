@@ -1,6 +1,36 @@
 # DetailForge Release Checklist
 
-## v0.2.0 — TASK-045 현재 판정
+## v0.2.1 — TASK-054 현재 판정
+
+2026-09-23 · `release/v0.2.1` · 시작 HEAD `240a943`, local main도 동일. **PASS — v0.2.1 Local/Internal MVP Release Candidate.** 공식 최신 tag는 v0.2.0이며 v0.2.1 Git 릴리스 작업은 미실행이다. [68항목 보고·Release notes](tasks/TASK-054.md). 아래 이전 체크리스트는 당시 기록이다.
+
+- [x] Release freeze: 앱/알고리즘/threshold/UI/prompt/test/fixture/SQL 변경0. version·문서만 수정, dependency/migration0.
+- [x] 실제 source 확인: pixel-only guard·동일 pixels/config·A/H 보존·A2 safe trim·3% 자동 cap. knownContentBounds/semantic label production 사용0.
+- [x] 전체1417 tests PASS, fail/skip/cancel0. M1/M4 safety, M2 failed-only retry, M3 role-aware copy/observation guard 회귀 포함.
+- [x] 실제 manual save: A01 L16/T17/R15/B18→790×790, B01 L8/T0/R0/B26→372×546. cleaner·관찰한 추가 손실0, B01 manual26>auto cap17. B02 위험 preview 취소·691×547 보존.
+- [x] inward 정수/최소크기/0px override·추가 auto trim0, Preview F/저장F 일치. PNG exact subset 테스트와 실제 JPEG95 기준 bytes/pixels 비교를 구분.
+- [x] Desktop1440×1000/Mobile375×812 dialog/overlay/pointer·touch/numeric/Apply/Cancel/reset/remove 및 Tab/Arrow1/Shift10/Enter/Escape/focus·labels/오류 연결 검증.
+- [x] ID 기반 checked/unchecked/reorder/retry/read·URL refresh에서 draft 보존. small/stale/conflict/limit/upload/database 실패 보존, partial 성공·reused clear/실패 keep 회귀.
+- [x] 같은 parent/hash/final rect 재사용, role/mode 차이 중복0, 다른 F 별도 변형. provenance·legacy trim없음/v1/v2/manualv2 호환, 기존 승인 Derived 자동 재crop0.
+- [x] manual inventory 포함 및 mode-independent near-duplicate 정책. 대표 B page-plan GET 검증, 실제 Planner AI 호출0.
+- [x] Renderer 이미지 누락/가로 overflow/새 clipping0, surface crop controls·내부 warning0. Specification6행·Options1그룹6개 원문과 저장 snapshot IDs/version exact.
+- [x] 대표 canonical PNG1회860×2468/819,404bytes, JPG1회860×2468/242,474bytes. TASK-053 동형 출력과 bytes exact.
+- [x] Product/Facts/Validation/Options·원본 bytes/hash 보호. 기존 source2+metadata2/real patch3 hash 불변. 실제 사용자·원격 DB/Storage mutation0.
+- [x] bounded Candidate/source authority/same-origin/8KiB/recursive Derived 금지/safe DTO·checkpoint/SSRF 회귀, configured secret3종·credential/token 패턴·client bundle 검사 findings0.
+- [x] typegen, typecheck, lint, production build, diff check PASS. QA PASS 후 version0.2.0→0.2.1, lock top/root 일치·version 외 deep equality, version 변경 후 build 재확인.
+- [x] README/CHANGELOG/Backlog/Checklist/계약/TASK 보고 최신화. M1/M4 RESOLVED, M2/M3 회귀 PASS, 기존 품질 B0/H0/M0/L0.
+- [x] OpenAI/Domeggook/원격 source fetch0. loopback Next/persistence와 Browser 종료, 임시 in-memory data 폐기, ignored 증거만 보관, stage0.
+- [ ] Public SaaS Authentication.
+- [ ] owner_id 및 사용자 소속 검증.
+- [ ] user-specific RLS.
+- [ ] Storage ownership policy 및 사용자 간 격리.
+- [ ] 빈 머신 fresh install·새 Supabase DB/Storage 설치 — 이번 범위 밖.
+- [ ] 새 실제 외부 API full E2E — 이번에는 기존 deterministic/local 자료로 회귀, 미실행.
+- [ ] 사용자 최종 diff 검토 후 `chore: prepare v0.2.1 release` commit.
+- [ ] 사용자 main fast-forward merge·annotated `v0.2.1` tag·원격 push.
+- [ ] 사용자 GitHub Release 게시.
+
+## v0.2.0 — TASK-045 당시 판정
 
 2026-09-22 · `release/v0.2.0` · 시작 HEAD `b9f42f7`, 당시 main도 동일. **PASS — v0.2.0 Local/Internal MVP Release Candidate.** 현재 공식 tag는 v0.1.1이며 아래 release 작업은 사용자에게 남긴다. [상세 범위·근거](tasks/TASK-045.md).
 

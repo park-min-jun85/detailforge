@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-054:** v0.2.1 Final Release Validation & Release Preparation 완료. `release/v0.2.1` / 기준 `240a943`. 전체1417 tests·필수검사·Desktop/375px 실제 source/save 회귀·Renderer·PNG/JPG860×2468·secret/data protection/cleanup PASS. **v0.2.1 Local/Internal MVP RC PASS, M1/M4 RESOLVED, M2/M3 회귀 PASS, BLOCKER0/HIGH0/MEDIUM0/LOW0.** QA 후 package/lock0.2.1 및 README/CHANGELOG/Backlog/Checklist/계약 갱신, production/tests/fixtures/dependency/migration0, 외부 API/원격 mutation0. Git stage/commit/main merge/tag/Release 게시0. [68항목·Release notes·정확한 다음 Git 명령](./TASK-054.md). 다음은 사용자 최종 diff 검토와 릴리스 Git 작업이다.
+
+## 이전 TASK-053 기록
+
 **TASK-053:** Actual Manual Crop Browser, Derived Save & Export QA 완료. `feat/manual-crop-real-qa` / 기준 `30e5a6f`. 실제 A01/B01 cleaner·추가 손실0, B02 Cancel/preserve, 신규 Derived6개 exact source-F 인코딩 기준·provenance·duplicate·partial/stale/CAS·Desktop/375px·Renderer·PNG/JPG860×2468 PASS. **M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 기존1417 tests·필수검사 PASS. production/AI/원격 mutation/migration/dependency0, package0.2.0, commit/merge/tag0. [72항목 보고](./TASK-053.md), [최신 계약](../V0_2_1_MANUAL_CROP_DESIGN.md). 다음 **TASK-054 v0.2.1 Final Release Validation**.
 
 ## 이전 TASK-052 기록

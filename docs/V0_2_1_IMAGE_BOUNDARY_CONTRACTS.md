@@ -1,5 +1,11 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
+## TASK-054 릴리스 검증 — 현재 상태
+
+2026-09-23. **v0.2.1 Local/Internal MVP RC PASS, M1/M4 RESOLVED, 기존 품질 B0/H0/M0/L0.** 실제 production 경로와 기존 safety corpus/1417 tests를 재검증했다. A/H 동일 pixels/config는 ambiguous/preserve, 구분 신호가 있는 A2는 safe trim. content-loss 보호 우선·3% 자동 cap·knownContentBounds/semantic label test-only 계약 변경0.
+
+실제 A01/B01 수동 결과790×790/372×546은 cleaner·관찰한 추가 손실0, B02 Cancel/preserve. manual/zero 추가 trim0·exact F/출처/중복/stale/CAS·Desktop/375px·Renderer/export860×2468 PASS. QA 뒤 package/lock0.2.1, production/fixture/dependency/migration 변경0. 공개 SaaS 전제는 미완료이며 Git commit/merge/tag0. [68항목 근거와 한계](tasks/TASK-054.md). 아래 기록은 각 TASK 당시 상태다.
+
 ## TASK-053 실제 Manual Crop QA — M1/M4 RESOLVED
 
 실제 local 원본의 A01 L16/T17/R15/B18→790×790, B01 L8/T0/R0/B26→372×546 수동 저장은 cleaner/관찰한 추가 손실0. A01 녹색 separator는 보존했고 B01 bottom26은 auto cap17에 의해 축소되지 않았다. B02 bottom38은 texture 손실 위험으로 Cancel/preserve, 후속 auto 저장도691×547/추가 trim0. Browser preview F와 실제 JPEG95 인코딩 기준 결과 exact, manual provenance·중복·부분 실패·stale/CAS·Desktop/375px·Renderer/PNG/JPG860×2468 PASS. [72항목 보고](tasks/TASK-053.md).
@@ -42,7 +48,7 @@ M4의 목표는 **pixel 근거상 명확히 분리된 decorative frame만 제한
 
 test-only metrics는 명시 ROI/줄에서 mean RGB, channel variance, inner contrast, luminance distance, transition count, continuity, detail ratio를 측정한다. 수치는 확률이나 trim 승인 점수가 아니다. 작은 patch3개(총100,676bytes)는 각각128×128/256×128/128×128이고 원본 전체와 cap/새 edge가 다르므로 full reason과 patch reason을 구분한다. 합성10개는 positive3/paired negative3/real analogue3/동일 pixels semantic alias1이다. positive는 이미 v2가 처리하는 양성 대조이며 실제 miss 개선으로 세지 않는다. desired validator와 current production characterization을 분리하고 label-only 반대 decision을 reject한다. knownContentBounds는 여전히 test oracle에만 존재한다. 아래048/047/046 내용은 당시 기록이다.
 
-## TASK-048 실제 QA 결과 — 최신 상태
+## TASK-048 실제 QA 결과 — 당시 상태
 
 2026-09-23, 실제 source2/상품2의 서로 다른 crop26개를 같은 bytes/candidate로 pre047 `f693151`과 현재 `cea04fd`에서 비교했다. **M1 RESOLVED(추가 trim 안전성 gate), M4 NEEDS_WORK, MEDIUM1/LOW0.** AFTER는26개 모두 preserve/inset0, clear/possible new loss0, false-positive trim0. same17/cleaner0/worse9(흰 띠 minor residue 증가), obvious frame/panel residue3→3. 유색 frame 후보6개에서 실제 개선이 확인되지 않아 M4 해결로 세지 않는다. 아래 TASK-047 안전 규칙/fixture 계약은 변경하지 않았다.
 

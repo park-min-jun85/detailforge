@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+## 0.2.1 - 2026-09-23
+
+Image Extraction Quality Patch. **Local/Internal MVP** Release Candidate 검증 완료. commit/merge/tag·GitHub Release 게시는 미실행이다.
+
+### Added
+
+- Candidate Review에서 저장 전 후보 내부의 네 가장자리를 수동 조정한다. 드래그·키보드·숫자 입력과 미리보기, 적용·취소·후보 전체 보존·수동 조정 해제를 제공한다.
+- 후보 ID 기반으로 선택과 조정 초안을 유지하며 저장 성공·재사용한 항목만 해제하고 실패 항목은 보존한다.
+
+### Improved
+
+- 제품·인물·텍스트 경계의 추가 손실을 우선 방지하는 보수적 white/colored-frame 처리를 적용했다. 구별 신호가 부족한 ambiguous edge는 보존한다.
+- 보수적 자동 경계 처리와 명시적 수동 Crop을 결합한다. 같은 pixels와 config는 같은 자동 결정을 내리며 fixture 의미 label은 판정에 사용하지 않는다.
+- 수동 Derived의 parent/source hash/candidate/base rect/insets 출처와 legacy 읽기 호환을 유지한다.
+
+### Safety / Data Integrity
+
+- 수동 영역은 Candidate 내부의 정수 inset으로 제한한다. 최소크기를 검사하고 3% 자동 cap과 분리하며, 명시 0px도 자동 trim을 건너뛴다.
+- 미리보기와 저장 source 영역·크기가 일치한다. JPEG/WebP는 기존 품질 설정으로 재인코딩하므로 원본 raw pixels와 무손실 같음을 뜻하지 않는다.
+- Source/Candidate/Revision stale·CAS 검증, 동일 parent/hash/final rect의 Derived 재사용, 실패 시 선택·초안 보존을 적용했다.
+- 기존 Derived를 자동 재가공하거나 provenance를 덮어쓰지 않는다. Product/Facts/Validation/Options와 원본 bytes는 보호한다.
+
+### Validation
+
+- TASK-054 전체 **1417 tests**, typegen/typecheck/lint/build, diff/secret scan PASS. M1/M4 RESOLVED, M2/M3 회귀 PASS, 기존 품질 backlog BLOCKER0/HIGH0/MEDIUM0/LOW0.
+- 실제 local 원본 A01은790×790, B01은372×546으로 cleaner/관찰한 추가 내용 손실0. B02는 Cancel/preserve. Desktop1440×1000/Mobile375×812와 실제 save/Renderer 경로를 격리 persistence에서 검증했다.
+- 대표 PNG819,404bytes/JPG242,474bytes 각1회, 모두860×2468. 스펙6행·옵션6개 exact, TASK-053 출력과 bytes 동일. 이번 OpenAI/Domeggook/원격 DB·Storage0.
+
+### Known Limitations
+
+- 모든 frame을 자동 제거하지 않는다. 모호한 사진 배경·패널·내용 접촉 경계는 남을 수 있으며 수동 입력도 사람의 내용 보존 검토가 필요하다.
+- Existing Derived 직접 편집과 outward crop expansion은 미지원이다. AI 이미지 생성·배경 제거·upscale도 제공하지 않는다.
+- Auth, owner_id, 사용자별 RLS, Storage ownership policy는 미완료이며 공개 SaaS 배포를 차단한다. 내부 RC PASS는 공개 운영 승인이 아니다.
+
 ## 0.2.0 - 2026-09-22
 
 검토와 재시도의 예측 가능성. Local/Internal MVP Release Candidate 검증 완료, v0.2.0 commit/merge/tag·GitHub Release는 사용자 검토 후 진행한다.

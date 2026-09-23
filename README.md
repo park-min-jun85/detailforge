@@ -1,6 +1,6 @@
 # DetailForge
 
-도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.0 Local / Internal MVP Release Candidate**다. TASK-045 검증을 통과했으며 v0.2.0 commit/merge/tag는 아직 하지 않았다. theme은 ‘검토와 재시도의 예측 가능성’이다.
+도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.1 Local/Internal MVP Release Candidate**다. Image Extraction Quality Patch의 TASK-054 검증을 통과했으며 v0.2.1 commit/merge/tag·Release 게시는 아직 하지 않았다. 공식 최신 릴리스는 v0.2.0이다.
 
 **공개 인터넷 SaaS 배포는 차단한다.** 현재는 인증 없는 server-only service-role 기반 단일 사용자 구조다. 공개 전에 Auth, owner_id, 사용자별 RLS와 Storage ownership policy가 필요하다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
 
@@ -8,7 +8,9 @@
 
 Project 관리 → URL 가져오기 또는 수동 Product/Facts 입력 → 상품정보·스펙·이미지 후보 검토 및 저장 → 도매꾹 공식 API의 도매매 옵션 후보 확인·입력란 반영·별도 저장 → 긴 상세 이미지의 제품컷 후보 추출·부분 실패 시 실패 영역만 명시적으로 재시도·사람이 선택해 Derived Asset 저장 → 이미지/상품 AI 분석 → Fact Validation → Page Planner → Section 생성 → Detail Editor에서 문구·스타일·순서 편집 또는 개별 Section 재생성 후보 검토 → Final Renderer → PNG/JPG Export.
 
-재시도는 입력이 같은 유효한 checkpoint에서만 가능하며 기존 성공 후보와 체크·해제 선택을 보존한다. 자동 재시도는 없고 비용이 발생할 수 있다. 제목/본문과 역할 간 반복·촬영 보고체 검토를 보완했으며, 짧은 텍스트 Section의 여백을 줄였다. 인물/제품 잘림 구분(M1)과 원본 유색 프레임(M4)은 알려진 한계로 남는다. [v0.2.0 검증 범위](docs/tasks/TASK-045.md).
+재시도는 입력이 같은 유효한 checkpoint에서만 가능하며 기존 성공 후보와 체크·해제 선택을 보존한다. 자동 재시도는 없고 비용이 발생할 수 있다. 제목/본문과 역할 간 반복·촬영 보고체 검토를 보완했으며, 짧은 텍스트 Section의 여백을 줄였다. v0.2.1은 보수적 자동 경계 처리와 명시적 수동 Crop을 결합한다. 추가 trim 안전성(M1)과 이 결합 범위의 유색 프레임 처리(M4)는 RESOLVED이며, 모호한 경계는 자동 보존한다. [v0.2.1 검증 범위](docs/tasks/TASK-054.md).
+
+Candidate Review의 **자르기 조정**에서 후보 내부의 네 가장자리를 드래그·방향키·숫자로 조정한다. 적용은 로컬 초안이며, 후보를 선택하고 저장해야 새 Derived가 생성된다. 수동 영역은 추가 자동 trim 없이 저장되며 0px도 명시적 보존이다. ‘수동 조정 해제’는 자동 경계 처리로 돌아간다. 기존 Derived 직접 편집·후보 밖 확장은 지원하지 않고 기존 이미지도 자동 재가공하지 않는다. 제품·인물·문자가 제외되지 않는지 미리보기에서 확인해야 한다.
 
 Generic URL Import와 도매꾹 공식 옵션 API를 지원하며 모든 도매사이트의 호환성을 보장하지 않는다. Fact placeholder 정규화, Product-Relevance Guard, Commerce Copy Quality Guards, Commerce Visual System, Hero 해상도·제목 관련성 검사를 포함한다. 상품정보/옵션/이미지는 각각 명시적으로 저장하며 미적용 후보·미저장 편집은 Export에 포함되지 않는다.
 

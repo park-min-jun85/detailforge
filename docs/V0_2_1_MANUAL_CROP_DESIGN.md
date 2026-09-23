@@ -1,6 +1,12 @@
 # v0.2.1 Manual Crop Review UX & Data Contract — TASK-050
 
-2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051 서버, TASK-052 UI, TASK-053 실제 원본 Browser/save/export QA 완료. M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 아래 §1은 설계 당시 기록이며 현재 상태는 바로 아래 TASK-053을 따른다.
+2026-09-23. TASK-050 설계 기준 `078ebf6`, 당시 branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051 서버, TASK-052 UI, TASK-053 실제 QA, TASK-054 릴리스 검증 완료. M1/M4 RESOLVED, BLOCKER0/HIGH0/MEDIUM0/LOW0.** 현재 package/lock0.2.1. 아래 §1은 설계 당시 기록이며 최신 판정은 TASK-054를 따른다.
+
+## TASK-054 릴리스 검증 — 현재 상태
+
+`release/v0.2.1` / 기준 `240a943`, **Local/Internal MVP RC PASS**. 실제 code를 대조하고 전체1417 tests·Desktop/375px production UI·local save/service·pixel/provenance/duplicate/stale/CAS·Renderer·PNG/JPG860×2468을 재실행했다. A01/B01 cleaner·관찰한 추가 손실0, B02 Cancel/preserve. zero override와 auto bypass, ID 기반 선택·draft/retry 보존, legacy/기존 Derived 불변 계약 유지. manual inventory는 정상 포함되며 near-duplicate 억제 예외는 없다.
+
+QA PASS 후 version0.2.0→0.2.1만 갱신, 앱/기존 fixture/dependency/migration0. OpenAI/Domeggook/원격 mutation0, 보호 파일 hash 불변과 QA 종료 확인. Auth/owner_id/사용자 RLS/Storage ownership은 공개 blocker로 남는다. Git commit/merge/tag/Release 게시0. [68항목·Release notes](tasks/TASK-054.md). 이후 절의 과거 판정은 당시 기록이다.
 
 ## TASK-053 실제 원본 QA 결과
 
@@ -264,6 +270,6 @@ M1은 기존 자동 추가 trim 안전성 gate의 RESOLVED를 유지한다. manu
 - **TASK-051 domain/API/save/provenance:** strict V2+legacy union, bounded inset→F, canonical/revision/CAS, manual no-auto 경로, default legacy reuse/final identity/capacity, v1/v2 reader·review projection·visual inventory 호환. schema/tampering/0px/3%초과/최소/EXIF/duplicate/partial/CAS/lost-ack/legacy tests. UI 없음. 24개 최대 request8KiB 검증. M4 NEEDS_WORK 유지.
 - **TASK-052 Candidate Review UI 완료:** 4 edge+numeric editor, local Apply/Cancel, full-zero/remove 분리, F preview/receipt, ID/basis reconciliation, selection false 보존, 저장됨 variant/슬롯 추정, a11y/responsive/URL lifetime. dependency0, local/mock browser pointer·touch·keyboard·retry·failure 검증. 실제 상품 종료 QA는 TASK-053.
 - **TASK-053 Actual Browser + Derived save QA 완료:** 실제 A01/B01 cleaner·추가 손실0, B02 Cancel/preserve, exact F/인코딩 기준/새 metadata, duplicate/부분 실패/모바일/Renderer·export 확인. M4 RESOLVED. 실제 EXIF1 source와 EXIF1~8 domain regression을 구분하며 물리 기기 전체 QA를 주장하지 않는다.
-- **TASK-054 v0.2.1 Release Validation:** 051~053 gate 충족/M4 해결 시 진행. package bump/release/Git publish는 별도 TASK 요청 범위에서만 수행한다. 현재 v0.2.0을 변경하지 않는다.
+- **TASK-054 v0.2.1 Release Validation 완료:** 051~053 gate 및 최종 회귀 PASS 후 package/lock0.2.1과 release 문서 준비. Local/Internal MVP RC PASS. Git commit/main merge/tag/Release 게시는 실행하지 않았다.
 
 future backlog: 이미 저장된 Derived의 편집/version/Page 참조 교체, outward 복구, 복잡한 transform/segmentation은 별도 계약이 필요하다. TASK-050은 문서만 바꾸며 이 목록의 구현을 시작하지 않는다. 실행 검사·69항목 완료 보고는 [TASK-050](tasks/TASK-050.md)에 기록한다.
