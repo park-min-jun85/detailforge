@@ -1,5 +1,9 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
+## TASK-052 UI 구현 상태
+
+Manual Crop Editor/ID·basis draft/selection·retry/V2 save 및 Desktop·375px 로컬 Browser QA를 완료했다. zero manual 승인과 override 제거를 구분하며 성공·재사용만 pending state를 지우고 실패를 보존한다. 자동 detector/3%/A-H preserve/A2 safe trim/`same pixels + same config => same decision` 계약은 그대로다. **M1 RESOLVED / M4 NEEDS_WORK, MEDIUM1/LOW0**: TASK-053 실제 A01/B01/B02 review/save QA가 남았다. [최신 계약](V0_2_1_MANUAL_CROP_DESIGN.md), [75항목 보고](tasks/TASK-052.md). 아래는 각 TASK 당시 기록이다.
+
 ## TASK-051 서버 구현 상태
 
 Manual Crop domain/save V2·exact pixels·provenance/legacy reader·final-rect duplicate·CAS/보상을 구현했다. 자동 boundary detector/threshold/3% 정책은 그대로다. UI/실제 manual review QA는 아직 없으므로 **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0**. [최신 실행 계약](V0_2_1_MANUAL_CROP_DESIGN.md), [TASK-051 검증](tasks/TASK-051.md). 아래 TASK-050은 설계 당시 기록이다.

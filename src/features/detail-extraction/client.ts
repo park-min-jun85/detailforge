@@ -10,9 +10,12 @@ async function request<T>(projectId: string, assetId: string, action: string, bo
   } catch (error) { throw error instanceof ExtractionError ? error : new ExtractionError("unexpected"); }
 }
 export const requestExtraction = (projectId: string, assetId: string, force: boolean) => request<{ asset: Asset; reused: boolean }>(projectId, assetId, "", { force });
-export const requestCropSave = (projectId: string, assetId: string, candidateIds: string[]) => request<{
+export type CropSaveReply = {
   saved: { candidateId: string; asset: Pick<Asset, "id" | "width" | "height" | "mimeType" | "assetType">; existing: boolean }[]; failed: { candidateId: string; code: ExtractionCode; message: string }[]; available: number;
-}>(projectId, assetId, "/save", { candidateIds });
+};
+export const requestCropSave = (projectId: string, assetId: string, candidateIds: string[]) => request<CropSaveReply>(projectId, assetId, "/save", { candidateIds });
+export const requestCropSaveV2 = (projectId: string, assetId: string, body: { schemaVersion: 2; expectedRevision: string;
+  items: { candidateId: string; manualInsets?: import("./schemas").ManualInsets }[] }) => request<CropSaveReply>(projectId, assetId, "/save", body);
 
 export const requestExtractionReview = (projectId: string, assetId: string) => request<import("./review-model").ExtractionReview>(projectId, assetId, "");
 export const requestExtractionRetry = (projectId: string, assetId: string, expectedRevision: string) => request<import("./retry").RetryResult>(projectId, assetId, "/retry", { expectedRevision });

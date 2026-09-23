@@ -1,6 +1,16 @@
 # v0.2.1 Manual Crop Review UX & Data Contract — TASK-050
 
-2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051에서 서버/domain/save/readers 구현 완료, Crop Editor UI/실제 Browser QA는 미구현**이다. 아래 §1의 현재 구현은 TASK-050 조사 당시 기록이며, 변경된 실행 계약은 바로 아래 최신 상태를 따른다.
+2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051 서버/domain/save/readers, TASK-052 Crop Editor UI와 로컬 Browser QA 완료. 실제 상품 QA는 TASK-053 대기**다. 아래 §1의 현재 구현은 TASK-050 조사 당시 기록이며, 변경된 실행 계약은 바로 아래 최신 상태를 따른다.
+
+## TASK-052 실행 상태와 계약 변경
+
+`feat/manual-crop-editor-ui` / 기준 `f2d0518`. Candidate Review의 saveAllowed 카드에만 `[자르기 조정]`을 표시한다. native dialog/SVG 후보 clip/제외 dim/4 edge pointer capture/4 numeric 입력, integer source pixels와 shared `manualCropRect`를 사용한다. Arrow 1px/Shift 10px, 44 CSS px 핸들, focus trap/복귀, 375px contain, image load/dimensions/error gate를 구현했다. 편집·적용은 local-only이며 새 이미지나 임시 Storage를 만들지 않는다.
+
+TASK-052 요청이 초기 설계의 두 동작을 변경한다. **Editor `[후보 전체로]`는0/0/0/0 manual override를 유지한다. Card `[수동 조정 해제]`만 override를 제거하여 automatic으로 돌아간다.** Cancel/Escape는 열기 전 applied draft/선택을 보존한다. **저장 성공·재사용은 해당 selection과 pending draft를 제거**, 실패 항목은 유지한다. 저장된 F의 preview는 별도 read-only receipt로 보존하며 다음 편집은 canonical base에서 시작한다. 이전 TASK-050/051 보고서는 당시 상태 기록이다.
+
+Source별 workspace가 review/selected/drafts/receipts를 소유한다. 같은 ID+base+basis+dimensions면 revision/order/URL 변경에도 draft 유지, 삭제된 ID 제거, 새 ID 무상속, 바뀐 basis는 stale 격리와 안내 후 재승인한다. V2 builder는 selected+eligible+미저장 항목만 전달하며 zero manual을 생략하지 않는다. stale draft를 automatic으로 대체하지 않는다. 오류 후 fresh GET은 하되 자동 Save/AI 재시도는 없다. panel 닫기/Source 전환/beforeunload 확인을 제공하며 임의 SPA 라우터 전체 이탈 차단이나 crash 복구를 보장하지 않는다.
+
+Desktop1440×1000/375×812 실제 Chromium에 production React 컴포넌트와 합성800×4000 이미지를 띄워 pointer/keyboard/numeric/Apply/Cancel/reset/remove/selection/V2/partial/retry/URL/stale/conflict/슬롯/Storage/이미지 실패를 검증했다. 375px CDP touch input과 resize/focus trap도 통과했다. client webpack graph에 Sharp/server-only/Supabase/server service 없음. 별도 실제 상품 브라우저 저장·의미 보존 QA는 하지 않았다. [75항목 보고](tasks/TASK-052.md). **M1 RESOLVED / M4 NEEDS_WORK**, MEDIUM1은 실제 상품 gate다. 자동 detector/3%/same-pixels invariant, package0.2.0 유지.
 
 ## TASK-051 실행 상태
 
@@ -36,7 +46,7 @@ TASK-048 실제26개는 추가 content loss0이지만 colored-frame 개선0, obv
 
 ## 2. 진입 위치와 범위
 
-Assets의 **Derived 저장 전 Candidate Review 카드**에 `[자르기 조정]`을 둔다. canonical 원본 후보와 출처가 있고, 사용자가 저장 전에 검토하며, 원본·기존 Derived·Page 연결을 변경하지 않는 위치다. saveAllowed 후보에는 기본 선택 여부/기존 저장 여부와 무관하게 제공한다. saveAllowed=false는 이유를 표시하고 비활성화한다. busy/stale/preview 미가용 상태도 이유와 함께 잠근다.
+Assets의 **Derived 저장 전 Candidate Review 카드**에 `[자르기 조정]`을 둔다. canonical 원본 후보와 출처가 있고, 사용자가 저장 전에 검토하며, 원본·기존 Derived·Page 연결을 변경하지 않는 위치다. saveAllowed 후보에는 기본 선택 여부/기존 저장 여부와 무관하게 제공한다. saveAllowed=false는 이유를 표시하고 crop control을 표시하지 않는다. busy/stale/preview 미가용 상태도 이유와 함께 잠근다.
 
 이미 저장된 카드에서 진입해도 **원본 Candidate의 새 변형**을 만드는 것이다. 기존 Derived를 입력으로 crop하거나 같은 Asset ID/Storage를 덮어쓰지 않는다. 기존 Derived 편집·확장/복구·identity/version/Page 참조 교체는 future backlog다. 원본 Candidate가 사라졌거나 Source가 없으면 이 경로도 사용할 수 없다.
 
@@ -83,16 +93,16 @@ left/top은 pointer와 B 시작점 차이, right/bottom은 B 끝점과 pointer �
 왼쪽 [0] px   위쪽 [0] px   오른쪽 [0] px   아래쪽 [0] px
 저장 예정 영역: W × H px
 제품이나 글자가 제외 영역에 포함되는지 확인하세요.
-[초기화]                                      [취소] [적용]
+[후보 전체로]                                 [취소] [적용]
 ```
 
 한 개 interactive preview로 포함·제외 영역과 최종 크기를 보여 준다. 별도 side-by-side/zoom 도구는 v0.2.1 필수가 아니다. Apply 후 카드 preview는 F로 바꾸고 `수동 자르기 적용 · 저장 전`으로 표시한다. editor를 다시 열면 B 전체와 적용한 I를 함께 보여 준다.
 
 - **Apply:** 유효한 working copy를 `manualDrafts[id]`에 반영하고 닫는다. 서버/Storage/AI 호출0. selection은 바꾸지 않는다. 해제된 후보라면 “저장하려면 후보를 선택하세요.” 안내. 실제 mutation은 기존 `[선택한 제품컷 저장]`에서만 발생한다.
 - **Cancel/Escape:** 이번 editor에서 바꾼 working copy만 버린다. 이전 applied draft/selection 유지, focus를 진입 버튼으로 복귀한다. 모호한 backdrop click으로 discard하지 않는다.
-- **Reset(초기화):** working copy의 모드를 automatic으로 바꾸고 B/0px로 표시한다. **적용해야** 기존 applied manual override가 제거된다. Reset 후 Cancel이면 이전 override가 유지된다. “기본 영역으로 초기화했습니다. 적용 후 저장 시 자동 경계 정리가 사용됩니다.” 안내한다. 이후 숫자/drag를 조정하면 다시 manual 모드다.
-- 처음 editor를 열고 아무 것도 이동하지 않은 채 Apply하면 0px manual override를 명시 적용한다. 반대로 Reset→Apply는 override 제거다. editor 모드 설명을 통해 차이를 알린다.
-- 저장 후 Reset은 기존 Derived의 undo가 아니다. 다음 요청의 기본 모드만 바꾸며, 기존 이미지는 계속 존재한다.
+- **후보 전체로:** working insets를0/0/0/0으로 변경한다. Apply하면 명시 manual override가 유지되어 auto trim을 건너뛴다. Cancel이면 기존 applied draft가 유지된다.
+- **수동 조정 해제:** Card에서 pending override와 receipt를 제거하고 automatic 저장 경로로 복귀한다. 선택 상태는 바꾸지 않는다. editor 내부에는 automatic 모드 전환이 없다.
+- 처음 열고 이동 없이 Apply한0px도 같은 manual 승인이다. 기존 Derived의 undo는 아니며 기존 이미지는 계속 존재한다.
 
 ## 6. client state / retry / selection
 
@@ -104,7 +114,7 @@ manualDrafts: Record<candidateId, {
   basisKey, baseRect, sourceDimensions,
   insets: {left,top,right,bottom}, status: applied | stale
 }>
-editor: null | {candidateId, basisKey, mode: manual | automatic,
+editor: null | {candidateId, basisKey,
                 workingInsets, initialWorkingCopy, fieldErrors}
 review.revision: UUID                                     // 현재 read snapshot
 ```
@@ -112,12 +122,12 @@ review.revision: UUID                                     // 현재 read snapsho
 새 review candidate 필드 `basisKey`는 서버가 scope(project/product/source ID), sourceFingerprint, candidateId/base rect, normalized dimensions/orientation/coordinate-space version에서 만든 opaque SHA-256이다. raw hash/checkpoint/path를 UI에 노출할 필요가 없다. **revision/score/order는 basisKey에 넣지 않는다.** request에는 basisKey를 권한 토큰으로 보내지 않으며 expectedRevision+canonical 조회가 최종 권위다.
 
 - fresh GET/retry 뒤 같은 ID+base+basis+dimensions이면 applied draft와 explicit true/false를 유지한다. revision만 갱신한다. 카드 순서 변화와 무관하다.
-- 후보가 사라지면 해당 draft/selection을 제거하고 개수 안내. 새 후보는 override 없이 기존 defaultSelected 정책만 따른다. overlap/비슷한 위치를 이유로 이전 override를 이동하지 않는다.
+- 후보가 사라지면 해당 draft/selection을 제거하고 변경 안내. 새 후보는 override 없이 기존 defaultSelected 정책만 따른다. overlap/비슷한 위치를 이유로 이전 override를 이동하지 않는다.
 - 같은 ID라도 base/source basis가 다르면 draft를 stale로 격리하고 저장 제외한다. 정상 ID 생성에서는 base/hash 변경이 ID도 바꾸지만, 손상·오래된 응답을 방어한다. 다시 열어 **현재 B로 새로 조정**하거나 Reset하도록 하고 기존 inset을 자동 재적용하지 않는다.
 - ID가 같아도 saveAllowed=false가 되면 draft는 검토용으로 유지하되 저장 금지. 현재 eligibility가 복구되어 fresh basis가 확인되기 전에는 저장하지 않는다.
 - editor 열린 동안 같은 화면의 분석/retry/save를 잠근다. 외부 revision 변경이 확인되면 Apply/save를 잠그고 fresh GET 후 위 규칙으로 재조정한다. 닫힌 applied draft는 사용자가 실행한 retry를 거쳐 보존 가능하다.
 - GET 실패 시 이전 review/selection/draft를 유지하고 mutation만 잠근다. 기존 sequence guard로 늦은 응답을 무시한다. 최신 상태를 읽는 것만으로 Save/AI를 자동 재실행하지 않는다.
-- panel 닫기/다른 Source 이동/화면 이탈 시 미저장 working/applied 변경을 버릴지 명시 확인한다. 취소하면 상태 유지, 이동하면 폐기한다. URL만 갱신되면 remount/폐기하지 않는다. 강제 reload/crash 복구까지 보장하지 않는 세션 draft임을 안내한다.
+- panel 닫기/다른 Source 이동 및 browser beforeunload에서 미저장 working/applied 변경을 확인한다. 취소하면 상태 유지, 이동하면 폐기한다. URL만 갱신되면 remount/폐기하지 않는다. session memory이며 crash 복구나 모든 SPA 링크 이탈 차단은 범위 밖이다.
 
 TASK-040의 명시 false 보존을 우선하므로 **Apply가 자동 선택을 켜지 않는다.** 기존 savedCandidateIds에 있다는 이유만으로 새 manual 변형을 disabled 처리하지 않는다. 현재 요청 모드/최종 영역에 동일 저장물이 있으면 `저장됨` 표시·저장 제외, 다른 F면 선택 가능해진다. 이미 저장됨을 나타내는 시각적 check와 실제 selected boolean을 혼동하지 않는다.
 
@@ -201,7 +211,7 @@ Planner의 near-duplicate 억제는 저장 중복과 별개다. **v1-v1 쌍은 �
 - asset_limit(409): 현재 available 안내와 선택 축소. 기존 forbidden/ownership/not_found를 그대로 사용한다.
 - crop/upload/database/recovery: 기존 안전한 encoding/Storage/DB/미확정 저장 메시지 및503 convention. retry의 **persistence_failure는 AI 비용 안내를 포함하므로 manual DB 실패에 재사용하지 않는다.** storage_failure 등의 중복 enum을 만들지 않는다.
 
-정상 partial 응답은 기존 후보별 saved/failed와 available을 유지한다. **성공한 제출 항목만 선택 해제**, 실패한 항목의 selection/manual draft 유지. 성공 draft도 같은 session에서 보관하여 저장한 F를 보여 주고 다른 변형의 시작점으로 쓸 수 있다. 같은 F 재저장은 저장됨 처리한다. success/failed 건수를 분리하고 실패 카드에 재시도할 수 있는 오류를 표시한다. auto 항목의 성공/실패 정책과 같다.
+정상 partial 응답은 기존 후보별 saved/failed와 available을 유지한다. **성공·재사용한 제출 항목만 선택 해제하고 pending draft 제거**, 실패 항목의 selection/manual draft 유지. 성공 F는 read-only receipt로 preview에 보관하고 fresh savedCrops로 확인한다. 다음 편집은 canonical base에서 시작한다. 같은 F 재저장은 저장됨 처리한다. success/failed 건수를 분리하고 후보 번호를 포함한 오류를 표시한다. auto 항목의 성공/실패 정책과 같다.
 
 요청/응답 유실 또는 lease 정리 실패는 이미 저장된 결과를 삭제하지 않는다. 기존 insert lost-ack 재조회/새 object만 제한 cleanup 규칙을 유지한다. 브라우저는 제출 snapshot과 draft를 보존하고 먼저 read-only review/assets를 갱신하여 같은 source scope+F 저장 여부를 확인한다. 조회 실패/미확정 recovery 중에는 mutation을 잠근다. 확인 뒤 미저장 항목만 명시 재시도한다. refresh 자체나 재연결이 Save를 자동 반복하지 않는다.
 
@@ -238,7 +248,7 @@ M1은 기존 자동 추가 trim 안전성 gate의 RESOLVED를 유지한다. manu
 ## 14. 구현 TASK 분해와 검증 책임
 
 - **TASK-051 domain/API/save/provenance:** strict V2+legacy union, bounded inset→F, canonical/revision/CAS, manual no-auto 경로, default legacy reuse/final identity/capacity, v1/v2 reader·review projection·visual inventory 호환. schema/tampering/0px/3%초과/최소/EXIF/duplicate/partial/CAS/lost-ack/legacy tests. UI 없음. 24개 최대 request8KiB 검증. M4 NEEDS_WORK 유지.
-- **TASK-052 Candidate Review UI:** 4 edge+numeric editor, working/applied state, staged Reset/Cancel, F preview, ID/basis reconciliation, selection false 보존, 저장됨 variant/슬롯 추정, a11y/responsive/URL lifetime. dependency0, local/mock browser pointer·keyboard·retry·failure 검증. 실제 상품 종료 QA와 구분.
+- **TASK-052 Candidate Review UI 완료:** 4 edge+numeric editor, local Apply/Cancel, full-zero/remove 분리, F preview/receipt, ID/basis reconciliation, selection false 보존, 저장됨 variant/슬롯 추정, a11y/responsive/URL lifetime. dependency0, local/mock browser pointer·touch·keyboard·retry·failure 검증. 실제 상품 종료 QA는 TASK-053.
 - **TASK-053 Actual Browser + Derived save QA:** 기존 실제 A01/B01/B02 입력 재사용, 최소 명시 저장·중복/변형/실패 복구, source/old data 보호, EXIF/좌표와 Renderer/export 확인. 새로운 AI는 이 UX 검증에 필요하지 않다. 실제 QA 증거로 M4 종료 여부 결정.
 - **TASK-054 v0.2.1 Release Validation:** 051~053 gate 충족/M4 해결 시 진행. package bump/release/Git publish는 별도 TASK 요청 범위에서만 수행한다. 현재 v0.2.0을 변경하지 않는다.
 

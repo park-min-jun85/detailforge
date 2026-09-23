@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchAssets, removeAsset, sendAsset } from "../client";
 import { IMAGE_MIME_TYPES, MAX_PRODUCT_ASSETS, validateFile } from "../schemas";
 import type { AssetList } from "../types";
@@ -35,6 +35,12 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
   const [error, setError] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const locked = useRef(false);
+  const cropDirty = useRef(false);
+  const onCropDirtyChange = useCallback((dirty: boolean) => { cropDirty.current = dirty; }, []);
+  function openExtraction(id: string) {
+    if (id !== extractionId && cropDirty.current && !window.confirm("저장하지 않은 자르기 조정을 버리고 다른 원본을 볼까요?")) return;
+    setExtractionId(id);
+  }
   const [now, setNow] = useState(() => Date.now());
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
@@ -214,7 +220,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
                   <p className="break-all text-sm font-medium">{index + 1}. {asset.originalFilename}</p>
                   <p className="text-xs text-zinc-500">{asset.sizeBytes === null ? "크기 정보 없음" : sizeLabel(asset.sizeBytes)} · 저장 분류: {ASSET_TYPE_LABELS[asset.assetType]}</p>
                   {isDerived(asset.metadata) ? <p className="text-xs font-medium text-zinc-600">{assetProvenanceLabel(asset, list.items.map(item => item.asset))} · {asset.width} × {asset.height}px</p>
-                    : (extractionDisplay(asset.metadata)?.hasAttempt || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => setExtractionId(asset.id)}>제품컷 추출{extractionDisplay(asset.metadata)?.hasResult ? " 후보 보기" : ""}</button>}
+                    : (extractionDisplay(asset.metadata)?.hasAttempt || imageCategory(dimensions[asset.id]?.width ?? asset.width ?? 0, dimensions[asset.id]?.height ?? asset.height ?? 0) !== "normal") && <button type="button" className="button-secondary w-full" disabled={busy} onClick={() => openExtraction(asset.id)}>제품컷 추출{extractionDisplay(asset.metadata)?.hasResult ? " 후보 보기" : ""}</button>}
                   <AnalysisResultCard asset={asset} now={now} pending={analyzingId === asset.id} disabled={busy}
                     error={analysisErrors[asset.id]} onAnalyze={() => analyze([asset.id])} />
                   {confirmId === asset.id ? <div className="space-y-3">
@@ -230,7 +236,7 @@ export function AssetManager({ projectId, initialList }: { projectId: string; in
           </ul>
         )}
       </section>
-      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy}
+      {extractionItem && <ExtractionPanel key={extractionItem.asset.id} projectId={projectId} {...extractionItem} assets={list.items.map(item => item.asset)} busy={busy} onDirtyChange={onCropDirtyChange}
         begin={() => { if (locked.current) return false; locked.current = true; setBusy(true); return true; }} end={() => { locked.current = false; setBusy(false); setNow(Date.now()); }}
         refresh={refresh} update={asset => setList(current => ({ ...current, items: current.items.map(item => item.asset.id === asset.id ? { ...item, asset } : item) }))} close={() => setExtractionId(null)} />}
       <p className="text-sm leading-6 text-zinc-500">이미지 검토와 분석을 마쳤다면 다음 상품 분석 단계로 이동하세요. 이후 사실 검증과 페이지 설계를 거쳐 상세페이지를 만들 수 있습니다.</p>

@@ -294,11 +294,17 @@ test('NMS may remove a prior candidate; its saved Derived and unrelated metadata
   assert.deepEqual(f.row.metadata.custom, { untouched: true }); assert.deepEqual(f.row.metadata.source, { original: true });
   assert.ok(f.state.requests.filter(r => r.method === 'PATCH').every(r => r.path.endsWith('/assets')));
 });
-test('existing selection is client-local; server does not invent or persist explicit selections', () => {
+test('existing selection is client-local; server does not invent or persist explicit selections', async () => {
   const ui = readFileSync(new URL('../src/features/detail-extraction/components/extraction-panel.tsx', import.meta.url), 'utf8');
-  assert.ok(ui.includes('const [selected, setSelected] = useState'));
+  const { emptyCropWorkspace, reconcileCropWorkspace } = await import('../src/features/detail-extraction/manual-crop-client.ts');
+  const { review } = await import('./fixtures/v0.2.1/manual-crop-ui.mjs');
+  const local = reconcileCropWorkspace(emptyCropWorkspace(), review());
+  local.selected.A = false; local.selected.C = true;
+  const refreshed = reconcileCropWorkspace(local, review());
+  assert.equal(refreshed.selected.A, false); assert.equal(refreshed.selected.C, true);
+  assert.ok(ui.includes('useState(emptyCropWorkspace)'));
   assert.ok(!ui.includes('key={result.analyzedAt}'));
-  assert.ok(ui.includes('reconcileSelection(current, next.result?.candidates ?? [])'));
+  assert.ok(ui.includes('reconcileCropWorkspace(current, next)'));
   assert.equal(ui.includes('retryProductShots'), false);
 });
 function routeRequest(body, overrides = {}) {

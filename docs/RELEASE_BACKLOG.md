@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-052 — Manual Crop UI 구현 / 실제 상품 QA 대기
+
+2026-09-23. Candidate Review의 saveAllowed 카드 진입, bounded dialog/SVG clip/dim/4 edge pointer+numeric, keyboard/focus/375px, source pixel draft와 selection/retry/URL reconciliation, V2 save를 구현했다. `[후보 전체로]`는0px manual 승인, `[수동 조정 해제]`는 auto 경로 복귀다. 성공·재사용 selection/draft 제거와 F receipt, 실패 selection/draft 유지, stale/conflict 갱신 후 재승인을 검증했다. [75항목 보고](tasks/TASK-052.md), [최신 계약](V0_2_1_MANUAL_CROP_DESIGN.md).
+
+**M1 RESOLVED / M4 NEEDS_WORK, BLOCKER0/HIGH0/MEDIUM1/LOW0.** 새28 포함 **1417 tests**, Desktop/375px local Chromium QA 및 필수검사 PASS. 자동 detector/3%/동일-pixels invariant 유지. AI·remote mutation·migration·dependency0, package0.2.0, commit/main merge/tag0. 다음 **TASK-053 Actual A01/B01/B02 Manual Crop Browser & Save QA**, 그 결과로054 release gate를 판단한다. 아래 TASK-051은 당시 기록이다.
+
 ## TASK-051 — Manual Crop 서버 구현 / UI·실제 QA 대기
 
 2026-09-23. 기존 Derived save route의 V1 호환 + strict V2/revision/inward insets, manual0px 포함 auto bypass, exact source pixels, v2 manual provenance/legacy reader, final-rect duplicate/30슬롯 preflight, partial failure·CAS·lease·ack-lost 보상을 구현했다. GET의 crop/basis projection과 safe save response도 제공한다. Crop Editor UI/선택 draft 변경0, 기존 파일·provenance 자동 수정0. [설계의 최신 실행 상태](V0_2_1_MANUAL_CROP_DESIGN.md), [78항목 보고](tasks/TASK-051.md).
