@@ -1,5 +1,13 @@
 import "server-only";
 import { isExtractionActive, isSaveActive, readExtraction } from "./schemas";
+import type { saveProductShots } from "./service";
+
+// Save callers need the result identity and dimensions, not private storage or provenance.
+export function publicCropSaveResponse(reply: Awaited<ReturnType<typeof saveProductShots>>) {
+  return { ...reply, saved: reply.saved.map(({ candidateId, existing, asset }) => ({ candidateId, existing,
+    asset: { id: asset.id, width: asset.width, height: asset.height, mimeType: asset.mimeType, assetType: asset.assetType },
+  })) };
+}
 
 // Transport projection only. Never write this projection back to stored metadata.
 // Applied recursively because assets also occur in upload/analysis/save responses.

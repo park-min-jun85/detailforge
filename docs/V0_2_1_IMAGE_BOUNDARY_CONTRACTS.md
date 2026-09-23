@@ -1,6 +1,10 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
-## TASK-050 Manual Crop 계약 — 최신 상태 / 구현 전
+## TASK-051 서버 구현 상태
+
+Manual Crop domain/save V2·exact pixels·provenance/legacy reader·final-rect duplicate·CAS/보상을 구현했다. 자동 boundary detector/threshold/3% 정책은 그대로다. UI/실제 manual review QA는 아직 없으므로 **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0**. [최신 실행 계약](V0_2_1_MANUAL_CROP_DESIGN.md), [TASK-051 검증](tasks/TASK-051.md). 아래 TASK-050은 설계 당시 기록이다.
+
+## TASK-050 Manual Crop 계약 — 설계 당시 / 구현 전
 
 2026-09-23. [Manual Crop 설계](V0_2_1_MANUAL_CROP_DESIGN.md)를 확정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0.** TASK-049의 실제 safe automatic extension 근거0을 받아들여 threshold를 완화하지 않고 Candidate Review의 명시적 inward 조정을 후속 구현한다. 이번 변경은 문서뿐이다.
 

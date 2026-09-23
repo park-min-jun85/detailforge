@@ -1,6 +1,18 @@
 # v0.2.1 Manual Crop Review UX & Data Contract — TASK-050
 
-2026-09-23. **설계 확정 / 구현 전**. 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. 이 문서의 새 DTO/API/provenance/UI는 TASK-051/052 제안이며 현재 제공되는 기능이 아니다. production·migration·dependency 변경 없음.
+2026-09-23. TASK-050 설계 기준 `078ebf6`, branch `plan/manual-crop-review-ux`, package `0.2.0`. **TASK-051에서 서버/domain/save/readers 구현 완료, Crop Editor UI/실제 Browser QA는 미구현**이다. 아래 §1의 현재 구현은 TASK-050 조사 당시 기록이며, 변경된 실행 계약은 바로 아래 최신 상태를 따른다.
+
+## TASK-051 실행 상태
+
+`feat/manual-crop-save-domain` / 기준 `cc51492`. 기존 save route에 strict V2(schemaVersion2/expectedRevision/items)를 추가하고 IDs-only V1을 유지했다. manualInsets는 정수0~60000·4필드 필수, 원본/candidate bounds와 최소160×160·면적64000을 검사한다. 명시0px도 manual이며 auto trim 호출0이다. `planCrop`으로 최종 영역을 한 번 계산하고 `encodeCrop`으로 정확한 normalized source 부분을 저장한다. 자동 detector/3%/policyVersion2는 변경하지 않았다.
+
+새 manual provenance schemaVersion2는 sourceRect=base와 adjustment.mode/insets를 기록하고 trim을 금지한다. v1/trim1·2/없음 reader 유지, final geometry로 duplicate/슬롯을 계산한다. 기존 automatic 기본 재요청은 승인된 legacy 결과를 재사용한다. manual variant를 base만으로 saved 처리하지 않는다. visual inventory의 manual geometry/3% 초과·projection 읽기도 지원한다.
+
+V2 expectedRevision→기존 source lease CAS→claim revision cursor 검사를 연결했다. 각 항목 및 encoding 후 upload 직전에 최신 path/revision/run/lease/result를 확인한다. 외부 conflict는 남은 저장을 중단한다. 기존 upload/INSERT/ack-lost 보상 경로는 유지하며, 같은 batch에서 저장 확인이 불확실한 final key를 재업로드하지 않는다. 이미 시작한 upload/INSERT를 외부 writer와 하나의 DB transaction으로 묶는 보장은 없고 기존 Local/Internal MVP 소속·lease 참여 전제를 유지한다.
+
+GET review에 basisKey/sourceOrientation/coordinateSpace/savedCrops를 추가했다. **Save HTTP 응답 asset은 id/width/height/mimeType/assetType 요약**만 반환한다. saved/failed/available 및 candidateId/existing은 유지하며 private storage path/raw provenance/checkpoint를 반환하지 않는다. service 내부 Asset은 보존하고 client save 반환 타입만 요약에 맞췄다. UI 컴포넌트/draft/selection/drag 구현 변경0.
+
+98개 신규 domain/Sharp/loopback service/route tests로 strict 입력,0px/helper 호출0,PNG pixels,EXIF1~8,JPEG/WebP,일반화 A01/B01/B02,중복/30슬롯/partial/stale/CAS/보상을 검증했다. 실제 상품 Browser/수동 review QA는 TASK-053이며 이 결과로 M4를 닫지 않는다. [78항목 및 전체 검사](tasks/TASK-051.md). migration/dependency/AI/원격 mutation0, package0.2.0 유지.
 
 **M1 RESOLVED 유지 / M4 NEEDS_WORK, BLOCKER0/HIGH0/MEDIUM1/LOW0.** 자동 보존과 사용자 명시 승인을 결합한다. 자동 content preservation > frame removal, `same pixels + same config => same decision`을 유지한다. semantic label/knownContentBounds는 production 입력이 아니다. 수동 입력은 별도 승인 경로이며 자동 detector의 예외 규칙이 아니다.
 

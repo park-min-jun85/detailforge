@@ -7,6 +7,7 @@ export const EXTRACTION_MESSAGES = {
   not_configured: "제품컷 분석 서버 설정을 확인해 주세요.", timeout: "제품컷 분석 시간이 초과됐습니다.",
   provider: "제품컷 분석 서비스에 연결하지 못했습니다.", invalid_response: "분석 응답 형식을 확인할 수 없습니다.",
   invalid_rect: "추출 영역이 원본 이미지 범위를 벗어났습니다.", source_changed: "분석 후 원본 이미지가 변경됐습니다. 다시 분석해 주세요.",
+  crop_too_small: "저장 영역은 가로·세로 160px 이상, 면적 64,000픽셀 이상이어야 합니다.",
   stale: "후보가 변경되었거나 만료됐습니다. 최신 후보를 다시 확인해 주세요.", invalid_input: "선택한 후보와 요청 내용을 확인해 주세요.",
   asset_limit: "상품당 이미지 30개 제한을 초과합니다. 선택 수를 줄여 주세요.", crop: "선택 영역의 이미지 파일을 만들지 못했습니다.",
   upload: "추출 이미지를 저장하지 못했습니다.", database: "추출 정보를 저장하거나 조회하지 못했습니다.",

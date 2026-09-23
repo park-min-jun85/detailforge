@@ -11,7 +11,7 @@ async function request<T>(projectId: string, assetId: string, action: string, bo
 }
 export const requestExtraction = (projectId: string, assetId: string, force: boolean) => request<{ asset: Asset; reused: boolean }>(projectId, assetId, "", { force });
 export const requestCropSave = (projectId: string, assetId: string, candidateIds: string[]) => request<{
-  saved: { candidateId: string; asset: Asset; existing: boolean }[]; failed: { candidateId: string; code: ExtractionCode; message: string }[]; available: number;
+  saved: { candidateId: string; asset: Pick<Asset, "id" | "width" | "height" | "mimeType" | "assetType">; existing: boolean }[]; failed: { candidateId: string; code: ExtractionCode; message: string }[]; available: number;
 }>(projectId, assetId, "/save", { candidateIds });
 
 export const requestExtractionReview = (projectId: string, assetId: string) => request<import("./review-model").ExtractionReview>(projectId, assetId, "");

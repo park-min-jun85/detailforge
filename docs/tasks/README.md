@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-051:** Manual Crop Domain, Save API & Provenance 구현 완료. `feat/manual-crop-save-domain` / 기준 `cc51492`. V1 호환+V2 revision/insets, manual0px 포함 auto bypass/exact pixels, manual v2/legacy reader, final duplicate/30슬롯/CAS/partial/보상·safe response 구현. 새98 포함 **1389 tests 및 필수검사 PASS**. **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0.** UI/drag/draft/AI/원격 mutation/migration/dependency/version 변경0, package0.2.0, commit/merge/tag0. [78항목 보고](./TASK-051.md), [실행 계약](../V0_2_1_MANUAL_CROP_DESIGN.md). 다음 **TASK-052 Crop Editor UI/selection/retry**, 이후053 실제 QA → gate 충족 시054 release 검증.
+
+## 이전 TASK-050 기록
+
 **TASK-050:** Manual Crop Review UX & Data Contract 설계 완료, 구현 전. `plan/manual-crop-review-ux` / 기준 `078ebf6`. Candidate Review inward-only/4 edge+numeric, 명시 manual no-auto trim/WYSIWYG, draft·retry·selection 보존, strict save V2/revision CAS, provenance/duplicate/legacy 호환·a11y/375px/오류·실제 QA gate를 확정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK, MEDIUM1/LOW0.** 문서만 변경, production/migration/dependency/version/AI/원격 mutation0, 전체1291 tests·typegen/typecheck/lint/build PASS. commit/merge/tag0. [설계](../V0_2_1_MANUAL_CROP_DESIGN.md), [69항목 보고](./TASK-050.md). 다음은 **TASK-051 domain/API/save/provenance**, 이후052 UI → 053 실제 QA → gate 충족 시054 release 검증이다.
 
 ## 이전 TASK-049 기록

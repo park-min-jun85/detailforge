@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-051 — Manual Crop 서버 구현 / UI·실제 QA 대기
+
+2026-09-23. 기존 Derived save route의 V1 호환 + strict V2/revision/inward insets, manual0px 포함 auto bypass, exact source pixels, v2 manual provenance/legacy reader, final-rect duplicate/30슬롯 preflight, partial failure·CAS·lease·ack-lost 보상을 구현했다. GET의 crop/basis projection과 safe save response도 제공한다. Crop Editor UI/선택 draft 변경0, 기존 파일·provenance 자동 수정0. [설계의 최신 실행 상태](V0_2_1_MANUAL_CROP_DESIGN.md), [78항목 보고](tasks/TASK-051.md).
+
+**M1 RESOLVED 유지 / M4 NEEDS_WORK, BLOCKER0/HIGH0/MEDIUM1/LOW0.** 자동 detector/threshold/3%·same pixels/config invariant 유지. 새98 포함 **전체1389 tests·typegen/typecheck/lint/build/diff/secret PASS**. server/Sharp/loopback tests는 실제 사용자 review QA가 아니다. 다음 **TASK-052 Crop Editor UI + selection/retry integration**, 이어053 실제 A01/B01/B02 Browser/save QA 후054 release gate를 판단한다. version0.2.0, migration/dependency/OpenAI/외부 API/원격 mutation/commit/merge/tag0. 아래 TASK-050의 구현 전 상태는 당시 기록이다.
+
 ## TASK-050 — Manual Crop 설계 확정 / 구현 전
 
 2026-09-23. Candidate Review 저장 전 `[자르기 조정]`, inward-only 4 edge+numeric, normalized pixel inset, local Apply/Cancel/Reset, ID/basis별 draft와 explicit true/false selection 보존을 설계했다. 수동 override는0px도 자동 trim을 대체하고3% 초과를 허용하되 최소160×160·면적64000을 검증한다. strict V2 save/기존 revision CAS, manual v2 provenance/legacy reader, 최종 영역 duplicate/30슬롯/기존 automatic 승인 결과 재사용을 명시했다. [설계](V0_2_1_MANUAL_CROP_DESIGN.md), [69항목 보고](tasks/TASK-050.md).

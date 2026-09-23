@@ -6,6 +6,7 @@ export type ReviewCandidate = Pick<Candidate, "id" | "rect" | "regionType" | "de
   visualKind?: "photo" | "illustration" | "diagram" | "graphic" | "mixed" | "unknown";
   targetProductRelevance?: number;
   exclusion: ExclusionReason | null;
+  basisKey: string;
 };
 type SelectableCandidate = Pick<Candidate, "id" | "defaultSelected" | "saveAllowed">;
 
@@ -26,9 +27,12 @@ export type ExtractionReview = {
   result: {
     candidates: ReviewCandidate[];
     sourceDimensions: { width: number; height: number };
+    sourceOrientation: number;
+    coordinateSpace: "orientation_normalized_pixels";
     truncatedCandidates: boolean;
   } | null;
   savedCandidateIds: string[];
+  savedCrops: { assetId: string; finalRect: Candidate["rect"]; adjustmentMode: "automatic" | "manual" }[];
 };
 
 // Full selection map: explicit false is as important as explicit true.

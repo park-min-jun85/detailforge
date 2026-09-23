@@ -41,7 +41,18 @@ export const checkpointExtractionStateSchema = legacyExtractionStateSchema.exten
   latestResultInputFingerprint: hash.nullable().optional() });
 export const extractionStateSchema = z.discriminatedUnion("schemaVersion", [legacyExtractionStateSchema, checkpointExtractionStateSchema]);
 export const analyzeRequestSchema = z.strictObject({ force: z.boolean().default(false) });
-export const saveRequestSchema = z.strictObject({ candidateIds: z.array(hash).min(1).max(MAX_CANDIDATES) }).refine(x=>new Set(x.candidateIds).size===x.candidateIds.length);
+export const manualInsetsSchema = z.strictObject({
+  left: z.number().int().min(0).max(60000), top: z.number().int().min(0).max(60000),
+  right: z.number().int().min(0).max(60000), bottom: z.number().int().min(0).max(60000),
+});
+export type ManualInsets = z.infer<typeof manualInsetsSchema>;
+const legacySaveRequestSchema = z.strictObject({ candidateIds: z.array(hash).min(1).max(MAX_CANDIDATES) })
+  .refine(x => new Set(x.candidateIds).size === x.candidateIds.length);
+export const saveItemSchema = z.strictObject({ candidateId: hash, manualInsets: manualInsetsSchema.optional() });
+const manualSaveRequestSchema = z.strictObject({ schemaVersion: z.literal(2), expectedRevision: z.uuid(),
+  items: z.array(saveItemSchema).min(1).max(MAX_CANDIDATES),
+}).refine(x => new Set(x.items.map(item => item.candidateId)).size === x.items.length);
+export const saveRequestSchema = z.union([legacySaveRequestSchema, manualSaveRequestSchema]);
 export type Region = z.infer<typeof regionSchema> | z.infer<typeof relevanceRegionSchema>;
 export type Rect = z.infer<typeof rectSchema>;
 export type Dimensions = z.infer<typeof dimensionsSchema>;
@@ -53,6 +64,15 @@ export function isExtractionActive(state: ExtractionState|null, now=Date.now()) 
 export function isSaveActive(state: ExtractionState|null, now=Date.now()) { const age=now-Date.parse(state?.saveLease?.startedAt??"");return Boolean(state?.saveLease && age>=0 && age<LEASE_MS); }
 export function isDerived(metadata: Record<string, unknown>) { const d=metadata.derivation;return Boolean(d&&typeof d==="object"&&"kind" in d&&d.kind==="detail_image_crop"); }
 export const trimSchema = z.strictObject({ policyVersion: z.union([z.literal(1), z.literal(2)]), insets: z.strictObject({ top:z.number().int().nonnegative(), right:z.number().int().nonnegative(), bottom:z.number().int().nonnegative(), left:z.number().int().nonnegative() }), postTrimDimensions: dimensionsSchema });
-export const derivationSchema = z.strictObject({ schemaVersion:z.literal(1),kind:z.literal("detail_image_crop"),parentAssetId:z.uuid(),sourceFingerprint:hash,candidateId:hash, trim:trimSchema.optional(),
+const derivationBaseSchema = z.strictObject({ kind:z.literal("detail_image_crop"),parentAssetId:z.uuid(),sourceFingerprint:hash,candidateId:hash,
   sourceRect:rectSchema,sourceDimensions:dimensionsSchema,coordinateSpace:z.literal("orientation_normalized_pixels"),suggestedRole:z.enum(["product","usage","detail","option","mixed"]),
   confidence:score,extractedAt:z.iso.datetime({offset:true}),provider:z.literal("openai"),model:z.string().min(1).max(200) });
+export const manualAdjustmentSchema = z.strictObject({ mode: z.literal("manual"), insets: manualInsetsSchema });
+export const derivationSchema = z.discriminatedUnion("schemaVersion", [
+  derivationBaseSchema.extend({ schemaVersion: z.literal(1), trim: trimSchema.optional(), adjustment: z.never().optional() }),
+  derivationBaseSchema.extend({ schemaVersion: z.literal(2), adjustment: manualAdjustmentSchema, trim: z.never().optional() }),
+]);
+export type Derivation = z.infer<typeof derivationSchema>;
+export const derivationProjectionSchema = derivationBaseSchema.pick({ parentAssetId: true, candidateId: true, sourceFingerprint: true, sourceRect: true })
+  .extend({ trim: trimSchema.optional(), adjustment: manualAdjustmentSchema.optional() })
+  .refine(value => !(value.trim && value.adjustment));

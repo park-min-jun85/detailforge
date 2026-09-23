@@ -5,7 +5,8 @@ import { createHash } from "node:crypto";
 import { MAX_FILE_BYTES, validateFile, validateSignature, type ImageMime } from "@/features/assets/schemas";
 import { ExtractionError } from "./errors";
 import { imageCategory, MAX_INPUT_PIXELS, MAX_SOURCE_WIDTH, MAX_SOURCE_HEIGHT, TILE_HEIGHT, TILE_OVERLAP, MAX_TILE_COUNT, SNAP_WINDOW, OUTPUT_QUALITY, TRIM_POLICY_VERSION } from "./policy";
-import type { Dimensions, Rect } from "./schemas";
+import type { Dimensions, Rect, ManualInsets, Derivation } from "./schemas";
+import { assertSourceRect, insetRect, manualCropRect } from "./crop-geometry";
 import type { TileRect } from "./geometry";
 
 export type WorkingImage = { bytes: Buffer; fingerprint: string; dimensions: Dimensions; orientation: number; mime: ImageMime };
@@ -74,19 +75,37 @@ export async function tileDataUrl(image: WorkingImage, tile: TileRect) {
   return `data:image/jpeg;base64,${bytes.toString("base64")}`;
 }
 
-export async function cropImage(image: WorkingImage, rect: Rect) {
+export type CropPlan = { rect: Rect; trim?: NonNullable<Derivation["trim"]> };
+
+// Resolve geometry before capacity/deduplication. Manual, including all-zero,
+// returns before any automatic boundary analysis is invoked.
+export async function planCrop(image: WorkingImage, base: Rect, manualInsets?: ManualInsets): Promise<CropPlan> {
+  if (manualInsets !== undefined) return { rect: manualCropRect(base, image.dimensions, manualInsets) };
   try {
-    if (![rect.x, rect.y, rect.width, rect.height].every(Number.isSafeInteger) || rect.x < 0 || rect.y < 0 || rect.width <= 0 || rect.height <= 0
-      || rect.x + rect.width > image.dimensions.width || rect.y + rect.height > image.dimensions.height) throw new ExtractionError("invalid_rect");
-    const originalCrop = await input(image.bytes).extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height }).png().toBuffer();
-    const trimmed = await trimCrop(originalCrop, rect.width, rect.height);
-    const pipeline = input(originalCrop).extract({ left: trimmed.insets.left, top: trimmed.insets.top, width: trimmed.width, height: trimmed.height });
+    assertSourceRect(base, image.dimensions);
+    const originalCrop = await input(image.bytes).extract({ left: base.x, top: base.y, width: base.width, height: base.height }).png().toBuffer();
+    const trimmed = await trimCrop(originalCrop, base.width, base.height);
+    return { rect: insetRect(base, trimmed.insets), ...(trimmed.applied ? { trim: {
+      policyVersion: TRIM_POLICY_VERSION, insets: trimmed.insets, postTrimDimensions: { width: trimmed.width, height: trimmed.height },
+    } } : {}) };
+  } catch (error) { throw error instanceof ExtractionError ? error : new ExtractionError("crop"); }
+}
+
+export async function encodeCrop(image: WorkingImage, plan: CropPlan) {
+  try {
+    const rect = plan.rect;
+    assertSourceRect(rect, image.dimensions);
+    const pipeline = input(image.bytes).extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height });
     const bytes = await (image.mime === "image/jpeg" ? pipeline.jpeg({ quality: OUTPUT_QUALITY, chromaSubsampling: "4:4:4" })
       : image.mime === "image/webp" ? pipeline.webp({ quality: OUTPUT_QUALITY }) : pipeline.png({ compressionLevel: 6 })).toBuffer();
     validateFile(image.mime, bytes.length); validateSignature(bytes, image.mime);
     const actual = await input(bytes).metadata();
-    if (bytes.length > MAX_FILE_BYTES || actual.width !== trimmed.width || actual.height !== trimmed.height) throw new ExtractionError("crop");
+    if (bytes.length > MAX_FILE_BYTES || actual.width !== rect.width || actual.height !== rect.height) throw new ExtractionError("crop");
     return { bytes, width: actual.width, height: actual.height, mime: image.mime,
-      ...(trimmed.applied ? { trim: { policyVersion: TRIM_POLICY_VERSION, insets: trimmed.insets, postTrimDimensions: { width: trimmed.width, height: trimmed.height } } } : {}) };
+      ...(plan.trim ? { trim: plan.trim } : {}) };
   } catch (error) { throw error instanceof ExtractionError ? error : new ExtractionError("crop"); }
+}
+
+export async function cropImage(image: WorkingImage, rect: Rect, manualInsets?: ManualInsets) {
+  return encodeCrop(image, await planCrop(image, rect, manualInsets));
 }
