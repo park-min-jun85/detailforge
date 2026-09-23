@@ -1,5 +1,21 @@
 # v0.2.1 Image Boundary Contracts — TASK-046
 
+## TASK-049 실제 miss 분류 계약 — 최신 상태
+
+2026-09-23, A01/B01/B02 원본 bytes/candidate에서 실제 preserve 이유·pixel 통계·작은 lossless patch3개와 generalized analogue10개를 고정했다. **M1 RESOLVED 유지 / M4 NEEDS_WORK — root cause/classification established, MEDIUM1/LOW0.** production/threshold/crop/기존fixture 변경0. 새38 포함1291 tests 및 필수검사 PASS. [57항목·실측·gap matrix](tasks/TASK-049.md).
+
+M4의 목표는 **pixel 근거상 명확히 분리된 decorative frame만 제한적으로 자동 제거하고, ambiguous residue는 보존하여 검토 대상으로 남기는 것**이다. 모든 colored residue 제거를 요구하지 않는다. 이 정의만으로 backlog를 해결 처리하지 않는다. content preservation > frame removal, same pixels + same config => same decision, 최대3%·최소크기·기존 Derived 불변 계약 유지.
+
+- `decorative_frame`: bounded band·낮은 분산·반복 가능한 전환·방향 연속성, 의미 content와 분리. 색·평균·국소 patch만으로 승인 금지.
+- `panel_background`: layout 배경/부분 색 패널. 자동 removable이라는 뜻이 아니다.
+- `photo_background`: 실제 촬영의 벽/바닥/천/배경 연속. 보존 우선.
+- `content_touching_edge`: 제품·인물·문자·icon·shadow·의미 separator가 제거 영역과 연결. 자동 trim 금지.
+- `ambiguous`: pixel-only 근거로 안전하게 구분되지 않음. preserve 및 명시 검토.
+
+분류는 test-only annotation이며 production의 새 semantic 출력이 아니다. A01은 `ambiguous/manual_review`: T/R/L no_separator, B interior_ambiguous. B01은 `panel_background/manual_crop_candidate`: B/L band_detail, 완전 제거26px>cap17. B02는 `content_touching_edge/manual_review`: B/T band_detail, 내부 card38px 제거가 옆 제품 texture와 cap16을 침범. **실제 safe auto-trim 패턴0**, 새 detector extension을 정당화하지 않는다. 다음 TASK-050은 Review/Manual Crop UX 설계이며 이번 구현0이다.
+
+test-only metrics는 명시 ROI/줄에서 mean RGB, channel variance, inner contrast, luminance distance, transition count, continuity, detail ratio를 측정한다. 수치는 확률이나 trim 승인 점수가 아니다. 작은 patch3개(총100,676bytes)는 각각128×128/256×128/128×128이고 원본 전체와 cap/새 edge가 다르므로 full reason과 patch reason을 구분한다. 합성10개는 positive3/paired negative3/real analogue3/동일 pixels semantic alias1이다. positive는 이미 v2가 처리하는 양성 대조이며 실제 miss 개선으로 세지 않는다. desired validator와 current production characterization을 분리하고 label-only 반대 decision을 reject한다. knownContentBounds는 여전히 test oracle에만 존재한다. 아래048/047/046 내용은 당시 기록이다.
+
 ## TASK-048 실제 QA 결과 — 최신 상태
 
 2026-09-23, 실제 source2/상품2의 서로 다른 crop26개를 같은 bytes/candidate로 pre047 `f693151`과 현재 `cea04fd`에서 비교했다. **M1 RESOLVED(추가 trim 안전성 gate), M4 NEEDS_WORK, MEDIUM1/LOW0.** AFTER는26개 모두 preserve/inset0, clear/possible new loss0, false-positive trim0. same17/cleaner0/worse9(흰 띠 minor residue 증가), obvious frame/panel residue3→3. 유색 frame 후보6개에서 실제 개선이 확인되지 않아 M4 해결로 세지 않는다. 아래 TASK-047 안전 규칙/fixture 계약은 변경하지 않았다.

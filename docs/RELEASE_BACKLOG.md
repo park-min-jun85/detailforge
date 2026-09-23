@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-049 — M4 원인·안전 분류 계약 확정
+
+2026-09-23. A01의 layered frame은 자동 승인 근거 부족으로 ambiguous, B01은 불연속 panel_background(완전 제거26px>cap17), B02는 제품 texture와 연결된 내부 card/content_touching_edge(38px>cap16)로 고정했다. 실제 helper 반환값과 pixel 통계, bounded real patch3개, positive3/paired negative3/real analogue3/동일-pixels alias1을 보존 계약으로 검증했다. positive는 기존 v2 양성 대조이며 실제 개선0이다. **M1 RESOLVED 유지 / M4 NEEDS_WORK — root cause/classification established. BLOCKER0/HIGH0/MEDIUM1/LOW0.** [실측·3행 gap matrix·57항목](tasks/TASK-049.md).
+
+M4는 명확히 분리된 decorative frame만 자동 제거하고 ambiguous residue를 사용자 검토에 남기는 목표다. 목표 명확화는 해결 처리가 아니다. **다음 TASK-050: Review/Manual Crop UX 설계**. 실제 safe extension 후보0이므로 threshold/cap 완화나 detector 최소 확장으로 바로 가지 않는다. production/기존fixture/UI/package/migration/dependency 변경0, source·Derived 보존, AI/Domeggook/원격 DB·Storage0. 새38 포함1291 tests·필수 검사 PASS. package0.2.0, commit/merge/tag0. 아래 각 TASK 상태는 당시 기록이다.
+
 ## TASK-048 — M1 RESOLVED / M4 NEEDS_WORK
 
 2026-09-23, 실제 상품67399861/67695797 source2개, 중복 없는 crop26개를 동일 source bytes/candidate로 pre047과 비교했다. AFTER26개 모두 preserve: clear/possible new content loss0, false-positive trim0. 합성30종·전체1253 tests·typegen/typecheck/lint/build/diff/secret 및 실제 AFTER3개 save/read/Planner/Renderer/PNG·JPG860px PASS. **BLOCKER0/HIGH0/MEDIUM1(M4)/LOW0**. M1 종료는 고정 후보에 대한 추가 trim 안전성 gate 범위이며 기존 후보의 인물/제품 의미 구분 전체 해결은 아니다.

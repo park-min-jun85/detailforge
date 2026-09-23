@@ -1,0 +1,1143 @@
+{
+  "schemaVersion": 1,
+  "productionRef": "cea04fd",
+  "source": "TASK-048 frozen candidates; statistics from decoded original JPEG, not re-encoded output",
+  "semanticLabels": "test-only reviewed classifications; not production detector outputs",
+  "samples": [
+    {
+      "name": "layered-muted-border",
+      "sourceHash": "ffc49a546991f56b620080cb1a76fdd817a52dfdbaf5f37fd47318135c7ef4e8",
+      "sourceDimensions": {
+        "width": 860,
+        "height": 12900
+      },
+      "candidateRect": {
+        "x": 19,
+        "y": 505,
+        "width": 821,
+        "height": 825
+      },
+      "beforeRect": {
+        "x": 19,
+        "y": 505,
+        "width": 821,
+        "height": 825
+      },
+      "afterRect": {
+        "x": 19,
+        "y": 505,
+        "width": 821,
+        "height": 825
+      },
+      "outputDimensions": {
+        "width": 821,
+        "height": 825
+      },
+      "role": "product",
+      "residue": "Outer gray surround T17/R15/B18/L16px plus approximately 2px green line; JPEG transition pixels vary.",
+      "contentTouch": "No visible foreground in outer gray surround; dog meets the retained right photo boundary. Green separator must be retained. No text.",
+      "classification": "ambiguous",
+      "safety": "ambiguous",
+      "futureAction": "manual_review",
+      "operation": "Complete observed residue removal by rectangular auto-trim under unchanged 3% cap",
+      "fullCandidateDecisions": {
+        "top": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        },
+        "right": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        },
+        "bottom": {
+          "trimPixels": 0,
+          "frameConfidence": 0.5,
+          "contentRisk": "ambiguous",
+          "reason": "interior_ambiguous"
+        },
+        "left": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        }
+      },
+      "statistics": {
+        "representativeEdge": "top",
+        "band": {
+          "rect": {
+            "x": 28,
+            "y": 0,
+            "width": 765,
+            "height": 15
+          },
+          "pixels": 11475,
+          "mean": [
+            224,
+            224,
+            224
+          ],
+          "variance": [
+            0,
+            0,
+            0
+          ],
+          "detailRatio": 0
+        },
+        "inner": {
+          "rect": {
+            "x": 28,
+            "y": 20,
+            "width": 765,
+            "height": 4
+          },
+          "pixels": 3060,
+          "mean": [
+            140.204902,
+            135.477124,
+            131.040523
+          ],
+          "variance": [
+            22.762917,
+            16.127254,
+            22.52777
+          ],
+          "detailRatio": 0
+        },
+        "color": {
+          "rect": {
+            "x": 28,
+            "y": 17,
+            "width": 765,
+            "height": 2
+          },
+          "pixels": 1530,
+          "mean": [
+            127.456209,
+            180.956209,
+            120.956209
+          ],
+          "variance": [
+            0.310827,
+            6.247102,
+            0.623573
+          ],
+          "detailRatio": 0
+        },
+        "RGBDistance": 153.295083,
+        "luminanceDistance": 87.838073,
+        "fullFirstLine": {
+          "offset": 0,
+          "mean": [
+            224,
+            224,
+            224
+          ],
+          "variance": [
+            0,
+            0,
+            0
+          ],
+          "range": [
+            0,
+            0,
+            0
+          ],
+          "adjacentMax": 0,
+          "detailRatio": 0,
+          "opaqueRatio": 1,
+          "continuity": 1
+        },
+        "transitionCount60": 2,
+        "residueCoverage": 1
+      },
+      "trace": {
+        "top": {
+          "stopOffset": 15,
+          "stopLine": {
+            "offset": 15,
+            "mean": [
+              220.846529,
+              225.671133,
+              226.125457
+            ],
+            "variance": [
+              1.791306,
+              0.815111,
+              0.916051
+            ],
+            "range": [
+              18,
+              14,
+              20
+            ],
+            "adjacentMax": 15,
+            "detailRatio": 0.003659,
+            "opaqueRatio": 1,
+            "continuity": 0.98173
+          },
+          "stopVsFirstDistance": 4.15387,
+          "guardedSeparator": {
+            "offset": 15,
+            "mean": [
+              220.656209,
+              225.764706,
+              226.210458
+            ],
+            "variance": [
+              0.628213,
+              0.32895,
+              0.231525
+            ],
+            "range": [
+              3,
+              3,
+              2
+            ],
+            "adjacentMax": 2,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 1
+          },
+          "separatorDistance": 4.37964,
+          "separatorUniform": true
+        },
+        "right": {
+          "stopOffset": 8,
+          "stopLine": {
+            "offset": 8,
+            "mean": [
+              227.761212,
+              221.169697,
+              228.721212
+            ],
+            "variance": [
+              1.287223,
+              0.68393,
+              1.621671
+            ],
+            "range": [
+              12,
+              9,
+              12
+            ],
+            "adjacentMax": 12,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 0.950303
+          },
+          "stopVsFirstDistance": 6.666872,
+          "guardedSeparator": {
+            "offset": 8,
+            "mean": [
+              228,
+              221,
+              229
+            ],
+            "variance": [
+              0,
+              0,
+              0
+            ],
+            "range": [
+              0,
+              0,
+              0
+            ],
+            "adjacentMax": 0,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 1
+          },
+          "separatorDistance": 7.071068,
+          "separatorUniform": true
+        },
+        "bottom": {
+          "stopOffset": 18,
+          "stopLine": {
+            "offset": 18,
+            "mean": [
+              134.420219,
+              183.878197,
+              123.336175
+            ],
+            "variance": [
+              316.455572,
+              63.912082,
+              400.53254
+            ],
+            "range": [
+              107,
+              53,
+              121
+            ],
+            "adjacentMax": 99,
+            "detailRatio": 0.006098,
+            "opaqueRatio": 1,
+            "continuity": 0.602923
+          },
+          "stopVsFirstDistance": 140.596948,
+          "guardedSeparator": {
+            "offset": 18,
+            "mean": [
+              130.904575,
+              182.29281,
+              119.359477
+            ],
+            "variance": [
+              0.985665,
+              0.654131,
+              3.694306
+            ],
+            "range": [
+              7,
+              4,
+              9
+            ],
+            "adjacentMax": 6,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 1
+          },
+          "separatorDistance": 146.136535,
+          "separatorUniform": true,
+          "separatorWidth": 1,
+          "interior": [
+            {
+              "offset": 19,
+              "mean": [
+                125.482353,
+                179.147712,
+                125.690196
+              ],
+              "variance": [
+                1.269296,
+                0.865763,
+                5.24912
+              ],
+              "range": [
+                8,
+                6,
+                9
+              ],
+              "adjacentMax": 8,
+              "detailRatio": 0,
+              "opaqueRatio": 1,
+              "continuity": 1
+            },
+            {
+              "offset": 20,
+              "mean": [
+                137.058824,
+                143.356863,
+                127.203922
+              ],
+              "variance": [
+                18.379546,
+                32.57461,
+                16.813318
+              ],
+              "range": [
+                14,
+                19,
+                16
+              ],
+              "adjacentMax": 7,
+              "detailRatio": 0,
+              "opaqueRatio": 1,
+              "continuity": 0.266667
+            },
+            {
+              "offset": 21,
+              "mean": [
+                142.163399,
+                138.291503,
+                131.056209
+              ],
+              "variance": [
+                16.228203,
+                31.061431,
+                20.126252
+              ],
+              "range": [
+                15,
+                21,
+                18
+              ],
+              "adjacentMax": 9,
+              "detailRatio": 0,
+              "opaqueRatio": 1,
+              "continuity": 0.386928
+            },
+            {
+              "offset": 22,
+              "mean": [
+                135.644444,
+                141.766013,
+                131.079739
+              ],
+              "variance": [
+                18.142861,
+                37.172701,
+                20.201485
+              ],
+              "range": [
+                17,
+                20,
+                19
+              ],
+              "adjacentMax": 5,
+              "detailRatio": 0,
+              "opaqueRatio": 1,
+              "continuity": 0.264052
+            }
+          ],
+          "contrast": false,
+          "textured": true,
+          "separatorExtremum": false
+        },
+        "left": {
+          "stopOffset": 13,
+          "stopLine": {
+            "offset": 13,
+            "mean": [
+              224.545455,
+              223.786667,
+              223.029091
+            ],
+            "variance": [
+              1.098843,
+              0.691459,
+              1.572487
+            ],
+            "range": [
+              14,
+              12,
+              20
+            ],
+            "adjacentMax": 12,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 0.991515
+          },
+          "stopVsFirstDistance": 1.133885,
+          "guardedSeparator": {
+            "offset": 13,
+            "mean": [
+              224.542263,
+              223.789337,
+              222.980494
+            ],
+            "variance": [
+              0.724157,
+              0.592812,
+              1.111453
+            ],
+            "range": [
+              5,
+              5,
+              7
+            ],
+            "adjacentMax": 4,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 1
+          },
+          "separatorDistance": 1.173806,
+          "separatorUniform": true
+        }
+      },
+      "patch": {
+        "file": "real-frame-patches/layered-muted-border.png",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 128,
+          "height": 128
+        },
+        "bytes": 2649,
+        "sha256": "06c360ec25fe7e076b16d0dbbd700f715af0c1c68318abf9238325ac4ee21afe",
+        "rawHash": "6dbaa17f76c3e8504df36f3b4ebe5c798fd4fae938bf02b3b4d0046e4c55b0d5",
+        "decisions": {
+          "top": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "ambiguous",
+            "reason": "wide_band"
+          },
+          "right": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "bottom": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "left": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "ambiguous",
+            "reason": "wide_band"
+          }
+        }
+      },
+      "scaleWarning": "Patch decisions use patch dimensions and new artificial edges; never substitute these reasons/caps for full-candidate decisions."
+    },
+    {
+      "name": "partial-dark-panel",
+      "sourceHash": "32a08abba067f3410d3f04e8d8b293f29b9c5290a7a5d7d1062964c74e4adb59",
+      "sourceDimensions": {
+        "width": 800,
+        "height": 23982
+      },
+      "candidateRect": {
+        "x": 360,
+        "y": 2000,
+        "width": 380,
+        "height": 572
+      },
+      "beforeRect": {
+        "x": 360,
+        "y": 2000,
+        "width": 380,
+        "height": 572
+      },
+      "afterRect": {
+        "x": 360,
+        "y": 2000,
+        "width": 380,
+        "height": 572
+      },
+      "outputDimensions": {
+        "width": 380,
+        "height": 572
+      },
+      "role": "product",
+      "residue": "Brown L: left x0..7/y222..571; bottom x0..197/y546..571. Bottom26px exceeds floor(572*.03)=17.",
+      "contentTouch": "Photo ends at y545; body/photo content is adjacent to the panel. No proof of one continuous full-edge frame. No text.",
+      "classification": "panel_background",
+      "safety": "unsafe_to_trim",
+      "futureAction": "manual_crop_candidate",
+      "operation": "Complete observed residue removal by rectangular auto-trim under unchanged 3% cap",
+      "fullCandidateDecisions": {
+        "top": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        },
+        "right": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        },
+        "bottom": {
+          "trimPixels": 0,
+          "frameConfidence": 0,
+          "contentRisk": "detail",
+          "reason": "band_detail"
+        },
+        "left": {
+          "trimPixels": 0,
+          "frameConfidence": 0,
+          "contentRisk": "detail",
+          "reason": "band_detail"
+        }
+      },
+      "statistics": {
+        "representativeEdge": "bottom",
+        "band": {
+          "rect": {
+            "x": 0,
+            "y": 546,
+            "width": 198,
+            "height": 26
+          },
+          "pixels": 5148,
+          "mean": [
+            87.94289,
+            75.907148,
+            64.027001
+          ],
+          "variance": [
+            3.814532,
+            2.075683,
+            5.438859
+          ],
+          "detailRatio": 0.007546
+        },
+        "inner": {
+          "rect": {
+            "x": 8,
+            "y": 540,
+            "width": 190,
+            "height": 6
+          },
+          "pixels": 1140,
+          "mean": [
+            192.641228,
+            185.229825,
+            180.236842
+          ],
+          "variance": [
+            1555.594967,
+            2442.248935,
+            3493.34566
+          ],
+          "detailRatio": 0.232246
+        },
+        "color": null,
+        "RGBDistance": 190.834789,
+        "luminanceDistance": 108.836795,
+        "fullFirstLine": {
+          "offset": 0,
+          "mean": [
+            167.973684,
+            161.713158,
+            155.460526
+          ],
+          "variance": [
+            6960.741413,
+            7998.304564,
+            9102.680021
+          ],
+          "range": [
+            170,
+            181,
+            196
+          ],
+          "adjacentMax": 183,
+          "detailRatio": 0.002639,
+          "opaqueRatio": 1,
+          "continuity": 0
+        },
+        "transitionCount60": 8,
+        "residueCoverage": 0.521053
+      },
+      "trace": {
+        "top": {
+          "stopOffset": 8,
+          "stopLine": {
+            "offset": 8,
+            "mean": [
+              253.110526,
+              253.305263,
+              251.123684
+            ],
+            "variance": [
+              6.19831,
+              5.712078,
+              24.934702
+            ],
+            "range": [
+              15,
+              17,
+              35
+            ],
+            "adjacentMax": 35,
+            "detailRatio": 0.031662,
+            "opaqueRatio": 1,
+            "continuity": 0.865789
+          },
+          "stopVsFirstDistance": 4.633365,
+          "guardedSeparator": {
+            "offset": 8,
+            "mean": [
+              253.037143,
+              253.28,
+              251.114286
+            ],
+            "variance": [
+              5.852906,
+              5.384457,
+              25.786939
+            ],
+            "range": [
+              15,
+              17,
+              35
+            ],
+            "adjacentMax": 35,
+            "detailRatio": 0.028653,
+            "opaqueRatio": 1,
+            "continuity": 0.862857
+          },
+          "separatorDistance": 4.68081,
+          "separatorUniform": false
+        },
+        "right": {
+          "stopOffset": 6,
+          "stopLine": {
+            "offset": 6,
+            "mean": [
+              253.433566,
+              254.012238,
+              252.697552
+            ],
+            "variance": [
+              1.68265,
+              1.277822,
+              2.497686
+            ],
+            "range": [
+              13,
+              13,
+              13
+            ],
+            "adjacentMax": 13,
+            "detailRatio": 0.001751,
+            "opaqueRatio": 1,
+            "continuity": 0.993007
+          },
+          "stopVsFirstDistance": 2.954768,
+          "guardedSeparator": {
+            "offset": 6,
+            "mean": [
+              253.375472,
+              254,
+              252.630189
+            ],
+            "variance": [
+              1.540153,
+              1.14717,
+              2.153806
+            ],
+            "range": [
+              13,
+              13,
+              13
+            ],
+            "adjacentMax": 13,
+            "detailRatio": 0.00189,
+            "opaqueRatio": 1,
+            "continuity": 0.996226
+          },
+          "separatorDistance": 3.042219,
+          "separatorUniform": false
+        },
+        "bottom": {
+          "firstLine": {
+            "offset": 0,
+            "mean": [
+              167.973684,
+              161.713158,
+              155.460526
+            ],
+            "variance": [
+              6960.741413,
+              7998.304564,
+              9102.680021
+            ],
+            "range": [
+              170,
+              181,
+              196
+            ],
+            "adjacentMax": 183,
+            "detailRatio": 0.002639,
+            "opaqueRatio": 1,
+            "continuity": 0
+          },
+          "stage": "initial band-detail veto"
+        },
+        "left": {
+          "firstLine": {
+            "offset": 0,
+            "mean": [
+              152.797203,
+              145.463287,
+              138.108392
+            ],
+            "variance": [
+              6619.588244,
+              7607.238163,
+              8656.128111
+            ],
+            "range": [
+              168,
+              180,
+              191
+            ],
+            "adjacentMax": 182,
+            "detailRatio": 0.001751,
+            "opaqueRatio": 1,
+            "continuity": 0
+          },
+          "stage": "initial band-detail veto"
+        }
+      },
+      "patch": {
+        "file": "real-frame-patches/partial-dark-panel.png",
+        "rect": {
+          "x": 0,
+          "y": 444,
+          "width": 256,
+          "height": 128
+        },
+        "bytes": 59646,
+        "sha256": "a86a2cfdca7f14bf50776ec57412486265ac42b30c37acec742b70f66db8864b",
+        "rawHash": "7856d7da9bdf2636091f3b800a18bce2e4f643ff09a1c9de497cd236c1379dd2",
+        "decisions": {
+          "top": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "right": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "bottom": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "left": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "ambiguous",
+            "reason": "dark_edge"
+          }
+        }
+      },
+      "scaleWarning": "Patch decisions use patch dimensions and new artificial edges; never substitute these reasons/caps for full-candidate decisions."
+    },
+    {
+      "name": "inset-card-boundary",
+      "sourceHash": "32a08abba067f3410d3f04e8d8b293f29b9c5290a7a5d7d1062964c74e4adb59",
+      "sourceDimensions": {
+        "width": 800,
+        "height": 23982
+      },
+      "candidateRect": {
+        "x": 54,
+        "y": 2711,
+        "width": 691,
+        "height": 547
+      },
+      "beforeRect": {
+        "x": 54,
+        "y": 2711,
+        "width": 691,
+        "height": 547
+      },
+      "afterRect": {
+        "x": 54,
+        "y": 2711,
+        "width": 691,
+        "height": 547
+      },
+      "outputDimensions": {
+        "width": 691,
+        "height": 547
+      },
+      "role": "detail",
+      "residue": "Inset card x74..616/y509..546, about38px tall; 4px top outline, not a full-width edge band. Bottom cap16px.",
+      "contentTouch": "Meaningful fleece texture continues to bottom on both sides of the inset. Full-width38px removal would delete it. No person/text.",
+      "classification": "content_touching_edge",
+      "safety": "unsafe_to_trim",
+      "futureAction": "manual_review",
+      "operation": "Complete observed residue removal by rectangular auto-trim under unchanged 3% cap",
+      "fullCandidateDecisions": {
+        "top": {
+          "trimPixels": 0,
+          "frameConfidence": 0,
+          "contentRisk": "detail",
+          "reason": "band_detail"
+        },
+        "right": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        },
+        "bottom": {
+          "trimPixels": 0,
+          "frameConfidence": 0,
+          "contentRisk": "detail",
+          "reason": "band_detail"
+        },
+        "left": {
+          "trimPixels": 0,
+          "frameConfidence": 0.25,
+          "contentRisk": "ambiguous",
+          "reason": "no_separator"
+        }
+      },
+      "statistics": {
+        "representativeEdge": "bottom",
+        "band": {
+          "rect": {
+            "x": 74,
+            "y": 509,
+            "width": 543,
+            "height": 4
+          },
+          "pixels": 2172,
+          "mean": [
+            251.83011,
+            251.826427,
+            249.441529
+          ],
+          "variance": [
+            9.798486,
+            11.759467,
+            32.979546
+          ],
+          "detailRatio": 0.051093
+        },
+        "inner": {
+          "rect": {
+            "x": 78,
+            "y": 515,
+            "width": 535,
+            "height": 8
+          },
+          "pixels": 4280,
+          "mean": [
+            205.865421,
+            196.90771,
+            192.716121
+          ],
+          "variance": [
+            401.179085,
+            447.684707,
+            458.837871
+          ],
+          "detailRatio": 0.561806
+        },
+        "color": null,
+        "RGBDistance": 91.359674,
+        "luminanceDistance": 53.145534,
+        "fullFirstLine": {
+          "offset": 0,
+          "mean": [
+            209.318379,
+            199.945007,
+            193.657019
+          ],
+          "variance": [
+            389.070849,
+            545.30233,
+            766.89973
+          ],
+          "range": [
+            115,
+            128,
+            149
+          ],
+          "adjacentMax": 94,
+          "detailRatio": 0.498551,
+          "opaqueRatio": 1,
+          "continuity": 0.070912
+        },
+        "transitionCount60": 3,
+        "residueCoverage": 0.785818
+      },
+      "trace": {
+        "top": {
+          "firstLine": {
+            "offset": 0,
+            "mean": [
+              210.606368,
+              197.767004,
+              184.945007
+            ],
+            "variance": [
+              1288.970958,
+              1868.138188,
+              2559.719118
+            ],
+            "range": [
+              166,
+              182,
+              208
+            ],
+            "adjacentMax": 79,
+            "detailRatio": 0.197101,
+            "opaqueRatio": 1,
+            "continuity": 0.015919
+          },
+          "stage": "initial band-detail veto"
+        },
+        "right": {
+          "stopOffset": 9,
+          "stopLine": {
+            "offset": 9,
+            "mean": [
+              252.630713,
+              253.744059,
+              251.601463
+            ],
+            "variance": [
+              5.417558,
+              2.74985,
+              15.369504
+            ],
+            "range": [
+              16,
+              10,
+              15
+            ],
+            "adjacentMax": 15,
+            "detailRatio": 0.001832,
+            "opaqueRatio": 1,
+            "continuity": 0.833638
+          },
+          "stopVsFirstDistance": 4.329084,
+          "guardedSeparator": {
+            "offset": 9,
+            "mean": [
+              252.704142,
+              253.761341,
+              251.579882
+            ],
+            "variance": [
+              5.320752,
+              2.733969,
+              15.513836
+            ],
+            "range": [
+              16,
+              10,
+              15
+            ],
+            "adjacentMax": 15,
+            "detailRatio": 0.001976,
+            "opaqueRatio": 1,
+            "continuity": 0.828402
+          },
+          "separatorDistance": 4.301447,
+          "separatorUniform": false
+        },
+        "bottom": {
+          "firstLine": {
+            "offset": 0,
+            "mean": [
+              209.318379,
+              199.945007,
+              193.657019
+            ],
+            "variance": [
+              389.070849,
+              545.30233,
+              766.89973
+            ],
+            "range": [
+              115,
+              128,
+              149
+            ],
+            "adjacentMax": 94,
+            "detailRatio": 0.498551,
+            "opaqueRatio": 1,
+            "continuity": 0.070912
+          },
+          "stage": "initial band-detail veto"
+        },
+        "left": {
+          "stopOffset": 10,
+          "stopLine": {
+            "offset": 10,
+            "mean": [
+              252.252285,
+              253.661792,
+              253.797075
+            ],
+            "variance": [
+              6.83946,
+              2.476109,
+              3.554799
+            ],
+            "range": [
+              13,
+              8,
+              11
+            ],
+            "adjacentMax": 9,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 0.936015
+          },
+          "stopVsFirstDistance": 3.284474,
+          "guardedSeparator": {
+            "offset": 10,
+            "mean": [
+              252.428008,
+              253.704142,
+              253.771203
+            ],
+            "variance": [
+              6.264541,
+              2.247774,
+              3.608402
+            ],
+            "range": [
+              13,
+              7,
+              11
+            ],
+            "adjacentMax": 9,
+            "detailRatio": 0,
+            "opaqueRatio": 1,
+            "continuity": 0.940828
+          },
+          "separatorDistance": 3.131187,
+          "separatorUniform": false
+        }
+      },
+      "patch": {
+        "file": "real-frame-patches/inset-card-boundary.png",
+        "rect": {
+          "x": 40,
+          "y": 419,
+          "width": 128,
+          "height": 128
+        },
+        "bytes": 38381,
+        "sha256": "769a20ace6041f23786e62b1b2f22663c8457b16e30094620e84f4331d177cb2",
+        "rawHash": "44405f99bd68516dc98276fa4c516aceca038401fb871171bced5d68cd2b734d",
+        "decisions": {
+          "top": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "right": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "bottom": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          },
+          "left": {
+            "trimPixels": 0,
+            "frameConfidence": 0,
+            "contentRisk": "detail",
+            "reason": "band_detail"
+          }
+        }
+      },
+      "scaleWarning": "Patch decisions use patch dimensions and new artificial edges; never substitute these reasons/caps for full-candidate decisions."
+    }
+  ]
+}
