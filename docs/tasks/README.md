@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-058 COMPLETE:** 0007 ownership/RLS 경계, 28 policies, 7-table 실제 A/B/anon143 checks, 전체1465 tests·필수검사 PASS. Fresh/upgrade 데이터 보존, remote mutation0, Git stage/commit/merge/tag0. **Public SaaS deployment remains BLOCKED.** ownerless legacy create는 차단되며060/061 연결이 필요하다. [11항목 결과](TASK-058.md), [DB 계약](../V0_3_DATABASE_RLS_SECURITY.md). 다음 TASK-059 Storage ownership/object isolation.
+
+## 이전 TASK-057A 기록
+
 **TASK-057A:** Ownership Migration Runtime Validation 완료. 별도 local Supabase PostgreSQL17.6/GoTrue API에서 fresh/upgrade/backfill/FK/index/NOT NULL/type 비교34 checks PASS, 전체1465 tests 및 필수검사 PASS. migration/production 수정0, remote DB/Auth0. **TASK-057 최종 COMPLETE / Public SaaS BLOCKED**. [46항목 보고](TASK-057A.md). 다음 TASK-058 DB RLS & Ownership Enforcement.
 
 ## 이전 TASK-057 기록

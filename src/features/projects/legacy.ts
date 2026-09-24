@@ -3,11 +3,10 @@ import "server-only";
 import type { ProjectClient } from "./service";
 import { createProjectSchema } from "./schemas";
 
-// Explicit pre-auth/internal bridge, removed at TASK-060. Never choose an owner.
-// Valid only before Stage C: NOT NULL intentionally rejects this old insert.
-export async function createLegacyInternalProject(input: unknown, client: ProjectClient) {
-  const parsed = createProjectSchema.parse(input);
-  const { error } = await client.from("projects").insert({ name: parsed.name, status: "draft" })
-    .abortSignal(AbortSignal.timeout(10_000));
-  if (error) throw new Error("Project insert failed");
+// TASK-058 closes the ownerless bridge. TASK-060/061 must wire the verified
+// principal into createProject before this old action can create projects again.
+export async function createLegacyInternalProject(input: unknown, _client: ProjectClient) {
+  void _client;
+  createProjectSchema.parse(input);
+  throw new Error("Project creation requires authenticated ownership");
 }

@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-058 — Database RLS COMPLETE / public gate 유지
+
+0007·28 policies·owner/parent/PK/path 불변성·Asset 복합 FK를 구현했다. 실제 A/B Auth JWT/anon143 checks, fresh/upgrade 무손실, 전체1465 tests와 필수검사 PASS. Remote DB/Auth/Storage0, Git 작업0. ownerless Project create는060/061 연결 전 차단된다. [11항목 결과](tasks/TASK-058.md), [DB security contract](V0_3_DATABASE_RLS_SECURITY.md).
+
+다음 TASK-059 Storage isolation. TASK-060 service-role/비용 제어,061 Auth UX,062 Export,063 cross-user E2E,064 own workflow,065 release가 남아 **Public SaaS deployment remains BLOCKED**다. 아래는 각 TASK 당시 기록이다.
+
 ## TASK-057A — SQL runtime PASS / TASK-057 최종 완료
 
 실제 local Supabase PostgreSQL17.6/GoTrue에서 fresh/upgrade/Auth bootstrap/backfill/FK/index/NULL gate/NOT NULL/types34 checks PASS, 전체1465 tests·필수검사 PASS. SQL 변경0/remote mutation0. 아래057의 NOT_RUN은 후속으로 해소됐다. **Public SaaS BLOCKED**, 다음 TASK-058 RLS/ownership enforcement. [46항목 보고](tasks/TASK-057A.md).

@@ -63,11 +63,11 @@ test('OWN-10 A cannot delete B; owner filter is on DELETE itself',async()=>{
   assert.equal(db.tables.projects.length,3);assert.deepEqual(await deleteOwnedProject({userId:A},PA,db.client),{deleted:true});
   assert.ok(db.calls.every(c=>c.method==='DELETE'&&c.url.searchParams.get('owner_id')===`eq.${A}`));
 });
-test('OWN-11 legacy null/missing owner is visible only through explicit migration read/legacy create',async()=>{
+test('OWN-11 legacy null/missing owner is migration-only; ownerless create fails closed',async()=>{
   for(const row of [project(LEGACY,null),{...project(LEGACY,null),owner_id:undefined}]){
     assert.equal(ownedProjectRowSchema.safeParse(row).success,false);assert.equal(legacyProjectOwnershipSchema.parse(row).ownerId,null);
   }
-  const db=ownershipDb();await createLegacyInternalProject({name:'legacy'},db.client);assert.equal(Object.hasOwn(db.calls[0].body,'owner_id'),false);
+  const db=ownershipDb();await assert.rejects(createLegacyInternalProject({name:'legacy'},db.client),/authenticated ownership/);assert.equal(db.calls.length,0);
 });
 test('OWN-12 CLI validates explicit bootstrap/allowlist, defaults dry-run and only prints count DTO (mock psql)',()=>{
   const counts={applied:false,updated:0,totalProjects:3,ownedProjects:1,nullOwnerProjects:2,distinctOwners:1,eligibleProjects:2};let called=0;
@@ -92,9 +92,9 @@ test('OWN-16 zero-row allowlist accepted, apply is opt-in, DB errors never echo 
   assert.throws(()=>runBackfill(args,{read:()=>JSON.stringify([PA]),exec:()=>{throw Error('private-db-url-password-token');}}),e=>!e.message.includes('private-db'));
   assert.match(backfill,/coalesce\(array_agg\(value::uuid\), array\[\]::uuid\[\]\)/);
 });
-test('OWN-18 database Row/Insert/Update matches nullable Stage A; no generated public auth relation',()=>{
+test('OWN-18 database Row/Insert requires finalized owner; no generated public auth relation',()=>{
   const block=read('src/lib/supabase/database.types.ts').split('      projects: {')[1].split('      sections: {')[0];
-  assert.match(block,/owner_id: string \| null/);assert.equal([...block.matchAll(/owner_id\?: string \| null/g)].length,2);
+  assert.equal([...block.matchAll(/owner_id: string/g)].length,2);assert.match(block,/owner_id\?: string/);assert.doesNotMatch(block,/owner_id\??: string \| null/);
 });
 test('OWN-19 fresh SQL sequence contract has no bootstrap identity requirement in automatic migration',()=>{
   assert.doesNotMatch(migration,/[0-9a-f]{8}-[0-9a-f-]{27}|bootstrap_user_id/);

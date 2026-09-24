@@ -72,8 +72,11 @@ try{
       for(const kind of ['Row','Insert','Update','Relationships'])data[name][kind]=member(table.type,kind).getText(sf).replace(/\s|;/g,'');}
     return data;
   };
-  check('actual generated public table Row Insert Update Relationships match checked-in types',()=>assert.deepEqual(shapes(generated),shapes(readFileSync('src/lib/supabase/database.types.ts','utf8'))));
-  result.databaseTypes='Stage A public table shapes match; generator metadata reported separately';
+  // This historical 0001–0006 rehearsal must compare its own Stage A baseline.
+  // TASK-058 now verifies the current finalized schema in rls-runtime.supabase.mjs.
+  const stageATypes=execFileSync('git',['show','8906c0cee85b01281f2ddfa557469482cb58a981:src/lib/supabase/database.types.ts'],{encoding:'utf8',windowsHide:true,stdio:['ignore','pipe','pipe']});
+  check('actual generated public table shapes match the committed TASK-057 Stage A baseline',()=>assert.deepEqual(shapes(generated),shapes(stageATypes)));
+  result.databaseTypes='Stage A shapes match TASK-057 baseline 8906c0c; current final schema belongs to TASK-058';
   check('fresh finalize dry-run does not enforce NOT NULL',()=>assert.equal(final(fresh).notNull,false));
   check('fresh finalize applies NOT NULL',()=>assert.equal(final(fresh,true).notNull,true));
   check('fresh rejects missing owner after finalize',()=>reject(()=>sql(fresh,"insert into public.projects(name) values ('missing')"),/23502/));
@@ -125,7 +128,7 @@ try{
     assert.match(owner.Insert,/owner_id:string(?!\|null)/);
     assert.doesNotMatch(owner.Insert,/owner_id\?/);
   });
-  result.finalizedTypes='Stage C owner_id is string and Insert required; source remains Stage A until final rollout';
+  result.finalizedTypes='Stage C owner_id is string and Insert required; current source finalized by TASK-058';
   result.status='PASS';result.checkCount=checks.length;result.migrationChanges=0;
 }catch(error){
   result.status='FAIL';result.failedPhase=phase;

@@ -1,5 +1,11 @@
 # v0.3.0 Threat Model & Security Validation Contract
 
+## TASK-058 delta (2026-09-24)
+
+T02 직접 DB IDOR, T03 mixed Project/Product 및 owner/parent/PK/path 변경, anon user-data CRUD를 실제 Local Supabase A/B session JWT/anon으로 검증했다. 143 runtime checks 및 fresh/upgrade 무손실 PASS. 7-table RLS/28 policies/최소 grants가 DB 경계이며 service_role acceptance는0이다. 정확한 foreign/missing UUID read/update/delete는 양방향 동일0 rows다. [DB contract](V0_3_DATABASE_RLS_SECURITY.md), [TASK-058 결과](tasks/TASK-058.md).
+
+T01 전체 진입점, T04 service-role 호출, T05 Storage, T07 Export, T08/09 비용·동시성 및 전체063 E2E는 미완료다. Constraint 오류/timing의 모든 존재 추론을 제거했다고 주장하지 않는다. Remote mutation0. **Public SaaS deployment remains BLOCKED**. 아래 미구현/미검증 표기는 해당 TASK 시점 기록이다.
+
 2026-09-23 · TASK-055 · **계획, 미구현·미검증**. 기준 v0.2.1 / `cf77916`. 본 문서의 PASS 조건은 다음 구현 TASK의 gate이며, TASK-055의 1,417개 baseline 통과와 구분한다. 현재 앱은 공개 배포 불가다. [선택한 architecture](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [TASK-055 보고](tasks/TASK-055.md).
 
 ## TASK-057 delta (2026-09-24)

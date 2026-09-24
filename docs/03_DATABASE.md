@@ -1,5 +1,11 @@
 # Database
 
+## TASK-058 — User-scoped Database RLS
+
+최신 migration은 `0007_enforce_database_ownership.sql`이다. Project owner NOT NULL/불변, 모든 PK/parent 불변, Asset composite FK/path CHECK·UNIQUE·불변성과7-table28 CRUD policies를 구현했다. anon/PUBLIC 권한 없음, authenticated CRUD만, service_role 기존 권한 유지다. 실제 Local Supabase A/B session/anon143 checks 및 fresh/Stage C upgrade 무손실 PASS. [정확한 inventory·policy/grant matrix](V0_3_DATABASE_RLS_SECURITY.md), [TASK-058 결과](tasks/TASK-058.md).
+
+현재 타입은 actual generated finalized schema다. ownerless legacy 생성은 닫혔으며 TASK-060/061 adoption이 필요하다. Remote 적용0, **Public SaaS deployment remains BLOCKED**. 아래 과거 TASK의 nullable/RLS 미구현 문구는 해당 시점 기록이다.
+
 ## TASK-057 — Project ownership Stage A
 
 후속 TASK-057A에서 실제 Supabase17.6/GoTrue fixture로0001~0006 fresh/upgrade/backfill/NOT NULL/FK/index 및 actual type 비교 PASS. 아래 미실행 문구는057 최초 시점 기록이며 해소됐다. migration/source types 수정0, 운영 적용0. [Runtime 결과](tasks/TASK-057A.md).

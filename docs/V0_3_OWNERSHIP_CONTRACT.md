@@ -1,5 +1,11 @@
 # v0.3.0 Project Ownership & Backfill Contract
 
+## TASK-058 후속 상태
+
+0007이 Stage C 조건을 재검사하고 NOT NULL/owner·PK·parent·path 불변성/Asset 복합 FK/28 RLS policies를 구현했다. 실제 Local Supabase A/B/anon143 checks, fresh/upgrade 데이터 보존과 generated final types 비교 PASS. 현재 source owner Row는 string, Insert는 필수 string이다. 기존 ownerless legacy create는 DB 요청 전에 차단되며060/061 adoption이 필요하다. [최신 DB 계약](V0_3_DATABASE_RLS_SECURITY.md), [TASK-058 결과](tasks/TASK-058.md). 원격 적용0, **Public SaaS deployment remains BLOCKED**.
+
+아래 Stage A 타입/0007 미작성/legacy create 유지 설명은 TASK-057 당시 기록이다. 0006 자체는 그대로이며 historical057A runtime의 타입 비교는 당시 commit8906c0c 기준을 사용한다.
+
 2026-09-24 · TASK-057/057A · **구현 및 local SQL runtime 검증 완료 · Public SaaS BLOCKED**.
 
 TASK-057A에서 별도 local Supabase PostgreSQL17.6/GoTrue API로 fresh/upgrade/backfill/idempotency/FK/index/NULL gate/NOT NULL/actual generated types34 checks를 검증했다. migration/운영 SQL은 그대로이며 원격 적용0이다. 기존 Docker daemon이 정상임을 확인하고 host initdb의 postgres.bki 누락 경로를 피했다. TASK-057의 미검증 상태는 해소됐다. [46항목 후속 결과·재현 절차](tasks/TASK-057A.md).

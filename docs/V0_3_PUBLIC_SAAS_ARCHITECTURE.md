@@ -1,5 +1,11 @@
 # v0.3.0 Public SaaS Foundation Architecture
 
+## TASK-058 구현 상태 — DB RLS COMPLETE
+
+0007 ownership enforcement,7-table28 CRUD policies/최소 authenticated grants, Asset composite FK/path 제약, owner·parent·PK 불변성 및 actual generated types를 구현했다. 실제 A/B session JWT·anon143 checks, fresh/upgrade 데이터 보존, 전체1465 tests 및 필수검사 PASS. ownerless legacy create는060/061 통합 전 닫힌다. [현재 DB 계약](V0_3_DATABASE_RLS_SECURITY.md), [결과](tasks/TASK-058.md).
+
+Remote DB/Auth/Storage 변경0. 다음 TASK-059이며 Storage/일반 service-role/Export/Auth UX/전체 E2E·release gate가 남아 **Public SaaS deployment remains BLOCKED**다. 아래 inventory와 계획/미구현 문구는 각 TASK 당시 기록이다.
+
 2026-09-23 · TASK-055 · **설계 확정, 구현 전** · 기준 v0.2.1 / `cf77916` / `plan/v0.3.0`.
 
 v0.2.1은 Local/Internal MVP다. 품질 backlog BLOCKER/HIGH/MEDIUM/LOW 0은 공개 서비스의 보안 요건 완료를 뜻하지 않는다. 이 문서의 목표 상태는 아직 구현되지 않았다. 인증, 소유권, DB/Storage 정책, 일반 요청의 service-role 제거, 안전한 Export 및 비용 제한을 모두 검증하기 전에는 public ingress를 열지 않는다. [위협·검증 계약](V0_3_THREAT_MODEL.md), [93항목 완료 보고](tasks/TASK-055.md).
