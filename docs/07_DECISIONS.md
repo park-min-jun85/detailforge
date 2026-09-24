@@ -1,5 +1,14 @@
 # Architecture Decisions
 
+## ADR-017 — Auth foundation과 기존 privileged client를 분리한다
+
+- 상태: TASK-056 구현, 공개 적용은 PARTIAL (2026-09-24).
+- `@supabase/ssr`0.12.7로 cookie/PKCE/chunk lifecycle을 맡기며 Next16 proxy.ts에서 refresh만 수행한다. 기존31개 호출은 admin.ts의 legacy alias로 보존하고 새 auth/server.ts는 public key+request cookies를 사용한다.
+- 최초 browser Auth는 명확한 sb_publishable_ key만 받는다. custom JWT decode/verify 또는 service-key fallback을 만들지 않는다. public env가 모두 없으면 internal workflow를 유지하되 Auth helper는 configuration503이다. 부분/잘못된 public config는 build 단계에도 거부한다.
+- principal은 getUser가 확인한 userId만 반환한다. API guard는401 JSON/no-store, page guard는 검증한 내부 return path로 redirect한다. mutation은 strict bounded POST·trusted Origin·safe errors이며 공개 endpoint/UI는 아직 없다.
+- provider error text는 SDK log에 들어가기 전에 제거한다. 사용자 session/비밀번호를 custom 저장소에 저장하지 않는다. read-only RSC는 Proxy refresh에 의존하고 mutation cookie write는 명시적이며 실패를 숨기지 않는다.
+- DB owner/RLS/Storage/일반 service-role 제거/Export·rate limiting은 별도 TASK다. 실제 Local Auth 환경이 없어 SDK/mock 검증만 완료했다. [Auth contract](V0_3_AUTH_CONTRACT.md), [TASK-056](tasks/TASK-056.md).
+
 ## ADR-016 — Public SaaS는 사용자 JWT와 관계 소유권으로 격리한다
 
 - 상태: TASK-055 설계 채택, 구현 전 (2026-09-23). v0.2.1의 Local/Internal 운영 전제는 유지한다.

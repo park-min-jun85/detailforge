@@ -4,6 +4,12 @@
 
 v0.2.1은 Local/Internal MVP다. 품질 backlog BLOCKER/HIGH/MEDIUM/LOW 0은 공개 서비스의 보안 요건 완료를 뜻하지 않는다. 이 문서의 목표 상태는 아직 구현되지 않았다. 인증, 소유권, DB/Storage 정책, 일반 요청의 service-role 제거, 안전한 Export 및 비용 제한을 모두 검증하기 전에는 public ingress를 열지 않는다. [위협·검증 계약](V0_3_THREAT_MODEL.md), [93항목 완료 보고](tasks/TASK-055.md).
 
+## TASK-056 구현 상태 — Authentication foundation PARTIAL
+
+2026-09-24: SSR0.12.7·browser/session client·getUser principal·guards·bounded signup/signin/signout·Next16 refresh-only Proxy를 구현했다. legacy server client는 admin.ts로 분리하고 기존31곳에는 호환 alias를 유지한다. §1~4의 code/env inventory는 TASK-055 당시 snapshot이다. owner/RLS/Storage/일반 service-role 이전/Export/비용 gate는 여전히 미구현이다.
+
+첫 Auth adapter는 publishable key만 지원하며 직접 JWT decode 없이 legacy anon/secret을 거부한다. 기존 DETAILFORGE_APP_ORIGIN을 재사용한다. local public env가 없어 실제 Auth integration은 미실행이다. Auth/로그아웃 UI와 전체 route enforcement는 아직 없다. future public `/`는 데이터 없는 landing 전환 이후이며 현재 개인 Dashboard를 공개하지 않는다. [구현 계약](V0_3_AUTH_CONTRACT.md), [73항목 결과](tasks/TASK-056.md). 다음은 TASK-057이다.
+
 ## 1. 실제 기준과 조사 방법
 
 - 로컬 `HEAD`, `main`, 캐시된 `origin/main`, `v0.2.1^{commit}`은 모두 `cf77916dfa9e2dc67c4af981b6a9b2633e76e9c9`. 원격 fetch/배포 상태 확인은 하지 않았다.
@@ -313,11 +319,11 @@ rollback은 **ingress/유료 기능 정지→RLS/Storage 유지→보안 schema�
 | 064 | 실제 own-user 전체 workflow/기존 data migration 회귀; 063 후 | Import→AI→manual crop→Editor→PNG/JPG, 데이터 손실 0 |
 | 065 | release validation/운영 설정/backup·rollback rehearsal; 모든 gate 후 | 별도 공개 가능 판정, version/Git 작업은 해당 TASK 요청 범위 |
 
-각 TASK에서도 관련 integration은 즉시 작성·실행하고 063까지 미루지 않는다. 060은 필요하면 data-access와 control-plane 작업으로 나누되 둘 다 061/public의 선행조건이다. 055 문서 완료는 이후 TASK 실행/배포/Git commit 요청을 대신하지 않는다. **다음 추천 TASK는 056**이다.
+각 TASK에서도 관련 integration은 즉시 작성·실행하고 063까지 미루지 않는다. 060은 필요하면 data-access와 control-plane 작업으로 나누되 둘 다 061/public의 선행조건이다. 055 문서 완료는 이후 TASK 실행/배포/Git commit 요청을 대신하지 않는다. **TASK-056 foundation 이후 다음 추천은 057**이다. 056의 실제 Local Auth 미검증 범위는 구현 계약에 기록했다.
 
 ## 16. Dependency와 환경 변경 계획
 
-추가 예상 dependency는 **`@supabase/ssr` 1개**. 기존 supabase-js 자체로 Auth HTTP 호출은 가능하지만 Next cookie chunk/PKCE/refresh request-response adapter를 직접 재구현해야 하므로 공식 helper를 사용한다. 구현 시 Next 16/supabase-js와 호환되는 실제 버전을 확인·고정하고 refresh/security 회귀를 돌린다. 지금 install/lockfile 변경은 없다. 새로운 Auth framework/state library/결제 SDK는 필요 없다. [SSR 안내](https://supabase.com/docs/guides/auth/server-side).
+TASK-055에서 예상한 **`@supabase/ssr` 1개**를 TASK-056에서0.12.7로 고정 추가했다(peer supabase-js ^2.114.0, 현재2.115.0 유지). 기존 SDK 자체로 Auth HTTP 호출은 가능하지만 Next cookie chunk/PKCE/refresh request-response adapter를 직접 재구현해야 하므로 공식 helper를 사용한다. 새로운 Auth framework/state library/결제 SDK는 추가하지 않았다. [SSR 안내](https://supabase.com/docs/guides/auth/server-side).
 
 현재 local env에는 SUPABASE_URL 및 SUPABASE_SERVICE_ROLE_KEY가 있다. 후자는 **legacy JWT 형식, decoded role=service_role**이며 signature 검증/원격 프로젝트 key 설정 확인은 하지 않았다. SUPABASE_ANON_KEY/PUBLISHABLE_KEY/SECRET_KEY 및 NEXT_PUBLIC_SUPABASE_URL/ANON_KEY/PUBLISHABLE_KEY는 없다. 따라서 해당 프로젝트가 새 key를 지원하는지 또는 이미 보유하는지 추측하지 않는다.
 

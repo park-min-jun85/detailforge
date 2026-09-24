@@ -1,8 +1,8 @@
 # DetailForge
 
-도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.1 Local/Internal MVP Release Candidate**다. Image Extraction Quality Patch의 TASK-054 검증을 통과했으며 v0.2.1 commit/merge/tag·Release 게시는 아직 하지 않았다. 공식 최신 릴리스는 v0.2.0이다.
+도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.1 Local/Internal MVP**다. TASK-054 검증과 v0.2.1 tag 이후 현재 v0.3.0 Public SaaS 기반을 단계적으로 구현 중이며 package version은0.2.1을 유지한다.
 
-**공개 인터넷 SaaS 배포는 차단한다.** 현재는 인증 없는 server-only service-role 기반 단일 사용자 구조다. 공개 전에 Auth, owner_id, 사용자별 RLS와 Storage ownership policy가 필요하다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
+**공개 인터넷 SaaS 배포는 차단한다.** TASK-056 Auth client/session helper는 구현했지만 기존 앱은 guard가 적용되지 않은 service-role 기반 내부 구조다. 공개 전에 Auth UI/enforcement, owner_id, 사용자별 RLS/Storage 및 service-role 이전·Export/비용 보호가 필요하다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
 
 ## 지원 범위와 작업 흐름
 
@@ -16,7 +16,7 @@ Generic URL Import와 도매꾹 공식 옵션 API를 지원하며 모든 도매�
 
 Facts와 AI 해석, 원본과 Derived를 분리한다. 확정 옵션은 deterministic snapshot으로 전달하고 조건부 저장/CAS·lease·복구 경계로 충돌을 처리한다. AI 검증이 정확성을 보장하지는 않으므로 카피·시각 관찰·추출 후보의 사람 검토가 필요하다. Fact Validation의 supported는 입력된 근거 범위에서 일관됨을 뜻한다. 긴 이미지 추출도 후보 추천이며 최종 승인 후 저장한다. 낮은 원본 해상도는 후보 순위·확대 상한·경고로 대응하며 없는 픽셀을 복원하지 않는다.
 
-미지원: Public SaaS·다중 사용자·Auth·owner_id·사용자별 RLS/Storage 정책, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
+미지원: Public SaaS·다중 사용자·로그인/회원가입 UI·owner_id·사용자별 RLS/Storage 정책, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
 
 ## 기술 환경
 
@@ -71,6 +71,8 @@ npx.cmd tsc --noEmit
 
 ## 실행과 검사
 
+Auth foundation 개발에는 `.env.example`의 `NEXT_PUBLIC_SUPABASE_URL` 및 **공개용** `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`가 필요하다. 같은 Supabase 프로젝트의 실제 publishable key만 사용하며 service/secret/legacy JWT를 public 변수에 넣지 않는다. 두 값이 모두 없으면 기존 내부 앱은 그대로 동작하고 Auth helper만 설정 오류를 반환한다. Auth POST는 기존 `DETAILFORGE_APP_ORIGIN`도 필요하다. 현재 signup/login 화면과 원격 Auth QA는 제공하지 않는다. [Auth 개발 계약·테스트 범위](docs/V0_3_AUTH_CONTRACT.md).
+
 ```powershell
 npm.cmd run dev -- --hostname 127.0.0.1
 ```
@@ -87,6 +89,8 @@ git diff --check
 ```
 
 자동 테스트는 mock provider를 사용한다. 전체 테스트 명령의 파일 범위를 임의로 줄이지 않는다. 실제 외부 API QA는 별도 검증 Project에서 최소 호출로 수행한다.
+
+Auth browser 모듈은 UI에 연결하기 전에도 `node tests/auth-browser-bundle.mjs`로 별도 web-target graph/secret marker 검사를 실행할 수 있다. 실제 Supabase Local/Auth/두 사용자 RLS E2E를 대신하는 검사는 아니다.
 
 production 모드의 **로컬 확인**은 `.env.local`에 `DETAILFORGE_APP_ORIGIN`을 설정한 뒤 `npm.cmd run build` → `npm.cmd start -- --hostname 127.0.0.1`이다. Chromium 설치와 실제 이미지/한글 글꼴 표시까지 확인한다. 기본 최종 폭은 860px이며 Export는 높이 16,000px·16MP·75초 제한을 유지한다. 초과 페이지의 자동 분할은 제공하지 않는다.
 

@@ -7,6 +7,14 @@ import path from "node:path";
 const root = fileURLToPath(new URL("../", import.meta.url));
 registerHooks({
   resolve(specifier, context, nextResolve) {
+    // Next documents extensionless subpaths; Node's ESM runner needs the files.
+    if (specifier === "next/navigation") {
+      // Match Next's react-server alias; the default entry also loads client hooks.
+      return nextResolve("next/dist/client/components/navigation.react-server.js", context);
+    }
+    if (["next/headers", "next/server"].includes(specifier)) {
+      return nextResolve(specifier + ".js", context);
+    }
     if (specifier.startsWith("@/")) {
       return nextResolve(pathToFileURL(path.join(root, "src", specifier.slice(2))).href + ".ts", context);
     }

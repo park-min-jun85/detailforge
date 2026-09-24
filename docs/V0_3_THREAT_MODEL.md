@@ -2,6 +2,12 @@
 
 2026-09-23 · TASK-055 · **계획, 미구현·미검증**. 기준 v0.2.1 / `cf77916`. 본 문서의 PASS 조건은 다음 구현 TASK의 gate이며, TASK-055의 1,417개 baseline 통과와 구분한다. 현재 앱은 공개 배포 불가다. [선택한 architecture](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [TASK-055 보고](tasks/TASK-055.md).
 
+## TASK-056 delta (2026-09-24)
+
+Authentication foundation을 구현하고27개 SDK/mock case 및 browser-target module graph를 검증했다. T01의 principal/guard, T10의 신규 Auth POST, T12의 return path, T13의 no-store/cookie 기반, T18과 관련한 input identity 거부를 부분 검증했다. 기존 route/DB/Storage에 guard/RLS를 적용하지 않았으므로 이 위협 register의 public gate는 닫지 않는다. UI logout/cache·실제 Auth·cross-user DB/Storage·Export/비용 integration도 미실행이다.
+
+검증된 범위와 상태는 [Auth contract](V0_3_AUTH_CONTRACT.md), [TASK-056](tasks/TASK-056.md)을 따른다. SDK refresh error의 raw provider text는 transport에서 제거하고 malformed cookie/로그 privacy를 mock으로 확인했다. 원격 Auth mutation0, migration0, 기존31개 privileged 호출 이전0. 현재 `/`의 개인 Dashboard는 future public landing 전환 전까지 내부 전제다.
+
 ## 1. 보호 대상과 신뢰 경계
 
 보호 대상은 사용자별 Project/Product/Facts/Options/Assets/Page/Sections, 원본/Derived bytes와 provenance, import/candidate 임시 데이터, private signed URL, session/refresh token 및 provider/signing secret, AI 비용·Storage 용량·Chromium capacity다. Product Facts와 실제 제품 정체성은 보안 변경 중에도 보존한다.
