@@ -1,5 +1,7 @@
 # TASK-058 — User-scoped Database RLS Security Boundary
 
+후속 TASK-059 완료: 기존 DB ownership/path 계약 위에 Storage isolation과 최소 trusted upload intent를 구현하고 실제 A/B/anon STG-01~25를 검증했다. 아래 Next의 upload gate 계획은 승인 없는 upload 거부를 유지하며, 서버 승인 단일 path의 표준 upload만 허용하도록 구체화했다. 발급 endpoint·atomic quota·service-role 이전은060 범위다. [Storage 계약](../V0_3_STORAGE_SECURITY.md), [TASK-059 결과](TASK-059.md). 아래는 TASK-058 당시 기록이다.
+
 2026-09-24 · `C:\Projects\detailforge` · `feat/database-rls` · package 0.2.1 유지.
 
 ## 1. Status

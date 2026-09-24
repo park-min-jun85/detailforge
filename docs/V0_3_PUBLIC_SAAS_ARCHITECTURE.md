@@ -1,5 +1,13 @@
 # v0.3.0 Public SaaS Foundation Architecture
 
+## TASK-059 구현 상태 — Storage isolation COMPLETE
+
+0008은 product-assets private/JPEG·PNG·WebP/10MiB, strict 기존 path와 실제 Product→Project→owner 정책, Object4 policies/bucket restrictive guard를 구현했다. user metadata/Object owner는 권한 근거가 아니다. A/B/anon actual Storage 최종74 checks와 전체1470 tests PASS. Fresh/실제 기존 Object upgrade 무손실, policy drift·invalid path fail-closed를 확인했다. [현재 Storage 계약](V0_3_STORAGE_SECURITY.md), [결과](tasks/TASK-059.md).
+
+**§9/§13의 upload 계약 조정:** TASK-059의 실제 own upload 검증과 임의 Asset UUID 생성 차단을 함께 충족하도록0008에서 최소 app_private.asset_upload_intents를 먼저 도입했다. 서버가 승인한 단일 path에 한해15분 이하 유효기간 동안 표준 upload를 허용하고 Asset INSERT 시 소진한다. 승인 없는 upload는 계속 거부하며 authenticated는 승인을 발급/변경할 수 없다. read/delete는 legacy/pre-row cleanup을 지원하고 UPDATE/move/copy/signed-upload는 거부한다. 전체 cost ledger가 완성됐다는 의미가 아니다.
+
+060에서 verified actor·원자적 quota/bytes/slot과 intent issuance를 통합해야 한다. 아래0009는 후속 설계 번호이며 기존 intent를 재정의하지 않고 실제 migration 번호/구조를 다시 inventory한다. 현재 앱 Storage8개/전체31개 factory 호출은 service-role을 유지한다. 060~065와 운영 적용이 남아 **Public SaaS deployment remains BLOCKED**. 아래 inventory/계획은 각 TASK 당시 기록이다.
+
 ## TASK-058 구현 상태 — DB RLS COMPLETE
 
 0007 ownership enforcement,7-table28 CRUD policies/최소 authenticated grants, Asset composite FK/path 제약, owner·parent·PK 불변성 및 actual generated types를 구현했다. 실제 A/B session JWT·anon143 checks, fresh/upgrade 데이터 보존, 전체1465 tests 및 필수검사 PASS. ownerless legacy create는060/061 통합 전 닫힌다. [현재 DB 계약](V0_3_DATABASE_RLS_SECURITY.md), [결과](tasks/TASK-058.md).

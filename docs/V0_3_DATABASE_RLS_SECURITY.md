@@ -1,5 +1,7 @@
 # v0.3.0 Database RLS Security Boundary
 
+후속 TASK-059: DB path/parent 불변성을 유지하면서0008 Storage 정책·private bucket·Storage-first 승인 intent를 구현하고 실제 Storage STG-01~25를 검증했다. DB RLS와 Storage 경계를 별도로 검증했으며 일반 service-role app 이전은060에 남는다. [Storage 계약](V0_3_STORAGE_SECURITY.md), [13항목 결과](tasks/TASK-059.md). 아래는 TASK-058 당시 기록이다.
+
 2026-09-24 · TASK-058 · DB 경계 구현, 실제 Local Supabase 검증. **Public SaaS deployment remains BLOCKED**.
 
 [최종 결과·재현 절차](tasks/TASK-058.md), [Ownership/backfill 계약](V0_3_OWNERSHIP_CONTRACT.md), [전체 architecture](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [Threat model](V0_3_THREAT_MODEL.md).

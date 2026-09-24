@@ -1,5 +1,13 @@
 # Database
 
+## TASK-059 — Storage Ownership / Object Isolation
+
+최신 migration은 `0008_enforce_storage_ownership.sql`이다. 기존 private product-assets bucket을 재생성하지 않고 JPEG/PNG/WebP·10MiB 제한과 Object4 policies/bucket restrictive guard를 적용한다. 실제 Project→owner 조회와 strict Project/Product/Asset path를 사용하며 Object owner metadata를 권한으로 믿지 않는다.
+
+Storage-first upload를 위해 app_private.asset_upload_intents를 추가했다. authenticated는 own intent SELECT만 가능하고 발급/변경은 불가하다. 표준 upload는 유효한 승인 path만 허용하며 Asset INSERT trigger가 승인 소진을 기록한다. read/delete는 Asset row가 없는 정상 cleanup도 지원한다. UPDATE/move/copy는 미사용이므로 거부한다. public schema/types와 기존0001~0007은 변경하지 않았다.
+
+실제 A/B JWT·anon Storage 최종74 checks, 최초73 checks의 기존 Object upgrade·drift/invalid-path 거부, 전체1470 tests PASS. Remote 적용0. 승인 발급·원자적 quota·사용자 app 연결은060 범위이며 **Public SaaS deployment remains BLOCKED**. [Storage 계약](V0_3_STORAGE_SECURITY.md), [결과](tasks/TASK-059.md). 아래는 각 TASK 당시 기록이다.
+
 ## TASK-058 — User-scoped Database RLS
 
 최신 migration은 `0007_enforce_database_ownership.sql`이다. Project owner NOT NULL/불변, 모든 PK/parent 불변, Asset composite FK/path CHECK·UNIQUE·불변성과7-table28 CRUD policies를 구현했다. anon/PUBLIC 권한 없음, authenticated CRUD만, service_role 기존 권한 유지다. 실제 Local Supabase A/B session/anon143 checks 및 fresh/Stage C upgrade 무손실 PASS. [정확한 inventory·policy/grant matrix](V0_3_DATABASE_RLS_SECURITY.md), [TASK-058 결과](tasks/TASK-058.md).

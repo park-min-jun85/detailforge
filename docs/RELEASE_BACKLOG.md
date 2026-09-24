@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-059 — Storage isolation COMPLETE / public gate 유지
+
+0008 private bucket hardening, root ownership Object policies와 Storage-first 승인 intent를 구현했다. 실제 A/B/anon Storage STG-01~25 전체 PASS, 최종74 checks 및 전체1470 tests·필수검사 PASS. 최초73 checks에서 기존 Object/Asset upgrade 무손실과 policy/path drift 거부를 확인했다. 운영 DB/Auth/Storage 변경0, Git stage/commit/merge/tag0. [13항목 결과](tasks/TASK-059.md), [Storage 계약](V0_3_STORAGE_SECURITY.md).
+
+다음 TASK-060은 Storage8개/전체31개 service-role factory 경로 이전과 verified actor·atomic quota에 연결한 intent 발급이다. 061 Auth UX,062 Export,063 cross-user E2E,064 own workflow,065 release가 남아 **Public SaaS deployment remains BLOCKED**다. 아래는 각 TASK 당시 기록이다.
+
 ## TASK-058 — Database RLS COMPLETE / public gate 유지
 
 0007·28 policies·owner/parent/PK/path 불변성·Asset 복합 FK를 구현했다. 실제 A/B Auth JWT/anon143 checks, fresh/upgrade 무손실, 전체1465 tests와 필수검사 PASS. Remote DB/Auth/Storage0, Git 작업0. ownerless Project create는060/061 연결 전 차단된다. [11항목 결과](tasks/TASK-058.md), [DB security contract](V0_3_DATABASE_RLS_SECURITY.md).

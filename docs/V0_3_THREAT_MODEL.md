@@ -1,5 +1,11 @@
 # v0.3.0 Threat Model & Security Validation Contract
 
+## TASK-059 delta (2026-09-24)
+
+T05 Storage 직접 API 경계를 실제 A/B GoTrue JWT·anon으로 검증했다. exact foreign download/sign/upsert/update/delete, root/foreign prefix listing, mixed/fabricated UUID, metadata spoof, copy/move/signed-upload를 거부하고 공격 후 B bytes/hash/전체 metadata를 보존했다. STG-01~25 전체 PASS, 최종74 checks 및 전체1470 tests PASS. private bucket/10MiB/MIME와 예상 밖 policy fail-closed를 적용했다. [Storage 계약](V0_3_STORAGE_SECURITY.md), [TASK-059 결과](tasks/TASK-059.md).
+
+Own 표준 upload는 trusted server intent가 있어야 한다. 승인 발급 endpoint·분산 quota/slot/bytes·모든 이미지 bounded decode, 일반 service-role 제거는060의 남은 gate다. 유효 signed download URL은 bearer이므로 공유받은 사람은 TTL까지 사용할 수 있다. 서비스 우회 경로·Export·Auth UX·전체 E2E·운영 적용은 아직 완료되지 않았다. **Public SaaS deployment remains BLOCKED**. 아래 T05 미완료 표기는 각 TASK 당시 기록이다.
+
 ## TASK-058 delta (2026-09-24)
 
 T02 직접 DB IDOR, T03 mixed Project/Product 및 owner/parent/PK/path 변경, anon user-data CRUD를 실제 Local Supabase A/B session JWT/anon으로 검증했다. 143 runtime checks 및 fresh/upgrade 무손실 PASS. 7-table RLS/28 policies/최소 grants가 DB 경계이며 service_role acceptance는0이다. 정확한 foreign/missing UUID read/update/delete는 양방향 동일0 rows다. [DB contract](V0_3_DATABASE_RLS_SECURITY.md), [TASK-058 결과](tasks/TASK-058.md).

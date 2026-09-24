@@ -2,7 +2,7 @@
 
 도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.1 Local/Internal MVP**다. TASK-054 검증과 v0.2.1 tag 이후 현재 v0.3.0 Public SaaS 기반을 단계적으로 구현 중이며 package version은0.2.1을 유지한다.
 
-**공개 인터넷 SaaS 배포는 차단한다.** TASK-058에서 7-table DB RLS·ownership 불변성을 구현하고 실제 A/B/anon Local Supabase를 검증했다. 기존 앱은 아직 service-role 기반 내부 구조이며 Auth UX/enforcement, Storage 격리, service-role 이전·Export/비용 보호가 남아 있다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
+**공개 인터넷 SaaS 배포는 차단한다.** TASK-058 DB RLS와 TASK-059 Storage 격리를 실제 A/B/anon Local Supabase에서 검증했다. 기존 앱은 아직 service-role 기반 내부 구조이며 Auth UX/enforcement, 사용자 client 이전·Export/비용 보호가 남아 있다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.
 
 ## 지원 범위와 작업 흐름
 
@@ -16,9 +16,9 @@ Generic URL Import와 도매꾹 공식 옵션 API를 지원하며 모든 도매�
 
 Facts와 AI 해석, 원본과 Derived를 분리한다. 확정 옵션은 deterministic snapshot으로 전달하고 조건부 저장/CAS·lease·복구 경계로 충돌을 처리한다. AI 검증이 정확성을 보장하지는 않으므로 카피·시각 관찰·추출 후보의 사람 검토가 필요하다. Fact Validation의 supported는 입력된 근거 범위에서 일관됨을 뜻한다. 긴 이미지 추출도 후보 추천이며 최종 승인 후 저장한다. 낮은 원본 해상도는 후보 순위·확대 상한·경고로 대응하며 없는 픽셀을 복원하지 않는다.
 
-미지원: Public SaaS·다중 사용자 앱 통합·로그인/회원가입 UI·운영 ownership 전환·Storage 정책 적용, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
+미지원: Public SaaS·다중 사용자 앱 통합·로그인/회원가입 UI·운영 ownership 전환·운영 Storage 정책 적용, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
 
-TASK-058의 migration0007은 backfill 완료 후 owner NOT NULL, FK/path 불변성, 사용자별 DB RLS를 확정한다. 실제 runtime143 checks와 전체1465 tests PASS이며 운영 migration/backfill은 실행하지 않았다. **owner 없는 legacy Project 생성은 차단되며 TASK-060/061의 principal 연결 전까지 사용할 수 없다.** [DB 계약](docs/V0_3_DATABASE_RLS_SECURITY.md), [11항목 결과](docs/tasks/TASK-058.md). 다음은 TASK-059 Storage isolation이며 공개 배포는 계속 BLOCKED다.
+TASK-058의 migration0007은 backfill 완료 후 owner NOT NULL, FK/path 불변성, 사용자별 DB RLS를 확정한다. 실제 runtime143 checks와 전체1465 tests PASS이며 운영 migration/backfill은 실행하지 않았다. **owner 없는 legacy Project 생성은 차단되며 TASK-060/061의 principal 연결 전까지 사용할 수 없다.** [DB 계약](docs/V0_3_DATABASE_RLS_SECURITY.md), [11항목 결과](docs/tasks/TASK-058.md). TASK-059의0008은 기존 path를 보존하면서 private bucket/JPEG·PNG·WebP/10MiB와 root ownership 정책을 구현했다. 실제 Storage 최초73·최종74 checks 및 전체1470 tests PASS. 사용자 upload는 서버 승인 intent가 있어야 하며 발급 endpoint·분산 quota는 아직 없다. [Storage 계약](docs/V0_3_STORAGE_SECURITY.md), [13항목 결과](docs/tasks/TASK-059.md). 다음은 TASK-060 service-role migration / cost-abuse controls이며 공개 배포는 계속 BLOCKED다.
 
 ## 기술 환경
 
