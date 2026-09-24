@@ -1,19 +1,20 @@
 import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { PROJECT_STATUSES, type Project } from "@/types/domain";
+import { PROJECT_STATUSES, type ProjectSummary } from "@/types/domain";
 import { PROJECT_PAGE_SIZE, projectRowSchema } from "./schemas";
 import type { ProjectQueryResult } from "./types";
 
 const projectColumns = "id,name,status,created_at,updated_at";
 const workingStatuses = PROJECT_STATUSES.filter((status) => status !== "completed");
 
-type ProjectListData = { projects: Project[]; page: number; total: number; totalPages: number };
+// Explicit legacy/internal reads until TASK-060; use service.ts for owned access.
+type ProjectListData = { projects: ProjectSummary[]; page: number; total: number; totalPages: number };
 type DashboardData = {
   total: number;
   working: number;
   completed: number;
-  recentProjects: Project[];
+  recentProjects: ProjectSummary[];
 };
 
 export async function getProjects(requestedPage = 1): Promise<ProjectQueryResult<ProjectListData>> {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Project } from "@/types/domain";
+import type { ProjectSummary } from "@/types/domain";
 import { ProjectStatusBadge } from "./project-status";
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
@@ -7,7 +7,7 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul",
 });
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+export function ProjectList({ projects }: { projects: ProjectSummary[] }) {
   return (
     <div>
       <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1fr)_7rem_12rem_7rem] gap-4 border-b border-zinc-200 bg-zinc-50 px-6 py-3 text-xs font-medium text-zinc-500 lg:grid">

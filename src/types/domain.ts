@@ -12,11 +12,15 @@ export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export interface Project {
   id: string;
+  ownerId: string;
   name: string;
   status: ProjectStatus;
   createdAt: string;
   updatedAt: string;
 }
+
+// UI/legacy internal read model. Ownership is not needed by presentation.
+export type ProjectSummary = Omit<Project, "ownerId">;
 
 export interface Product {
   id: string;

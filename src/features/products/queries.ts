@@ -2,12 +2,12 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { projectRowSchema } from "@/features/projects/schemas";
-import type { Project, Product } from "@/types/domain";
+import type { ProjectSummary, Product } from "@/types/domain";
 import { projectIdSchema, productRowSchema, type ProductInput } from "./schemas";
 import { toProduct, toProductInput } from "./mappers";
 
 type DetailResult =
-  | { status: "ready"; project: Project; product: Product | null; values: ProductInput | null }
+  | { status: "ready"; project: ProjectSummary; product: Product | null; values: ProductInput | null }
   | { status: "not-found" }
   | { status: "error"; message: string };
 

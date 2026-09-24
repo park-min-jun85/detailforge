@@ -1,5 +1,15 @@
 # Database
 
+## TASK-057 — Project ownership Stage A
+
+후속 TASK-057A에서 실제 Supabase17.6/GoTrue fixture로0001~0006 fresh/upgrade/backfill/NOT NULL/FK/index 및 actual type 비교 PASS. 아래 미실행 문구는057 최초 시점 기록이며 해소됐다. migration/source types 수정0, 운영 적용0. [Runtime 결과](tasks/TASK-057A.md).
+
+마지막 migration은 신규 `0006_add_project_owner.sql`이다. projects.owner_id UUID NULL → auth.users(id) ON DELETE RESTRICT와 owner_id index를 추가하며 default/RLS/grant/child schema 변경은 없다. 아래 TASK-055 내용은 계획 당시 기록이다.
+
+자동 migration은 nullable Stage A에서 멈춘다. offline explicit user+Project allowlist backfill 후 operations/finalize-project-owner.sql로 NOT NULL을 확정하는 Stage C를 별도로 두었다. legacy create 중단/maintenance/NULL0·chain/path audit가 필수이며 다음058 migration에서 재확인한다. DB owner/parent 불변성·Asset 복합 FK는058이다. 현재 database.types.ts는 nullable Stage A를 수동 반영했다. 실제 DB regeneration은 미실행이다.
+
+원격 SQL/backfill 실행0. 로컬 PostgreSQL18은 postgres.bki 누락으로 초기화 불가하여 실제 fresh/upgrade rehearsal도 미실행이다. [단계별 계약·CLI·rollback·검증 한계](V0_3_OWNERSHIP_CONTRACT.md), [TASK-057](tasks/TASK-057.md). **Public SaaS BLOCKED**.
+
 ## TASK-055 — 공개 사용자 소유권 계획 (SQL 미작성)
 
 현재 마지막 migration은 `0005_add_product_options.sql`이며 7개 table에 owner column/사용자 policy가 없다. v0.3.0은 `projects.owner_id` 하나를 root로 사용하고 최종 NOT NULL/Auth user FK ON DELETE RESTRICT/불변을 계획한다. child는 실제 FK chain으로 SELECT/INSERT/UPDATE/DELETE RLS를 적용한다. `detail_pages`는 Project, `sections`는 Page를 참조하며 `assets`의 Product+Project 일치는 복합 FK로 보강한다.

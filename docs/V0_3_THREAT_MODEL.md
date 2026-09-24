@@ -2,6 +2,14 @@
 
 2026-09-23 · TASK-055 · **계획, 미구현·미검증**. 기준 v0.2.1 / `cf77916`. 본 문서의 PASS 조건은 다음 구현 TASK의 gate이며, TASK-055의 1,417개 baseline 통과와 구분한다. 현재 앱은 공개 배포 불가다. [선택한 architecture](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [TASK-055 보고](tasks/TASK-055.md).
 
+## TASK-057 delta (2026-09-24)
+
+TASK-057A 후속: 실제 Supabase runtime에서 FK RESTRICT/NULL gate/NOT NULL/명시 backfill·overwrite 방지·보존·반복·type 비교를 검증했다. 아래 SQL 미실행 제약은 해소됐다. 이 결과는 ownership data correctness이며 A/B/anon RLS·Storage/Export security proof가 아니다. [Runtime 결과](tasks/TASK-057A.md).
+
+새 Project CRUD의 principal 필수·owner filter/count·foreign/missing404·owner input 거부와 child FK chain을 SDK/mock으로 검증했다. Asset의 project/product 불일치는 같은 owner라도 거부한다. 이는 application-layer IDOR 방어이며 T01/ownership/child consistency 위협의 DB gate를 닫지 않는다. 기존 service-role 경로가 남고 owner 불변성·복합 FK·사용자 RLS는 TASK-058이다.
+
+0006 schema와 explicit allowlist backfill/NOT NULL 운영 절차를 작성했으나 실제 SQL 실행은 로컬 PostgreSQL 설치의 postgres.bki 누락으로 NOT RUN이다. 잘못된 bootstrap/누락 manifest/다른 owner 덮어쓰기 방지 SQL과 CLI privacy를 정적/mock으로만 검증했다. 운영 적용, 실제 A/B/anon 직접 DB 우회, concurrency/rollback rehearsal은 여전히 gate다. [Ownership contract](V0_3_OWNERSHIP_CONTRACT.md), [TASK-057](tasks/TASK-057.md). remote DB/Auth mutation0, public BLOCKED.
+
 ## TASK-056 delta (2026-09-24)
 
 Authentication foundation을 구현하고27개 SDK/mock case 및 browser-target module graph를 검증했다. T01의 principal/guard, T10의 신규 Auth POST, T12의 return path, T13의 no-store/cookie 기반, T18과 관련한 input identity 거부를 부분 검증했다. 기존 route/DB/Storage에 guard/RLS를 적용하지 않았으므로 이 위협 register의 public gate는 닫지 않는다. UI logout/cache·실제 Auth·cross-user DB/Storage·Export/비용 integration도 미실행이다.

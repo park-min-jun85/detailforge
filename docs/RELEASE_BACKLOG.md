@@ -1,5 +1,15 @@
 # Release Backlog
 
+## TASK-057A — SQL runtime PASS / TASK-057 최종 완료
+
+실제 local Supabase PostgreSQL17.6/GoTrue에서 fresh/upgrade/Auth bootstrap/backfill/FK/index/NULL gate/NOT NULL/types34 checks PASS, 전체1465 tests·필수검사 PASS. SQL 변경0/remote mutation0. 아래057의 NOT_RUN은 후속으로 해소됐다. **Public SaaS BLOCKED**, 다음 TASK-058 RLS/ownership enforcement. [46항목 보고](tasks/TASK-057A.md).
+
+## TASK-057 — Ownership foundation PARTIAL / public gate 유지
+
+2026-09-24: Auth 기반에 nullable owner0006/FK RESTRICT/index, explicit backfill/NOT NULL 운영 절차, principal 기반 Project CRUD·child chain·strict forged-owner 거부를 추가했다. **전체1465 tests PASS**. 실제 local SQL rehearsal은 PostgreSQL 설치의 postgres.bki 누락으로 NOT RUN이고 운영 migration/backfill0이다. 단일 bootstrap allowlist의 SQL semantics/transaction은 실제 DB에서 후속 검증해야 한다.
+
+DB RLS·owner/parent 불변성·Asset 복합 FK, Storage ownership, 일반 service-role 제거, Export 인증, Auth UI/local integration·비용 제어는 OPEN이다. v0.2.1 품질 backlog0/0/0/0과 별개로 **Public SaaS BLOCKED**. 다음 TASK-058은 실제 local migration/backfill gate부터 해결한다. [계약](V0_3_OWNERSHIP_CONTRACT.md), [76항목 보고](tasks/TASK-057.md). 아래는 각 TASK 당시 기록이다.
+
 ## TASK-055 — v0.3.0 Public SaaS Foundation 계획
 
 2026-09-23 · `plan/v0.3.0` · 기준 `cf77916`(로컬 main/캐시 origin/main/v0.2.1 동일). v0.2.1 Local/Internal MVP의 품질 backlog는 **BLOCKER0/HIGH0/MEDIUM0/LOW0** 그대로다. 아래 public 보안 gate는 아직 미구현이며 이 품질 숫자와 별도로 관리한다.

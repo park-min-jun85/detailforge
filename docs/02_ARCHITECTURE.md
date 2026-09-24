@@ -1,5 +1,9 @@
 # Architecture
 
+## TASK-057 — ownership-aware Project foundation
+
+TASK-056 Auth foundation 위에 Project.ownerId domain, server-only principal 기반 CRUD/child FK resolver, nullable0006과 offline bootstrap 계약을 추가했다. UI는 owner 없는 ProjectSummary만 사용하고 기존 내부용 action/query는 명시적 legacy 경로로 유지한다. userId/ownerId는 client input으로 받지 않는다. 새 service의 owner filter는 defense in depth이며 DB RLS/Storage/일반 service-role 이전 완료를 의미하지 않는다. [실행 계약과 SQL 미검증 범위](V0_3_OWNERSHIP_CONTRACT.md). 아래 구현 전 설명은055 당시 기록이다.
+
 ## TASK-055 — v0.3.0 Public SaaS 설계 (미구현)
 
 현재 v0.2.1은 Local/Internal MVP이며 아래 기존 service-role 설명은 그 구현 기록이다. 공개 전환은 Email+Password Auth, 요청별 session client, Project-root ownership, DB/Storage 정책을 보안 경계로 삼는다. 일반 사용자 factory 31곳과 하위 helper를 사용자 JWT/RLS로 옮기고 web runtime의 service key를 제거한다. 후보 서명키도 분리한다.

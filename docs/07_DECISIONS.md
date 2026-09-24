@@ -1,5 +1,13 @@
 # Architecture Decisions
 
+## ADR-018 — Ownership을 nullable 준비와 명시 운영 전환으로 나눈다
+
+- 상태: TASK-057 기반 구현, 실제 SQL rehearsal 미완료 (2026-09-24).
+- Project-root owner UUID/FK RESTRICT/index만0006에 추가한다. child owner 복제/default owner/첫 로그인 자동 claim은 없다. Stage C NOT NULL은 기존 writer 중단 및 explicit bootstrap 이후 수행하며058 migration에서 다시 enforce한다.
+- 단일 bootstrap user와 모든 NULL Project의 explicit allowlist를 offline CLI/psql transaction으로 검증한다. 기본 dry-run, 명시 apply, 기존 owner 충돌/누락/chain/path 오류는 중단한다. 여러 owner로 나눌 데이터는 별도 mapping 절차가 필요하다.
+- owned domain의 ownerId는 required, UI/legacy projection은 별도다. create/update strict input과 principal 기반 CRUD filter를 제공하며 기본은 user-session client다. 기존 internal 경로를058 이전에 Auth-only로 바꾸지 않는다. Stage C 이후 legacy create는 실패하므로060/061 adoption과 maintenance 순서를 지킨다.
+- Asset 복합 FK/DB owner·parent 불변성/RLS는058에 남긴다. application/mock PASS를 DB security proof로 보지 않는다. 로컬 PostgreSQL 설치가 불완전해 실제 SQL 실행/type regeneration은 미검증이다. [Ownership contract](V0_3_OWNERSHIP_CONTRACT.md), [TASK-057](tasks/TASK-057.md).
+
 ## ADR-017 — Auth foundation과 기존 privileged client를 분리한다
 
 - 상태: TASK-056 구현, 공개 적용은 PARTIAL (2026-09-24).

@@ -16,7 +16,9 @@ Generic URL Import와 도매꾹 공식 옵션 API를 지원하며 모든 도매�
 
 Facts와 AI 해석, 원본과 Derived를 분리한다. 확정 옵션은 deterministic snapshot으로 전달하고 조건부 저장/CAS·lease·복구 경계로 충돌을 처리한다. AI 검증이 정확성을 보장하지는 않으므로 카피·시각 관찰·추출 후보의 사람 검토가 필요하다. Fact Validation의 supported는 입력된 근거 범위에서 일관됨을 뜻한다. 긴 이미지 추출도 후보 추천이며 최종 승인 후 저장한다. 낮은 원본 해상도는 후보 순위·확대 상한·경고로 대응하며 없는 픽셀을 복원하지 않는다.
 
-미지원: Public SaaS·다중 사용자·로그인/회원가입 UI·owner_id·사용자별 RLS/Storage 정책, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
+미지원: Public SaaS·다중 사용자·로그인/회원가입 UI·운영 ownership 전환·사용자별 RLS/Storage 정책, marketplace publishing, SKU 조합 엔진·가격/재고 동기화, AI 이미지 생성·AI upscale·배경 제거, PDF·분할 Export, theme marketplace, 광범위한 도매 Adapter.
+
+TASK-057의 owner schema/CRUD·offline backfill 기반은 TASK-057A의 실제 local Supabase 검증까지 완료했다. 운영 migration/backfill은 실행하지 않았다. 개발·운영 순서는 [Ownership contract](docs/V0_3_OWNERSHIP_CONTRACT.md)를 따른다. RLS/Storage/일반 service-role 이전 등이 남아 공개 배포는 계속 BLOCKED다.
 
 ## 기술 환경
 

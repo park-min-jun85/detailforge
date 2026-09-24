@@ -2,6 +2,14 @@
 
 ## 현재 단계
 
+**TASK-057A:** Ownership Migration Runtime Validation 완료. 별도 local Supabase PostgreSQL17.6/GoTrue API에서 fresh/upgrade/backfill/FK/index/NOT NULL/type 비교34 checks PASS, 전체1465 tests 및 필수검사 PASS. migration/production 수정0, remote DB/Auth0. **TASK-057 최종 COMPLETE / Public SaaS BLOCKED**. [46항목 보고](TASK-057A.md). 다음 TASK-058 DB RLS & Ownership Enforcement.
+
+## 이전 TASK-057 기록
+
+**TASK-057:** Project Ownership Schema Migration & Existing-data Backfill Foundation 구현/SQL 검증 PARTIAL. `feat/project-ownership-foundation`, 기준 `e550946`. nullable0006/FK RESTRICT/index, explicit dry-run/apply backfill·NOT NULL 절차, principal 기반 CRUD/child chain·owner 입력 거부. 전체1465 tests PASS, 실제 local SQL은 postgres.bki 누락으로 NOT RUN, 원격 DB/Auth0. **Public SaaS BLOCKED**, package0.2.1·Git commit/merge/tag0. [76항목 보고](TASK-057.md), [Ownership contract](../V0_3_OWNERSHIP_CONTRACT.md). 다음 **TASK-058 DB RLS & Ownership Enforcement**, 실제 local rehearsal 선행.
+
+## 이전 TASK-056 기록
+
 **TASK-056:** Authentication Client & Session Foundation 구현 완료/공개 적용 PARTIAL. `feat/auth-session-foundation`, 기준 `c8e0514`. Browser/server client·getUser principal·API/page guard·safe return path·bounded signup/signin/signout·Next16 refresh-only Proxy, SSR0.12.7 추가. 기존31개 privileged 호출은 admin compatibility alias로 유지하며 UI/enforcement/owner/RLS/Storage/Export/비용 격리는 아직 없다. **Public SaaS 계속 BLOCKED**, package0.2.1, 원격 Auth mutation0, migration0, commit/merge/tag0. [73항목 보고](TASK-056.md), [Auth contract](../V0_3_AUTH_CONTRACT.md). 다음 **TASK-057 Project Ownership Schema Migration & Existing-data Backfill Contract**.
 
 ## 이전 TASK-055 기록

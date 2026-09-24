@@ -11,8 +11,10 @@ test("프로젝트명은 trim 후 1~100자로 검증한다", () => {
   }
 });
 
-test("브라우저가 보낸 상태/id 같은 추가 입력은 생성 데이터에 포함하지 않는다", () => {
-  assert.deepEqual(createProjectSchema.parse({ name: "상품", status: "completed", id: "injected" }), { name: "상품" });
+test("브라우저가 보낸 상태/id/owner 같은 추가 입력은 엄격하게 거부한다", () => {
+  for (const extra of [{ status: "completed" }, { id: "injected" }, { ownerId: "forged" }, { userId: "forged" }]) {
+    assert.equal(createProjectSchema.safeParse({ name: "상품", ...extra }).success, false);
+  }
 });
 
 const row = {

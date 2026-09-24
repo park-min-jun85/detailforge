@@ -4,6 +4,14 @@
 
 v0.2.1은 Local/Internal MVP다. 품질 backlog BLOCKER/HIGH/MEDIUM/LOW 0은 공개 서비스의 보안 요건 완료를 뜻하지 않는다. 이 문서의 목표 상태는 아직 구현되지 않았다. 인증, 소유권, DB/Storage 정책, 일반 요청의 service-role 제거, 안전한 Export 및 비용 제한을 모두 검증하기 전에는 public ingress를 열지 않는다. [위협·검증 계약](V0_3_THREAT_MODEL.md), [93항목 완료 보고](tasks/TASK-055.md).
 
+## TASK-057 구현 상태 — Ownership foundation PARTIAL
+
+후속 TASK-057A: 실제 local Supabase/GoTrue에서 SQL runtime34 checks와 전체1465 tests PASS로057 최종 완료. 아래 SQL 미검증 항목은 해소됐으나 RLS/Storage/일반 service-role 이전/Export·공개 gate는 계속 OPEN이다. [46항목 runtime 결과](tasks/TASK-057A.md).
+
+2026-09-24: migration0006(nullable owner/FK RESTRICT/index), 명시 allowlist bootstrap CLI와 Stage C NOT NULL 절차, principal 기반 CRUD/child chain helper를 작성했다. `Project.ownerId`는 required domain이고 UI/legacy projection은 분리했다. 새 CRUD는 사용자 client와 owner filter를 사용하지만 기존 internal31개 factory 경로는 유지된다. [Ownership contract](V0_3_OWNERSHIP_CONTRACT.md), [76항목 보고](tasks/TASK-057.md).
+
+0007은 아직 생성하지 않았다. 기존 §14 예상과 달리 운영 입력이 필요한 Stage C는 automatic migrations 밖에 두고 TASK-058에서 다시 NOT NULL을 enforce하도록 한다. bootstrap에는 단일 owner와 모든 NULL Project의 explicit allowlist가 필요하며 다중 owner mapping은 별도 운영 계약으로 남긴다. DB default owner 없이 서버 principal로 지정한다. 실제 local PostgreSQL 설치가 불완전하여 SQL rehearsal/type generation은 미실행, 원격 mutation0이다. RLS/Storage/일반 service-role 이전/Export와 공개 배포는 계속 BLOCKED이며 다음은 TASK-058이다. 아래 TASK-055/056 inventory는 해당 시점 기록이다.
+
 ## TASK-056 구현 상태 — Authentication foundation PARTIAL
 
 2026-09-24: SSR0.12.7·browser/session client·getUser principal·guards·bounded signup/signin/signout·Next16 refresh-only Proxy를 구현했다. legacy server client는 admin.ts로 분리하고 기존31곳에는 호환 alias를 유지한다. §1~4의 code/env inventory는 TASK-055 당시 snapshot이다. owner/RLS/Storage/일반 service-role 이전/Export/비용 gate는 여전히 미구현이다.
