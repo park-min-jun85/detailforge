@@ -1,5 +1,22 @@
 # Release Backlog
 
+## TASK-055 — v0.3.0 Public SaaS Foundation 계획
+
+2026-09-23 · `plan/v0.3.0` · 기준 `cf77916`(로컬 main/캐시 origin/main/v0.2.1 동일). v0.2.1 Local/Internal MVP의 품질 backlog는 **BLOCKER0/HIGH0/MEDIUM0/LOW0** 그대로다. 아래 public 보안 gate는 아직 미구현이며 이 품질 숫자와 별도로 관리한다.
+
+| 공개 전 필수 gate | 상태 | 예정 TASK |
+| --- | --- | --- |
+| Email+Password/verification/reset, SSR session·보호 DAL/API/Actions·logout/cache | OPEN | 056, 060, 061 |
+| Project owner·기존 data 보존 bootstrap·7-table CRUD RLS·FK 불변성 | OPEN | 057, 058 |
+| 기존 path 기반 private Storage isolation·upload bounds/예약 | OPEN | 059, 060 |
+| 일반 client factory31/하위 호출의 service-role 제거·전용 HMAC/actor ticket | OPEN | 060 |
+| user/global 분산 quota/lease·rate limit·provider cap | OPEN | 060 |
+| user JWT/RLS + 일회 grant의 Chromium Export | OPEN | 062 |
+| actual A/B/anon DB·Storage·IDOR·비용 부작용0·upgrade/own-user 회귀 | OPEN | 063, 064 |
+| maintenance rollout/secure rollback·운영 설정·최종 release gate | OPEN | 065 |
+
+Password reset과 최소 비용 제한은 **Must**, 기본 account page/상세 quota UX는 Should, billing/org/team/share/OAuth/SMS/admin portal은 Out이다. 다음은 **TASK-056 Auth client/session foundation**이며 Auth 화면부터 공개하지 않는다. [상세 설계](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [위협 모델](V0_3_THREAT_MODEL.md), [93항목 보고](tasks/TASK-055.md). 문서만 변경, package0.2.1·1417 baseline PASS, commit/merge/tag 없음. 아래는 각 TASK 당시 기록이다.
+
 ## TASK-054 — v0.2.1 RC PASS / Image Extraction Quality 목표 완료
 
 2026-09-23 · `release/v0.2.1` · 기준 `240a943`. **M1 RESOLVED / M4 RESOLVED. 기존 품질 backlog BLOCKER0/HIGH0/MEDIUM0/LOW0.** M2/M3 회귀 PASS. 보수적 자동 trim + ambiguous preserve + 명시 manual review/save 결합 범위로 완료했다. 인물/제품 의미 인식 전체 해결이나 모든 frame 자동 제거를 뜻하지 않는다.
@@ -131,6 +148,7 @@ M2 T1~T8과 M3 C1~C22의 BEFORE·기대 동작·gap을 [계약 문서](V0_2_M2_M
 
 - Auth, owner_id, 사용자별 RLS, private Storage 사용자 정책. 현재 service-role 기반 단일 사용자 구조를 인터넷에 공개하지 않는다.
 - 위 권한 경계의 공격·소속·삭제·비용 제어 검증과 배포 환경의 Chromium/글꼴 고정. 내부 RC 통과가 공개 운영 승인은 아니다.
+- 최신 구현 순서와 공개 Must는 TASK-055/ADR-016을 따른다. 아래 과거 권장 순서는 완료 이력이며 현재 다음 TASK는 056이다.
 
 ## Post-MVP enhancement
 

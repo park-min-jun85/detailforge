@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+**TASK-055:** v0.3.0 Public SaaS Foundation Architecture & Security Plan 완료(설계만). `plan/v0.3.0` / 기준 `cf77916`, 로컬 main/캐시 origin/main/v0.2.1 동일. 실제 factory31·7-table/Storage inventory, Email+Password/SSR, Project-root owner/backfill/CRUD RLS, 기존 Object path 보존, service-role 제거, 일회 Export 인증, 분산 비용 제한 및 A/B/anon 테스트·rollout 계약을 확정했다. **Public 보안 gate는 미구현이며 공개 배포 불가.** 품질 backlog0/0/0/0, package0.2.1 유지. 1417 tests·typegen/typecheck/lint/build PASS, code/SQL/dependency 변경0, stage/commit/merge/tag0. [93항목 보고](./TASK-055.md), [Architecture](../V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [Threat model](../V0_3_THREAT_MODEL.md). 다음 **TASK-056 Auth client/session foundation**.
+
+## 이전 TASK-054 기록
+
 **TASK-054:** v0.2.1 Final Release Validation & Release Preparation 완료. `release/v0.2.1` / 기준 `240a943`. 전체1417 tests·필수검사·Desktop/375px 실제 source/save 회귀·Renderer·PNG/JPG860×2468·secret/data protection/cleanup PASS. **v0.2.1 Local/Internal MVP RC PASS, M1/M4 RESOLVED, M2/M3 회귀 PASS, BLOCKER0/HIGH0/MEDIUM0/LOW0.** QA 후 package/lock0.2.1 및 README/CHANGELOG/Backlog/Checklist/계약 갱신, production/tests/fixtures/dependency/migration0, 외부 API/원격 mutation0. Git stage/commit/main merge/tag/Release 게시0. [68항목·Release notes·정확한 다음 Git 명령](./TASK-054.md). 다음은 사용자 최종 diff 검토와 릴리스 Git 작업이다.
 
 ## 이전 TASK-053 기록

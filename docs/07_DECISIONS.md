@@ -1,5 +1,15 @@
 # Architecture Decisions
 
+## ADR-016 — Public SaaS는 사용자 JWT와 관계 소유권으로 격리한다
+
+- 상태: TASK-055 설계 채택, 구현 전 (2026-09-23). v0.2.1의 Local/Internal 운영 전제는 유지한다.
+- 근거: 현재 31개 일반 workflow client 생성은 service-role을 사용하고, 7개 table에는 owner/사용자 policy가 없다. 서버 코드 한 곳의 scope 누락이 RLS로 보호되지 않는다.
+- 결정: Email+Password와 verification/reset, Next 16 SSR 요청 client, projects.owner_id 불변 root, child CRUD RLS 및 Asset 복합 FK, 기존 Storage 경로의 관계 기반 policy를 선택한다. 사용자 workflow는 service-role 0을 목표로 하며 candidate 서명키도 분리한다.
+- 기존 데이터: 환경별 명시 mapping으로 nullable→backfill→NOT NULL. Auth user 삭제는 RESTRICT, 소유권 이전/팀 공유는 범위 밖. rows/원본·Derived bytes를 기본 reset/copy하지 않는다.
+- 공개 gate: 분산 quota/예약 ledger의 좁은 서버 증명 RPC, 일회 Export grant+동일 사용자 JWT/RLS, 실제 A/B/anon 통합 검증, 유지보수 전환 및 RLS를 유지하는 rollback. Auth UI만으로 public-ready로 판단하지 않는다.
+- 영향: ADR-006의 service-role MVP 접근은 public target에서 대체하고 ADR-012의 service-key 기반 candidate HMAC은 전용키로 이전한다. 기존 journal/CAS가 DB transaction이나 비용 제한이라는 보장은 추가하지 않는다. 제한된 security-ledger 함수의 privileged 권한은 업무 데이터 전체 bypass와 구분한다.
+- 상세: [architecture·대안 비교](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [위협·검증](V0_3_THREAT_MODEL.md), [TASK-055](tasks/TASK-055.md). 이번 code/migration/dependency/version 변경은 없다.
+
 ## ADR-015 — 내부 RC와 추출 파일의 동일성
 
 - Status: Accepted for local/internal MVP

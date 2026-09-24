@@ -1,5 +1,11 @@
 # Architecture
 
+## TASK-055 — v0.3.0 Public SaaS 설계 (미구현)
+
+현재 v0.2.1은 Local/Internal MVP이며 아래 기존 service-role 설명은 그 구현 기록이다. 공개 전환은 Email+Password Auth, 요청별 session client, Project-root ownership, DB/Storage 정책을 보안 경계로 삼는다. 일반 사용자 factory 31곳과 하위 helper를 사용자 JWT/RLS로 옮기고 web runtime의 service key를 제거한다. 후보 서명키도 분리한다.
+
+Next 16 `proxy.ts`/SSR cookie refresh와 DAL 인증을 구분하며 Dashboard/Actions/API도 보호한다. Storage는 기존 경로를 유지하고 실제 Project/Product 관계로 권한을 확인한다. Export는 일회 grant와 initiator JWT/RLS를 결합한다. 분산 비용 제한·기존 데이터 보존·실제 A/B/anon integration은 공개 Must다. 아직 production code나 SQL은 바뀌지 않았다. [상세 architecture·inventory·TASK 순서](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [위협 모델](V0_3_THREAT_MODEL.md).
+
 ## TASK-032 저장 후 갱신과 crop 재사용
 
 ProductForm은 성공 저장 후 `router.refresh()`로 서버의 최신 Product/source URL을 sibling OptionsManager에 전달한다. 기존 Product ID를 key로 유지하므로 같은 Product의 옵션 draft는 재마운트하지 않는다. Import Route Handler와 수동 Server Action 모두 성공 경계를 공유한다.

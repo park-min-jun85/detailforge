@@ -1,5 +1,11 @@
 # UI / UX
 
+## TASK-055 — Public Auth UX 계획 (미구현)
+
+v0.3.0 primary Auth는 Email+Password다. login/signup/verification/logout/forgot-password/reset을 Must로 계획한다. 보호 App Shell에는 `/`, `/projects/**`, 현재 placeholder인 settings/templates를 포함한다. 로그인 이전에는 개인 데이터 화면을 표시하지 않으며 API/Actions도 독립 인증한다. 버튼 숨김은 권한 경계가 아니다.
+
+로그인 복귀 경로는 검증된 내부 path만 허용하고 foreign resource는 존재 여부를 숨기는 404를 사용한다. logout/만료/계정 전환 시 개인 draft·DTO·signed URL을 제거하고 다중 탭 focus/인증 이벤트와 back navigation을 검증한다. confirmation/reset 오류는 계정 존재를 과도하게 노출하지 않는다. 기본 account 화면은 Should, OAuth/SMS/team/admin UI는 Out이다. 이번 UI 구현은 없다. [session·화면·error 계약](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [보안 E2E](V0_3_THREAT_MODEL.md).
+
 ## TASK-041 카피 역할 검토
 
 Editor/Final의 페이지 품질 안내에 제목·본문 재진술과 반복 근거의 해당 섹션 번호·역할·검토 이유를 표시한다. AI 후보 비교에는 후보를 적용했을 때의 관련 반복 위험을 표시한다. 검토 경고는 편집·후보 적용을 차단하지 않으며 문구를 자동으로 수정하지 않는다. 생략 가능한 본문만 사용자가 기존 편집 흐름에서 명시적으로 비울 수 있다. 경고는 공유 renderer의 export surface 밖에 있다. [TASK-041](tasks/TASK-041.md).

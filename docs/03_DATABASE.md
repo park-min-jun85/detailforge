@@ -1,5 +1,11 @@
 # Database
 
+## TASK-055 — 공개 사용자 소유권 계획 (SQL 미작성)
+
+현재 마지막 migration은 `0005_add_product_options.sql`이며 7개 table에 owner column/사용자 policy가 없다. v0.3.0은 `projects.owner_id` 하나를 root로 사용하고 최종 NOT NULL/Auth user FK ON DELETE RESTRICT/불변을 계획한다. child는 실제 FK chain으로 SELECT/INSERT/UPDATE/DELETE RLS를 적용한다. `detail_pages`는 Project, `sections`는 Page를 참조하며 `assets`의 Product+Project 일치는 복합 FK로 보강한다.
+
+기존 rows는 nullable 도입→환경별 명시 bootstrap mapping→무손실 검증→NOT NULL 순서로 귀속한다. 기존 Storage path/bytes는 이동하지 않는다. owner/parent/path 불변성, 직접 API 우회, cascade와 Object orphan, 필요한 index, private 비용/예약/nonce ledger를 별도 검증한다. 예상 migration 4개(0006~0009), 구현 후 database.types.ts 재생성; 이번 추가 SQL/type 변경은 없다. [전체 DB inventory·CRUD matrix·rollout](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [upgrade/실제 policy 테스트](V0_3_THREAT_MODEL.md).
+
 ## 목적
 
 Product Facts, Assets, Sections, Page Draft의 저장 구조를 정의한다.
