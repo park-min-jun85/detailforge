@@ -1,7 +1,8 @@
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { projectRowSchema } from "@/features/projects/schemas";
 import { productRowSchema, productFactsRowSchema } from "@/features/products/schemas";
 import { assetRowSchema, parseId } from "@/features/assets/schemas";
@@ -12,7 +13,7 @@ import { getProductAnalysisProvider } from "./provider";
 import { PRODUCT_PROVIDER_TIMEOUT_MS } from "./config";
 import type { ProductAnalysisProvider, ProductAnalysisView } from "./types";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 const timeout = () => AbortSignal.timeout(10_000);
 const running = new Set<string>();
 function id(value: string) { try { return parseId(value); } catch { throw new ProductAnalysisError("not_found"); } }
@@ -57,7 +58,7 @@ function view(context: Awaited<ReturnType<typeof loadContext>>): ProductAnalysis
 }
 export async function getProductAnalysisView(projectId: string): Promise<ProductAnalysisView> {
   const project = id(projectId);
-  try { return view(await loadContext(createSupabaseServerClient(), project)); } catch (error) { throw safe(error); }
+  try { return view(await loadContext(await createUserDataClient(), project)); } catch (error) { throw safe(error); }
 }
 
 async function saveState(client: Client, product: Awaited<ReturnType<typeof readProduct>>, state: ProductAnalysisState) {
@@ -98,7 +99,7 @@ export async function analyzeProduct(projectId: string, providerFactory: () => P
   if (running.has(project) || running.size >= 2) throw new ProductAnalysisError("busy");
   running.add(project);
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const context = await loadContext(client, project);
     if (isProductAnalysisActive(context.state, Date.now())) throw new ProductAnalysisError("busy");
     const provider = providerFactory(); // Missing config never changes DB state or starts a paid call.
@@ -108,7 +109,7 @@ export async function analyzeProduct(projectId: string, providerFactory: () => P
     let analysis;
     try {
       // No paths, signed URLs, raw images or mutable Facts records cross this boundary.
-      const output = await invoke(provider, { evidence: context.input.evidence, coverage: context.input.coverage });
+      const output = await withPaidOperation(client, project, "product-analysis", context.input, () => invoke(provider, { evidence: context.input.evidence, coverage: context.input.coverage }));
       try { analysis = validateProductAnalysis(output, context.input.evidence); }
       catch { throw new ProductAnalysisError("invalid_response"); }
     } catch (error) {

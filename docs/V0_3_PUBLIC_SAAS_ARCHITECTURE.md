@@ -1,5 +1,11 @@
 # v0.3.0 Public SaaS Foundation Architecture
 
+## TASK-060 구현 상태 — User-scoped access / admission COMPLETE
+
+TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**.
+
+아래055의 HMAC reserve RPC 계획은 이번 요청이 허용한 좁은 privileged RPC wrapper로 구체화했다. 사용자 데이터 CRUD/Storage에 service_role fallback을 만들지 않으며 config row 없는 upload/AI는 거부한다. 후보 HMAC는 별도 DETAILFORGE_TICKET_SECRET이다. Export capture는 user renderer 전환으로 비인증 접근이 닫히며062의 JWT/grant가 필요하다. [현재 상세 계약·전체 호출별 표](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md), [결과](tasks/TASK-060.md). 아래는 각 TASK 당시 기록이다.
+
 ## TASK-059 구현 상태 — Storage isolation COMPLETE
 
 0008은 product-assets private/JPEG·PNG·WebP/10MiB, strict 기존 path와 실제 Product→Project→owner 정책, Object4 policies/bucket restrictive guard를 구현했다. user metadata/Object owner는 권한 근거가 아니다. A/B/anon actual Storage 최종74 checks와 전체1470 tests PASS. Fresh/실제 기존 Object upgrade 무손실, policy drift·invalid path fail-closed를 확인했다. [현재 Storage 계약](V0_3_STORAGE_SECURITY.md), [결과](tasks/TASK-059.md).

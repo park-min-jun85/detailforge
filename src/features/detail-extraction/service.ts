@@ -1,9 +1,10 @@
 import "server-only";
+import { issueUpload, withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { exclusive, getAssetContext } from "@/features/assets/service";
-import { AssetError, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS, parseId, storagePath } from "@/features/assets/schemas";
+import { AssetError, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS, parseId } from "@/features/assets/schemas";
 import type { Asset } from "@/types/domain";
 import { ExtractionError } from "./errors";
 import { withExtractionSlot } from "./execution";
@@ -21,7 +22,7 @@ import { readExtractionAsset as readAsset, compareExtractionState as compareAndS
 import { buildCheckpointInput, checkpointInputFingerprint, createCheckpoint, completedTileCheckpoint, failedTileCheckpoint,
   failureCheckpoint, CheckpointError, type TileCheckpoint } from "./checkpoint";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 const timeout = () => AbortSignal.timeout(10_000);
 const safeError = (e: unknown) => e instanceof ExtractionError ? e : new ExtractionError(e instanceof AssetError ? e.status === 404 ? "not_found" : e.status === 409 ? "busy" : "database" : "unexpected");
 async function context(client: Client, projectId: string, assetId: string) {
@@ -36,7 +37,7 @@ async function context(client: Client, projectId: string, assetId: string) {
 
 export async function analyzeProductShots(projectId: string, assetId: string, force = false, providerFactory: () => ExtractionProvider = getExtractionProvider) {
   return withExtractionSlot(async () => { try {
-    const client = createSupabaseServerClient({ requestTimeoutMs: 30_000 }), scope = await context(client, projectId, assetId);
+    const client = await createUserDataClient({ requestTimeoutMs: 30_000 }), scope = await context(client, projectId, assetId);
     return await exclusive(scope.productId, async () => {
       const source = await readAsset(client, scope), previous = readExtraction(source.metadata);
       if (isExtractionActive(previous) || isSaveActive(previous)) throw new ExtractionError("busy");
@@ -72,7 +73,7 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
             const budget = RUN_TIMEOUT_MS - (Date.now() - started);
             if (budget <= 0) throw new ExtractionError("timeout");
             phase = "provider"; dispatched = true;
-            const raw = await bounded(signal => activeProvider.analyze(dataUrl, signal, productContext.context), Math.min(budget, TILE_TIMEOUT_MS));
+            const raw = await withPaidOperation(client, projectId, "extraction", { dataUrl, context: productContext.context }, () => bounded(signal => activeProvider.analyze(dataUrl, signal, productContext.context), Math.min(budget, TILE_TIMEOUT_MS)));
             phase = "validation";
             const parsed = tileOutputSchema.safeParse(raw);
             if (!parsed.success) throw new ExtractionError("invalid_response");
@@ -126,7 +127,13 @@ export async function analyzeProductShots(projectId: string, assetId: string, fo
 async function removeObject(client: Client, path: string) { try { return !(await client.storage.from("product-assets").remove([path])).error; } catch { return false; } }
 async function persistCrop(client: Client, source: Asset, candidate: Candidate, image: Awaited<ReturnType<typeof decodeSource>>, model: string, sortOrder: number,
   plan: CropPlan, manualInsets: ManualInsets | undefined, beforeWrite: () => Promise<void>) {
-  const crop = await encodeCrop(image, plan), id = randomUUID(), path = storagePath(source.projectId, source.productId, id, crop.mime);
+  const crop = await encodeCrop(image, plan);
+  const approval = await issueUpload(client, source.projectId, source.productId, crop.mime, crop.bytes.length);
+  const { id, path } = approval;
+  const cleanup = async () => {
+    if (!await removeObject(client, path)) return false;
+    try { await approval.settle("released"); return true; } catch { return false; }
+  };
   const suggestedRole = { product_photo: "product", usage_photo: "usage", detail_closeup: "detail", variant_photo: "option", mixed: "mixed" }[candidate.regionType as "product_photo" | "usage_photo" | "detail_closeup" | "variant_photo" | "mixed"];
   const derivation = derivationSchema.parse({ kind: "detail_image_crop", parentAssetId: source.id, sourceFingerprint: image.fingerprint,
     candidateId: candidate.id, sourceRect: candidate.rect, sourceDimensions: image.dimensions, coordinateSpace: "orientation_normalized_pixels", suggestedRole,
@@ -136,16 +143,16 @@ async function persistCrop(client: Client, source: Asset, candidate: Candidate, 
   let uploaded = false;
   await beforeWrite();
   try { uploaded = !(await client.storage.from("product-assets").upload(path, crop.bytes, { contentType: crop.mime, upsert: false, cacheControl: "60" })).error; } catch { /* safe cleanup below */ }
-  if (!uploaded) throw new ExtractionError(await removeObject(client, path) ? "upload" : "recovery");
+  if (!uploaded) throw new ExtractionError(await cleanup() ? "upload" : "recovery");
   const row = { id, project_id: source.projectId, product_id: source.productId, storage_path: path, original_filename: `product-shot-${candidate.id.slice(0, 12)}.${path.split(".").at(-1)}`,
     mime_type: crop.mime, size_bytes: crop.bytes.length, width: crop.width, height: crop.height, asset_type: "unclassified", sort_order: sortOrder, metadata: { derivation } };
-  try { const saved = await client.from("assets").insert(row).select("*").abortSignal(timeout()).single(); if (!saved.error) return assetRowSchema.parse(saved.data); } catch { /* acknowledge lost? */ }
+  try { const saved = await client.from("assets").insert(row).select("*").abortSignal(timeout()).single(); if (!saved.error) { await approval.settle("consumed"); return assetRowSchema.parse(saved.data); } } catch { /* acknowledge lost? */ }
   try {
     const check = await client.from("assets").select("*").eq("id", id).abortSignal(timeout()).maybeSingle();
     if (check.error) throw new Error("unknown");
-    if (check.data) { const actual = assetRowSchema.parse(check.data); assertAssetScope(actual, source.projectId, source.productId); if (actual.storagePath !== path) throw new Error("unknown"); return actual; }
+    if (check.data) { const actual = assetRowSchema.parse(check.data); assertAssetScope(actual, source.projectId, source.productId); if (actual.storagePath !== path) throw new Error("unknown"); await approval.settle("consumed"); return actual; }
   } catch { throw new ExtractionError("recovery"); } // Never remove a file whose DB commit is uncertain.
-  throw new ExtractionError(await removeObject(client, path) ? "database" : "recovery");
+  throw new ExtractionError(await cleanup() ? "database" : "recovery");
 }
 
 export async function saveProductShots(projectId: string, assetId: string, body: unknown) {
@@ -154,7 +161,7 @@ export async function saveProductShots(projectId: string, assetId: string, body:
   const items: { candidateId: string; manualInsets?: ManualInsets }[] = "items" in request
     ? request.items : request.candidateIds.map(candidateId => ({ candidateId }));
   try {
-    const client = createSupabaseServerClient({ requestTimeoutMs: 30_000 }), scope = await context(client, projectId, assetId);
+    const client = await createUserDataClient({ requestTimeoutMs: 30_000 }), scope = await context(client, projectId, assetId);
     return await exclusive(scope.productId, async () => {
       const source = await readAsset(client, scope), state = readExtraction(source.metadata);
       if (isExtractionActive(state) || isSaveActive(state)) throw new ExtractionError("busy");

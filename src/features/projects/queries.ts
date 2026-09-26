@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { PROJECT_STATUSES, type ProjectSummary } from "@/types/domain";
 import { PROJECT_PAGE_SIZE, projectRowSchema } from "./schemas";
 import type { ProjectQueryResult } from "./types";
@@ -8,7 +8,7 @@ import type { ProjectQueryResult } from "./types";
 const projectColumns = "id,name,status,created_at,updated_at";
 const workingStatuses = PROJECT_STATUSES.filter((status) => status !== "completed");
 
-// Explicit legacy/internal reads until TASK-060; use service.ts for owned access.
+// Verified request session and DB RLS scope dashboard counts and rows alike.
 type ProjectListData = { projects: ProjectSummary[]; page: number; total: number; totalPages: number };
 type DashboardData = {
   total: number;
@@ -19,7 +19,7 @@ type DashboardData = {
 
 export async function getProjects(requestedPage = 1): Promise<ProjectQueryResult<ProjectListData>> {
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const signal = AbortSignal.timeout(10_000);
     const countResult = await client.from("projects")
       .select("id", { count: "exact", head: true }).abortSignal(signal);
@@ -46,7 +46,7 @@ export async function getProjects(requestedPage = 1): Promise<ProjectQueryResult
 
 export async function getProjectDashboard(): Promise<ProjectQueryResult<DashboardData>> {
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const signal = AbortSignal.timeout(10_000);
     const [total, working, completed, recent] = await Promise.all([
       client.from("projects").select("id", { count: "exact", head: true }).abortSignal(signal),

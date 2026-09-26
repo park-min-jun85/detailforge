@@ -29,7 +29,7 @@ function getServerEnvironment() {
   return result.data;
 }
 
-// Privileged legacy/internal client. Never import from the new Auth foundation.
+// Privileged admission/maintenance client. No ordinary user CRUD or Storage.
 export function createSupabaseAdminClient(options?: { requestTimeoutMs: number }): SupabaseClient<Database> {
   const environment = getServerEnvironment();
 

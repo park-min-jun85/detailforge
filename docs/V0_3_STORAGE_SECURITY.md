@@ -1,5 +1,7 @@
 # v0.3.0 Storage Ownership / Object Isolation
 
+후속 TASK-060: Storage8개 호출을 user JWT로 이전하고 최소 intent를 atomic quota/verified issuer와 연결했다. 새 ledger-backed 승인에는 단일 Storage INSERT 소비를 적용해 delete/reupload 반복을 막는다. 기존0008 정책/path/legacy intent를 보존하며 최종0009에서 Storage74 checks PASS. [현재 admission 계약](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md), [결과](tasks/TASK-060.md). 아래는059 당시 기록이다.
+
 2026-09-24 · TASK-059 · **구현 및 실제 Local Storage 검증 완료. Public SaaS deployment remains BLOCKED.**
 
 [TASK-059 결과·재현](tasks/TASK-059.md), [DB RLS](V0_3_DATABASE_RLS_SECURITY.md), [전체 architecture](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [Threat model](V0_3_THREAT_MODEL.md).

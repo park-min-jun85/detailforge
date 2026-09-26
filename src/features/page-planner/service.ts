@@ -1,6 +1,7 @@
 import { validatePlannedSemantics } from "@/features/page-quality/generation-titles";
 import { COMMERCE_COPY_VERSION, validateMessageDistinctness } from "@/features/page-quality/commerce";
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { planQuality, MAX_ASSET_REUSE, PRESENTATION_VERSION } from "@/features/page-quality/policy";
 import { readExtraction, derivationSchema } from "@/features/detail-extraction/schemas";
 import { inspectVisualAssets } from "@/features/visual-assets/inspection";
@@ -9,7 +10,7 @@ import { hasEditLease } from "@/features/section-engine/edit-lease";
 import { readReorder } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { projectRowSchema } from "@/features/projects/schemas";
 import { productRowSchema, productFactsRowSchema } from "@/features/products/schemas";
 import { assetRowSchema, parseId, assertAssetScope } from "@/features/assets/schemas";
@@ -20,7 +21,7 @@ import { getPlannerProvider } from "./provider";
 import { PLANNER_TIMEOUT_MS } from "./config";
 import type { PlannerContextInput, PlannerProvider, PlannerView } from "./types";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 type Page = ReturnType<typeof detailPageRowSchema.parse>;
 const timeout = () => AbortSignal.timeout(10000);
 const running = new Set<string>();
@@ -82,7 +83,7 @@ function view(context: Awaited<ReturnType<typeof loadContext>>): PlannerView {
 }
 export async function getPlannerView(projectId: string): Promise<PlannerView> {
   const project = id(projectId);
-  try { return view(await loadContext(createSupabaseServerClient({ requestTimeoutMs: 10000 }), project)); } catch (error) { throw safe(error); }
+  try { return view(await loadContext(await createUserDataClient({ requestTimeoutMs: 10000 }), project)); } catch (error) { throw safe(error); }
 }
 async function saveState(client: Client, page: Page, state: PlannerState) {
   if (hasEditLease(page) || readReorder(page.settings)) throw new PlannerError("busy");
@@ -140,7 +141,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
   if (running.has(project) || running.size >= 2) throw new PlannerError("busy");
   running.add(project);
   try {
-    const client = createSupabaseServerClient({ requestTimeoutMs: 10000 }), context = await loadContext(client, project), initial = view(context);
+    const client = await createUserDataClient({ requestTimeoutMs: 10000 }), context = await loadContext(client, project), initial = view(context);
     if (initial.prerequisite !== "ready") throw new PlannerError(initial.prerequisite);
     if (!context.current) throw new PlannerError("invalid_input");
     if (isPlannerActive(context.state, Date.now())) throw new PlannerError("busy");
@@ -148,7 +149,7 @@ export async function planPage(projectId: string, providerFactory: () => Planner
     const provider = providerFactory();
     const { page, state } = await claim(client, project, context.page);
     try {
-      const output = await invoke(provider, context.current.input);
+      const output = await withPaidOperation(client, project, "page-planner", context.current.input, () => invoke(provider, context.current!.input));
       let plan;
       try { plan = validatePagePlan(output, context.current.input.evidence, context.current.input.assets, context.current.input.confirmedOptions);
         validateMessageDistinctness(plan.sections);

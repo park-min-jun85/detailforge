@@ -1,8 +1,9 @@
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { exclusive, getAssetContext } from "@/features/assets/service";
 import { AssetError, parseId } from "@/features/assets/schemas";
 import type { Asset } from "@/types/domain";
@@ -56,7 +57,7 @@ export async function retryProductShots(projectId: string, assetId: string, body
   if (!request.success) throw new ExtractionError("invalid_input");
   try { projectId = parseId(projectId); assetId = parseId(assetId); } catch { throw new ExtractionError("not_found"); }
   return withExtractionSlot(async () => { try {
-    const client = createSupabaseServerClient({ requestTimeoutMs: 30_000 }), context = await getAssetContext(projectId, client);
+    const client = await createUserDataClient({ requestTimeoutMs: 30_000 }), context = await getAssetContext(projectId, client);
     if (!context.product) throw new ExtractionError("ownership");
     const scope = { projectId, productId: context.product.id, assetId };
     return await exclusive(scope.productId, async () => {
@@ -147,7 +148,7 @@ export async function retryProductShots(projectId: string, assetId: string, body
           let entry, phase: "provider" | "validation" = "provider";
           attempted++;
           try {
-            const raw = await bounded(signal => activeProvider.analyze(dataUrl, signal, product.context), Math.min(budget, TILE_TIMEOUT_MS));
+            const raw = await withPaidOperation(client, projectId, "extraction-retry", { dataUrl, context: product.context }, () => bounded(signal => activeProvider.analyze(dataUrl, signal, product.context), Math.min(budget, TILE_TIMEOUT_MS)));
             phase = "validation";
             const parsed = tileOutputSchema.safeParse(raw);
             if (!parsed.success) throw new ExtractionError("invalid_response");

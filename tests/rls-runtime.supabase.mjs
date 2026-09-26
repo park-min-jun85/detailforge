@@ -81,7 +81,11 @@ try {
   const migrations=readdirSync('supabase/migrations').filter(f=>/^000[1-7]_.*\.sql$/.test(f)).sort();assert.equal(migrations.length,7);
   // Clone the genuine platform bootstrap, not any application public schema.
   // Auth data/password hashes remain in process memory only.
-  const schema=c.dump(['--schema-only','--exclude-schema=public']);
+  // Later application migrations also own a private schema and named Storage
+  // triggers/policies. Exclude those when cloning platform-only bootstrap;
+  // primary REST acceptance still runs against all installed migrations.
+  const schema=c.dump(['--schema-only','--exclude-schema=public','--exclude-schema=app_private'])
+    .replace(/^CREATE (?:TRIGGER|POLICY) product_assets_[\s\S]*?;\r?\n/gm,'');
   const authData=c.dump(['--data-only','--table=auth.users','--table=auth.identities']);
   const fresh='df058_fresh_'+run,upgrade='df058_upgrade_'+run;
   result.databases={fresh,upgrade,rest:'postgres'};
@@ -169,7 +173,9 @@ try {
     const f=JSON.parse(sql('postgres',`select jsonb_build_object('definer',prosecdef,'config',proconfig,'owner',pg_get_userbyid(proowner),'anon',has_function_privilege('anon',oid,'EXECUTE'),'authenticated',has_function_privilege('authenticated',oid,'EXECUTE'),'service_role',has_function_privilege('service_role',oid,'EXECUTE')) from pg_proc where oid='public.enforce_ownership_immutability()'::regprocedure`));
     assert.equal(f.definer,false);assert.deepEqual(f.config,['search_path=""']);
     assert.equal(f.anon,false);assert.equal(f.authenticated,false);assert.equal(f.service_role,false);result.triggerFunction=f;
-    assert.equal(sql('postgres',`select count(*) from pg_trigger where not tgisinternal and tgfoid='public.enforce_ownership_immutability()'::regprocedure`),'7');
+    assert.equal(sql('postgres',`select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
+      where not t.tgisinternal and t.tgfoid='public.enforce_ownership_immutability()'::regprocedure
+      and n.nspname='public' and c.relname in (${tableList})`),'7');
   });
   await check('DB-02 Authenticated/anon roles cannot bypass RLS or own public tables',()=>{
     assert.equal(sql('postgres',"select count(*) from pg_roles where rolname in ('anon','authenticated') and (rolsuper or rolbypassrls)"),'0');

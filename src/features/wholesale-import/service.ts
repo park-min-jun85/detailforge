@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAssetContext, uploadAsset } from "@/features/assets/service";
 import { normalizeFilename, assetRowSchema, assertAssetScope, MAX_PRODUCT_ASSETS } from "@/features/assets/schemas";
 import { saveProductInformation } from "@/features/products/persistence";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { fetchResource, decodeHtml } from "./fetcher";
 import { renderedHtml } from "./browser";
 import { resolveAdapter } from "./adapters/generic";
@@ -41,6 +41,7 @@ export async function saveImport(projectId:string,input:unknown) {
 }
 export async function loadRemoteImage(url:string,signal?:AbortSignal,fetcher=fetchResource){const result=await fetcher(url,"image",{signal});const mime=validateRemoteImage(result.mime,result.bytes);return {...result,mime};}
 export async function previewImage(projectId:string,token:string,index:number){
+  await getAssetContext(projectId);
   const ticket=readTicket(projectId,token);if(!Number.isInteger(index)||!ticket.candidate.images[index])throw new ImportError("invalid_input");
   return thumbnailSlot(()=>loadRemoteImage(ticket.candidate.images[index].url));
 }
@@ -50,7 +51,7 @@ export async function importImage(projectId:string,input:unknown,fetcher=fetchRe
   return importExclusive(`images:${projectId}`,async()=>{
     const ticket=readTicket(projectId,parsed.data.token);if(!ticket.saved||!ticket.saved.urls.includes(parsed.data.url))throw new ImportError("invalid_input");
     const context=await getAssetContext(projectId);if(context.product?.id!==ticket.saved.productId)throw new ImportError("conflict");
-    const client=createSupabaseServerClient(),existing=await client.from("assets").select("*").eq("project_id",projectId).eq("product_id",ticket.saved.productId).abortSignal(AbortSignal.timeout(10000));
+    const client=await createUserDataClient(),existing=await client.from("assets").select("*").eq("project_id",projectId).eq("product_id",ticket.saved.productId).abortSignal(AbortSignal.timeout(10000));
     if(existing.error)throw new ImportError("unavailable");
     const assets=existing.data.map(row=>assetRowSchema.parse(row));assets.forEach(asset=>assertAssetScope(asset,projectId,ticket.saved!.productId));
     const found=assets.find(asset=>{const source=asset.metadata.source;return source&&typeof source==="object"&&"url" in source&&source.url===parsed.data.url;});

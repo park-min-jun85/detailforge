@@ -3,7 +3,7 @@ import { planQuality } from "@/features/page-quality/policy";
 import { assetProvenanceLabel } from "@/features/visual-assets/policy";
 import { z } from "zod";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext, listAssets } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope } from "@/features/assets/schemas";
 import { readPage, readRows, readGeneration } from "@/features/section-engine/persistence";
@@ -27,7 +27,7 @@ function safe(error: unknown): EditorError {
 }
 export async function editorContext(projectId: string) {
   if (!z.uuid().safeParse(projectId).success) throw new EditorError("not_found");
-  const client = createSupabaseServerClient();
+  const client = await createUserDataClient();
   const scope = await getAssetContext(projectId, client);
   const page = await readPage(client, projectId);
   if (!scope.product) return { client, scope, page, assets: [], rows: [], generation: null };

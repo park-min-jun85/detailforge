@@ -56,7 +56,7 @@ test('Storage missing crop makes plan stale, preserves saved Plan, restores fall
 import {confirmedSource} from '../src/features/product-options/confirmed-source.ts';
 import {buildConfirmedOptionSnapshot} from '../src/features/section-engine/options.ts';
 import {inspectVisualAssets} from '../src/features/visual-assets/inspection.ts';
-import {createSupabaseServerClient} from '../src/lib/supabase/server.ts';
+import {createUserDataClient} from '../src/lib/supabase/user.ts';
 import {startAssetDb} from './helpers/asset-db.mjs';
 import sharp from 'sharp';
 
@@ -72,12 +72,12 @@ test('option-role group visual keeps confirmed UUID values and no inferred image
 test('unknown dimensions decoded read-only and missing file excluded',async()=>{
  const db=await startAssetDb();try{
  const a=original({width:null,height:null});db.state.assets=[row(a)];db.state.objects.add(a.storagePath);db.state.objectBytes.set(a.storagePath,await sharp({create:{width:330,height:330,channels:3,background:'white'}}).png().toBuffer());
- const client=createSupabaseServerClient(),before=structuredClone(db.state.assets);const inspected=await inspectVisualAssets(client,[a],projectId,productId);assert.deepEqual(inspected[a.id],{width:330,height:330,usable:true});assert.deepEqual(db.state.assets,before);assert.ok(db.state.requests.every(r=>r.method==='GET'||r.path.includes('/object/sign/')));
+ const client=await createUserDataClient(),before=structuredClone(db.state.assets);const inspected=await inspectVisualAssets(client,[a],projectId,productId);assert.deepEqual(inspected[a.id],{width:330,height:330,usable:true});assert.deepEqual(db.state.assets,before);assert.ok(db.state.requests.every(r=>r.method==='GET'||r.path.includes('/object/sign/')));
  db.state.objects.clear();assert.equal((await inspectVisualAssets(client,[a],projectId,productId))[a.id].usable,false);
  }finally{await db.close();}
 });
 test('signature-valid but undecodable source marked unusable',async()=>{
- const db=await startAssetDb();try{const a=original({width:null,height:null});db.state.objects.add(a.storagePath);db.state.objectBytes.set(a.storagePath,Buffer.from([137,80,78,71,13,10,26,10,0]));assert.equal((await inspectVisualAssets(createSupabaseServerClient(),[a],projectId,productId))[a.id].usable,false);}finally{await db.close();}
+ const db=await startAssetDb();try{const a=original({width:null,height:null});db.state.objects.add(a.storagePath);db.state.objectBytes.set(a.storagePath,Buffer.from([137,80,78,71,13,10,26,10,0]));assert.equal((await inspectVisualAssets(await createUserDataClient(),[a],projectId,productId))[a.id].usable,false);}finally{await db.close();}
 });
 import {SECTION_POLICY} from '../src/features/section-engine/prompts.ts';
 test('real QA regression: V-only hero highlight is rejected; prompt requires F or empty claim lists',()=>fixture(s=>{

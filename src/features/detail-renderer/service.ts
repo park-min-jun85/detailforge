@@ -4,7 +4,7 @@ import { readOptionFreshness } from "@/features/detail-editor/option-application
 import { optionFreshness, OPTION_FRESHNESS_LABELS } from "@/features/product-options/section-snapshot";
 import { z } from "zod";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext, listAssets } from "@/features/assets/service";
 import { AssetError } from "@/features/assets/schemas";
 import { readPage, readRows, readGeneration } from "@/features/section-engine/persistence";
@@ -20,7 +20,7 @@ import { mapCanonicalSections, referencedAssetIds, type RenderView } from "./mod
 export async function getRenderView(projectId: string): Promise<RenderView> {
   if (!z.uuid().safeParse(projectId).success) throw new RenderError("not_found");
   try {
-    const client = createSupabaseServerClient(), scope = await getAssetContext(projectId, client);
+    const client = await createUserDataClient(), scope = await getAssetContext(projectId, client);
     const view: RenderView = { projectId, projectName: scope.project.name, productName: scope.product?.name ?? null,
       detailPageId: null, width: null, state: "product_missing", sections: [], assets: [],
       readiness: { sectionCount: 0, needsReviewCount: 0, missingImageCount: 0, stalePlan: false, validation: "unknown", unavailable: false } };

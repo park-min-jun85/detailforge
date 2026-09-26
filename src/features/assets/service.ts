@@ -1,10 +1,10 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { issueUpload } from "@/lib/abuse/admission";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import type { Asset } from "@/types/domain";
 import { AssetError, assetRowSchema, assertAssetScope, nextAssetOrder, normalizeFilename, parseId,
-  SIGNED_URL_SECONDS, storagePath, validateFile, validateSignature } from "./schemas";
+  SIGNED_URL_SECONDS, validateFile, validateSignature } from "./schemas";
 import type { AssetContext, AssetList } from "./types";
 import { readExtraction } from "@/features/detail-extraction/schemas";
 import { loadExtractionProductContext } from "@/features/detail-extraction/product-context";
@@ -12,11 +12,12 @@ import { loadExtractionProductContext } from "@/features/detail-extraction/produ
 const BUCKET = "product-assets";
 const mutations = new Set<string>();
 const timeout = () => AbortSignal.timeout(10_000);
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 const projectSchema = z.object({ id: z.uuid(), name: z.string() });
 const productSchema = z.object({ id: z.uuid(), project_id: z.uuid(), name: z.string() });
 
-export async function getAssetContext(projectId: string, client = createSupabaseServerClient()): Promise<AssetContext> {
+export async function getAssetContext(projectId: string, providedClient?: Client): Promise<AssetContext> {
+  const client = providedClient ?? await createUserDataClient();
   const id = parseId(projectId);
   const project = await client.from("projects").select("id,name").eq("id", id).abortSignal(timeout()).maybeSingle();
   if (project.error) throw new AssetError(503, "프로젝트를 불러오지 못했습니다. 다시 시도해 주세요.");
@@ -45,7 +46,7 @@ export async function exclusive<T>(productId: string, operation: () => Promise<T
 }
 
 export async function listAssets(projectId: string, onlyIds?: readonly string[]): Promise<AssetList> {
-  const client = createSupabaseServerClient();
+  const client = await createUserDataClient();
   const scope = await requireProduct(projectId, client);
   const result = await client.from("assets").select("*").eq("project_id", scope.projectId).eq("product_id", scope.productId)
     .order("sort_order").order("created_at").order("id").abortSignal(timeout());
@@ -74,7 +75,7 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
   const name = normalizeFilename(file.name);
   const mime = validateFile(file.mime, file.bytes.byteLength);
   validateSignature(file.bytes, mime);
-  const client = createSupabaseServerClient();
+  const client = await createUserDataClient();
   const scope = await requireProduct(projectId, client);
   if (options && scope.productId !== options.expectedProductId) throw new AssetError(409,"상품 연결이 변경되었습니다. 다시 확인해 주세요.");
   return exclusive(scope.productId, async () => {
@@ -90,14 +91,18 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
       .order("sort_order", { ascending: false }).limit(1).abortSignal(timeout());
     if (existing.error || existing.count === null) throw new AssetError(503, "등록된 이미지 수를 확인하지 못했습니다.");
     const sortOrder = nextAssetOrder(existing.count, existing.data?.[0]?.sort_order ?? null);
-    const id = randomUUID();
-    const path = storagePath(scope.projectId, scope.productId, id, mime);
+    const approval = await issueUpload(client, scope.projectId, scope.productId, mime, file.bytes.byteLength);
+    const { id, path } = approval;
+    const cleanup = async () => {
+      if (!await removeObject(client, path)) return false;
+      try { await approval.settle("released"); return true; } catch { return false; }
+    };
     let uploaded = false;
     try {
       uploaded = !(await client.storage.from(BUCKET).upload(path, file.bytes, { contentType: mime, upsert: false, cacheControl: "60" })).error;
     } catch { /* 응답 유실도 아래에서 이 요청의 경로만 정리한다. */ }
     if (!uploaded) {
-      const cleaned = await removeObject(client, path);
+      const cleaned = await cleanup();
       throw new AssetError(503, cleaned ? "파일 업로드에 실패했습니다. 다시 시도해 주세요." : "파일 업로드 및 정리를 확인하지 못했습니다. 관리자 확인이 필요합니다.");
     }
     const row = { id, project_id: scope.projectId, product_id: scope.productId, storage_path: path,
@@ -105,7 +110,7 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
       sort_order: sortOrder, width: null, height: null, metadata: options ? {source:options.source} : {} };
     try {
       const inserted = await client.from("assets").insert(row).select("*").abortSignal(timeout()).single();
-      if (!inserted.error) return assetRowSchema.parse(inserted.data);
+      if (!inserted.error) { await approval.settle("consumed"); return assetRowSchema.parse(inserted.data); }
     } catch { /* INSERT 응답 유실 여부를 재조회한 뒤 보상한다. */ }
     try {
       const check = await client.from("assets").select("*").eq("id", id).abortSignal(timeout()).maybeSingle();
@@ -114,13 +119,14 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
         const asset = assetRowSchema.parse(check.data);
         assertAssetScope(asset, scope.projectId, scope.productId);
         if (asset.storagePath !== path) throw new Error("unconfirmed");
+        await approval.settle("consumed");
         return asset;
       }
     } catch {
       // 저장되었을 수 있는 DB row의 파일을 지우지 않는다. 운영자가 대조해야 한다.
       throw new AssetError(503, "이미지 저장 결과를 확인하지 못했습니다. 목록을 새로고침한 뒤 확인해 주세요. 관리자 확인이 필요할 수 있습니다.");
     }
-    const cleaned = await removeObject(client, path);
+    const cleaned = await cleanup();
     throw new AssetError(503, cleaned ? "이미지 정보를 저장하지 못해 업로드 파일을 정리했습니다. 다시 시도해 주세요."
       : "이미지 정보 저장과 파일 정리에 실패했습니다. 관리자 확인이 필요합니다.");
   });
@@ -128,7 +134,7 @@ export async function uploadAsset(projectId: string, file: { name: string; mime:
 
 export async function deleteAsset(projectId: string, assetId: string) {
   const id = parseId(assetId);
-  const client = createSupabaseServerClient();
+  const client = await createUserDataClient();
   const scope = await requireProduct(projectId, client);
   return exclusive(scope.productId, async () => {
     const result = await client.from("assets").select("*").eq("id", id).eq("project_id", scope.projectId)

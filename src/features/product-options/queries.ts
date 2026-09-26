@@ -1,11 +1,11 @@
 import "server-only";
 import { confirmedSource } from "./confirmed-source";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { emptyOptionView, optionRowSchema, type OptionView } from "./schemas";
 import { OptionError } from "./errors";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 export async function optionProductScope(client: Client, projectId: string, expectedProductId?: string) {
   if (!z.uuid().safeParse(projectId).success || (expectedProductId !== undefined && !z.uuid().safeParse(expectedProductId).success)) throw new OptionError("not_found");
   const project = await client.from("projects").select("id").eq("id", projectId).abortSignal(AbortSignal.timeout(10000)).maybeSingle();
@@ -32,7 +32,7 @@ export function toOptionView(row: NonNullable<Awaited<ReturnType<typeof readOpti
 }
 export async function getProductOptions(projectId: string, expectedProductId?: string): Promise<OptionView> {
   try {
-    const client = createSupabaseServerClient(), productId = await optionProductScope(client, projectId, expectedProductId);
+    const client = await createUserDataClient(), productId = await optionProductScope(client, projectId, expectedProductId);
     if (!productId) return emptyOptionView(null);
     const row = await readOptionRow(client, productId);
     return row ? toOptionView(row) : emptyOptionView(productId);

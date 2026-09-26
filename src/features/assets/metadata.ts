@@ -2,10 +2,10 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Asset } from "@/types/domain";
-import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { createUserDataClient } from "@/lib/supabase/user";
 
 // Every application metadata writer participates. Large extraction results never go into a URL filter.
-export function metadataUpdate(client: ReturnType<typeof createSupabaseServerClient>, asset: Asset, metadata: Record<string, unknown>, assetType = asset.assetType) {
+export function metadataUpdate(client: Awaited<ReturnType<typeof createUserDataClient>>, asset: Asset, metadata: Record<string, unknown>, assetType = asset.assetType) {
   const previous = asset.metadata.detailExtraction;
   const revision = previous && typeof previous === "object" && "revision" in previous && z.uuid().safeParse(previous.revision).success ? String(previous.revision) : null;
   const next = metadata.detailExtraction;

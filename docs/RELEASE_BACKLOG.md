@@ -1,5 +1,9 @@
 # Release Backlog
 
+## TASK-060 COMPLETE / Public gate 유지
+
+TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음061 Auth UX,062 Export,063 cross-user E2E,064 own workflow,065 release다. [결과](tasks/TASK-060.md). 아래는 각 TASK 시점 기록이다.
+
 ## TASK-059 — Storage isolation COMPLETE / public gate 유지
 
 0008 private bucket hardening, root ownership Object policies와 Storage-first 승인 intent를 구현했다. 실제 A/B/anon Storage STG-01~25 전체 PASS, 최종74 checks 및 전체1470 tests·필수검사 PASS. 최초73 checks에서 기존 Object/Asset upgrade 무손실과 policy/path drift 거부를 확인했다. 운영 DB/Auth/Storage 변경0, Git stage/commit/merge/tag0. [13항목 결과](tasks/TASK-059.md), [Storage 계약](V0_3_STORAGE_SECURITY.md).

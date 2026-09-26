@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { projectRowSchema } from "@/features/projects/schemas";
 import type { ProjectSummary, Product } from "@/types/domain";
 import { projectIdSchema, productRowSchema, type ProductInput } from "./schemas";
@@ -14,7 +14,7 @@ type DetailResult =
 export async function getProductDetail(projectId: string): Promise<DetailResult> {
   if (!projectIdSchema.safeParse(projectId).success) return { status: "not-found" };
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const projectResult = await client.from("projects").select("*").eq("id", projectId)
       .abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
     if (projectResult.error) throw new Error("Project read failed");

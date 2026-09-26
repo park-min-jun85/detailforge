@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { productFormSchema, projectIdSchema, productRevisionSchema, productRowSchema,
   productFactsRowSchema, wholesaleProvenanceSchema, wholesaleSourceSchema, type ProductRow, type ProductFactsRow } from "./schemas";
 import { toManualSource, toManualFacts } from "./mappers";
@@ -10,7 +10,7 @@ import type { ProductSaveState } from "./types";
 
 // 한 서버 프로세스 안의 같은 Project 저장을 직렬화한다. DB 트랜잭션을 대신하지는 않는다.
 const savingProjects = new Set<string>();
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 const failed = (): ProductSaveState => ({ status: "error", message: "상품정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." });
 const recovery = (): ProductSaveState => ({
   status: "recovery-required",
@@ -76,7 +76,7 @@ export async function saveProductInformation(
   savingProjects.add(projectId);
   let writeStarted = false;
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const project = await client.from("projects").select("id").eq("id", projectId)
       .abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
     if (project.error) return failed();

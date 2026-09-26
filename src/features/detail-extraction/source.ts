@@ -1,6 +1,6 @@
 import "server-only";
 import type { Asset } from "@/types/domain";
-import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { createUserDataClient } from "@/lib/supabase/user";
 import { assertAssetScope, MAX_FILE_BYTES } from "@/features/assets/schemas";
 import { ExtractionError } from "./errors";
 
@@ -29,7 +29,7 @@ export async function readLimitedResponse(response: Response) {
   if (!length) throw new ExtractionError("source_load");
   return Buffer.concat(chunks, length);
 }
-export async function loadSource(client: ReturnType<typeof createSupabaseServerClient>, asset: Asset) {
+export async function loadSource(client: Awaited<ReturnType<typeof createUserDataClient>>, asset: Asset) {
   try {
     assertAssetScope(asset, asset.projectId, asset.productId);
     if (asset.sizeBytes !== null && asset.sizeBytes > MAX_FILE_BYTES) throw new ExtractionError("source_load");
@@ -37,7 +37,7 @@ export async function loadSource(client: ReturnType<typeof createSupabaseServerC
       const signed = await client.storage.from("product-assets").createSignedUrl(asset.storagePath, 60);
       if (signal.aborted) throw new ExtractionError("timeout");
       if (signed.error || !signed.data?.signedUrl) throw new ExtractionError("source_load");
-      const url = new URL(signed.data.signedUrl), configured = new URL(process.env.SUPABASE_URL!);
+      const url = new URL(signed.data.signedUrl), configured = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL!);
       // Only the server-configured private bucket and this already scoped DB path. No URL input.
       if (url.origin !== configured.origin || decodeURIComponent(url.pathname) !== `/storage/v1/object/sign/product-assets/${asset.storagePath}`) throw new ExtractionError("ownership");
       return readLimitedResponse(await fetch(url, { signal, redirect: "error", cache: "no-store" }));

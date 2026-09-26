@@ -7,7 +7,7 @@ import { region } from './fixtures/v0.2/m2-tile-recovery.mjs';
 import { analyzeProductShots, saveProductShots } from '../src/features/detail-extraction/service.ts';
 import { checkpointReadModel, checkpointInputFingerprint, completedTileCheckpoint } from '../src/features/detail-extraction/checkpoint.ts';
 import { readExtractionAsset, persistTileCheckpoint, compareExtractionState } from '../src/features/detail-extraction/persistence.ts';
-import { createSupabaseServerClient } from '../src/lib/supabase/server.ts';
+import { createUserDataClient } from '../src/lib/supabase/user.ts';
 import { normalizeCandidates } from '../src/features/detail-extraction/geometry.ts';
 import { ExtractionError } from '../src/features/detail-extraction/errors.ts';
 import { readExtraction } from '../src/features/detail-extraction/schemas.ts';
@@ -122,7 +122,7 @@ test('slow old run cannot overwrite replacement run checkpoint', async t => {
 });
 test('input ownership mismatch and oversized checkpoint reject before DB mutation', async t => {
   const f = await fixture(t); await f.analyze(false);
-  const client = createSupabaseServerClient(), scope = { projectId, productId, assetId }, asset = await readExtractionAsset(client, scope);
+  const client = await createUserDataClient(), scope = { projectId, productId, assetId }, asset = await readExtractionAsset(client, scope);
   const state = readExtraction(asset.metadata), cache = state.checkpoint, count = patches(f).length;
   f.row.metadata.detailExtraction.attempt.status = 'analyzing';
   await assert.rejects(persistTileCheckpoint(client, scope, asset, state.attempt.runId, 'f'.repeat(64),

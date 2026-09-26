@@ -1,10 +1,10 @@
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { detailPageRowSchema } from "@/features/page-planner/schemas";
 import { generationStateSchema, sectionRowSchema, type GenerationState, type SectionRow } from "./schemas";
 import { SectionEngineError } from "./errors";
-export type Client = ReturnType<typeof createSupabaseServerClient>;
+export type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 export type PageRow = ReturnType<typeof detailPageRowSchema.parse>;
 const signal = () => AbortSignal.timeout(10000);
 const timestampKey = (value: string) => `${Date.parse(value)}:${(value.match(/\.(\d+)/)?.[1] ?? "").padEnd(9, "0").slice(3)}`;

@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { createUserDataClient } from "@/lib/supabase/user";
 import { manualFactsSchema } from "@/features/products/schemas";
 import { ExtractionError } from "./errors";
 
@@ -23,7 +23,7 @@ export function productContextFingerprint(context: ExtractionProductContext) {
     brand: context.brand, identifiers: context.identifiers })).digest("hex");
 }
 const productSchema = z.object({ id: z.uuid(), project_id: z.uuid(), name: z.string(), category: z.string().nullable().optional(), brand: z.string().nullable().optional() });
-export async function loadExtractionProductContext(client: ReturnType<typeof createSupabaseServerClient>, scope: { projectId: string; productId: string }) {
+export async function loadExtractionProductContext(client: Awaited<ReturnType<typeof createUserDataClient>>, scope: { projectId: string; productId: string }) {
   const product = await client.from("products").select("id,project_id,name,category,brand").eq("id", scope.productId)
     .eq("project_id", scope.projectId).abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
   if (product.error) throw new ExtractionError("database");

@@ -1,5 +1,9 @@
 # v0.3.0 Threat Model & Security Validation Contract
 
+## TASK-060 delta
+
+TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**. foreign exact Project/Product/Asset와 anon을 실제 app service에서 거부했다. Denied/over-limit provider0, upload12개 중3/AI8개 중2만 admission PASS. expired/replay·삭제 후 동일 승인 재업로드를 차단했다. service key는 좁은 ledger RPC 전용이며 운영 secret/limits,Auth UX,Export,전체 E2E는 남은 공개 gate다. [계약](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md).
+
 ## TASK-059 delta (2026-09-24)
 
 T05 Storage 직접 API 경계를 실제 A/B GoTrue JWT·anon으로 검증했다. exact foreign download/sign/upsert/update/delete, root/foreign prefix listing, mixed/fabricated UUID, metadata spoof, copy/move/signed-upload를 거부하고 공격 후 B bytes/hash/전체 metadata를 보존했다. STG-01~25 전체 PASS, 최종74 checks 및 전체1470 tests PASS. private bucket/10MiB/MIME와 예상 밖 policy fail-closed를 적용했다. [Storage 계약](V0_3_STORAGE_SECURITY.md), [TASK-059 결과](tasks/TASK-059.md).

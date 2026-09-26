@@ -334,7 +334,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reserve_admission: {
+        Args: { p_actor: string; p_project: string; p_product: string | null; p_operation: string; p_key: string; p_fingerprint: string; p_asset?: string; p_mime?: string }
+        Returns: Json
+      }
+      settle_admission: { Args: { p_actor: string; p_id: string; p_outcome: string }; Returns: undefined }
+      expire_admissions: { Args: Record<PropertyKey, never>; Returns: number }
     }
     Enums: {
       [_ in never]: never

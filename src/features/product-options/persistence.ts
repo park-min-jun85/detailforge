@@ -1,7 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { importedOptionSourceSchema, normalizeOptionDraft, optionSaveSchema, optionRowSchema } from "./schemas";
 import { readOptionImportScope } from "./import-service";
 import { readOptionTicket } from "./import-tickets";
@@ -14,7 +14,7 @@ export async function saveProductOptions(projectId: string, input: unknown) {
     if (!request.success) throw new OptionError("invalid_input");
     let normalized: ReturnType<typeof normalizeOptionDraft>;
     try { normalized = normalizeOptionDraft(request.data.options); } catch { throw new OptionError("invalid_input"); }
-    const client = createSupabaseServerClient(), productId = await optionProductScope(client, projectId, request.data.productId);
+    const client = await createUserDataClient(), productId = await optionProductScope(client, projectId, request.data.productId);
     if (!productId) throw new OptionError("product_required");
     const before = await readOptionRow(client, productId);
     if ((before?.version ?? 0) !== request.data.expectedVersion) throw new OptionError("conflict");

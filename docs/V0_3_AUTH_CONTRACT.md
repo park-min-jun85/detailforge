@@ -1,5 +1,7 @@
 # v0.3.0 Auth Client & Session Contract
 
+후속 TASK-060: 기존31개 일반 데이터 호출과 Storage8개를 실제 verified session client로 이전했다. admin alias 삭제, principal 기반 Project create 연결, 별도 candidate HMAC 적용. Public config 누락 시 사용자 data access는 fail-closed이며 더 이상 legacy privileged fallback을 유지하지 않는다. 로그인 UI/보호 UX는061,Export는062다. [현재 계약](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md), [결과](tasks/TASK-060.md). 아래는056 당시 기록이다.
+
 2026-09-24 · TASK-056 · **Authentication foundation IMPLEMENTED/PARTIAL**. Package0.2.1, Next16.3.4. 로그인 UI/기존 route enforcement/owner/RLS/Storage 격리/일반 service-role 이전/Export 인증은 아직 없다. 공개 SaaS 배포는 계속 BLOCKED다. [73항목 보고](tasks/TASK-056.md), [전체 설계](V0_3_PUBLIC_SAAS_ARCHITECTURE.md), [위협 모델](V0_3_THREAT_MODEL.md).
 
 ## 구현 경계와 dependency

@@ -121,7 +121,7 @@ try {
   await check('SEC-02 private intents: no user write/RPC; definer finalizer trigger-only and fixed search_path',()=>{
     for(const role of ['anon','authenticated'])assert.equal(sql('postgres',`select has_table_privilege('${role}','app_private.asset_upload_intents','INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')`),'f');
     const functions=JSON.parse(sql('postgres',"select jsonb_agg(jsonb_build_object('name',proname,'definer',prosecdef,'config',proconfig,'owner',pg_get_userbyid(proowner),'authExec',has_function_privilege('authenticated',oid,'EXECUTE'),'anonExec',has_function_privilege('anon',oid,'EXECUTE'))) from pg_proc where pronamespace='app_private'::regnamespace"));
-    for(const f of functions){assert.deepEqual(f.config,['search_path=""']);assert.equal(f.anonExec,false);assert.equal(f.authExec,f.name==='owns_asset_object');assert.equal(f.definer,f.name==='finalize_asset_upload_intent');assert.ok(!['anon','authenticated'].includes(f.owner));}
+    for(const f of functions){assert.deepEqual(f.config,['search_path=""']);assert.equal(f.anonExec,false);assert.equal(f.authExec,f.name==='owns_asset_object');assert.equal(f.definer,['finalize_asset_upload_intent','consume_storage_admission','preserve_project_namespace'].includes(f.name));assert.ok(!['anon','authenticated'].includes(f.owner));}
     result.functions=functions;
   });
   await check('STG-25 remote destinations blocked before fetch; redirects forbidden',async()=>{

@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { diagnoseDomemeProduct } from "@/features/wholesale-import/domeme-api/client";
 import { DomemeApiError } from "@/features/wholesale-import/domeme-api/errors";
 import { importExclusive } from "@/features/wholesale-import/tickets";
@@ -11,7 +11,7 @@ import { compareImportedOptions, applyImportedAdditions } from "./import-merge";
 import { issueOptionTicket, readOptionTicket, OPTION_TICKET_TTL } from "./import-tickets";
 import { OptionError } from "./errors";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 export async function readOptionImportScope(client: Client, projectId: string, productId: string, expectedVersion: number) {
   if (!await optionProductScope(client, projectId, productId)) throw new OptionError("product_required");
   const product = await client.from("products").select("id,project_id,source_url").eq("id", productId).eq("project_id", projectId).abortSignal(AbortSignal.timeout(10000)).maybeSingle();
@@ -41,7 +41,7 @@ export async function previewImportedOptions(projectId: string, input: unknown, 
     const parsed = optionLookupSchema.safeParse(input);
     if (!parsed.success) throw new OptionError("invalid_input");
     return await importExclusive(`options:${projectId}`, async () => {
-      const client = createSupabaseServerClient();
+      const client = await createUserDataClient();
       const scope = await readOptionImportScope(client, projectId, parsed.data.productId, parsed.data.expectedVersion);
       const report = await diagnose(scope.productNo);
       // The official client already verifies this, retain a second boundary for mocked/changed providers.
@@ -76,7 +76,7 @@ export async function prepareImportedOptions(projectId: string, input: unknown) 
   try {
     const request = optionApplySchema.safeParse(input);
     if (!request.success) throw new OptionError("invalid_input");
-    const scope = await readOptionImportScope(createSupabaseServerClient(), projectId, request.data.productId, request.data.expectedVersion);
+    const scope = await readOptionImportScope(await createUserDataClient(), projectId, request.data.productId, request.data.expectedVersion);
     const ticket = readOptionTicket(request.data.token, scope, "candidate");
     const result = applyImportedAdditions(ticket.current, ticket.previous, ticket.source, ticket.additions, request.data.selectedIds);
     const prepared = issueOptionTicket({ ...ticket, kind: "prepared", preparedSource: result.source });

@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext, listAssets } from "@/features/assets/service";
 import { AssetError, parseId } from "@/features/assets/schemas";
 import { readExtractionAsset } from "./persistence";
@@ -20,7 +20,7 @@ import { MAX_PRODUCT_ASSETS } from "@/features/assets/schemas";
 export async function getExtractionReview(projectId: string, assetId: string): Promise<ExtractionReview> {
   try {
     try { projectId = parseId(projectId); assetId = parseId(assetId); } catch { throw new ExtractionError("not_found"); }
-    const client = createSupabaseServerClient({ requestTimeoutMs: 30_000 });
+    const client = await createUserDataClient({ requestTimeoutMs: 30_000 });
     const context = await getAssetContext(projectId, client);
     if (!context.product) throw new ExtractionError("ownership");
     const scope = { projectId, productId: context.product.id, assetId };

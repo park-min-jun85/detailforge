@@ -3,12 +3,12 @@ import { isDeepStrictEqual } from "node:util";
 import { assetRowSchema, assertAssetScope } from "@/features/assets/schemas";
 import { metadataUpdate } from "@/features/assets/metadata";
 import type { Asset } from "@/types/domain";
-import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { createUserDataClient } from "@/lib/supabase/user";
 import { ExtractionError } from "./errors";
 import { isDerived, readExtraction, type ExtractionState } from "./schemas";
 import { checkpointInputFingerprint, readCheckpoint, recordTileCheckpoint, serializeCheckpoint, type TileCheckpoint } from "./checkpoint";
 
-export type ExtractionClient = ReturnType<typeof createSupabaseServerClient>;
+export type ExtractionClient = Awaited<ReturnType<typeof createUserDataClient>>;
 export type ExtractionScope = { projectId: string; productId: string; assetId: string };
 const timeout = () => AbortSignal.timeout(10_000);
 export async function readExtractionAsset(client: ExtractionClient, scope: ExtractionScope) {

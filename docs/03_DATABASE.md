@@ -1,5 +1,11 @@
 # Database
 
+## TASK-060 — Atomic admission
+
+TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**.
+
+기존0001~0008/7-table Row·Insert·Update shape 유지, 신규 private limits/admissions와 public service-only RPC types 추가. 기존 rows/Object/intents upgrade 보존. [현재 계약](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md), [19항목 결과](tasks/TASK-060.md). 아래는 각 TASK 시점 기록이다.
+
 ## TASK-059 — Storage Ownership / Object Isolation
 
 최신 migration은 `0008_enforce_storage_ownership.sql`이다. 기존 private product-assets bucket을 재생성하지 않고 JPEG/PNG/WebP·10MiB 제한과 Object4 policies/bucket restrictive guard를 적용한다. 실제 Project→owner 조회와 strict Project/Product/Asset path를 사용하며 Object owner metadata를 권한으로 믿지 않는다.

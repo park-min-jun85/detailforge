@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync,readdirSync} from 'node:fs';
+import {readFileSync,readdirSync,existsSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {inspect} from 'node:util';
 import ts from 'typescript';
@@ -14,13 +14,11 @@ import {safeReturnPath,loginLocation} from '../src/lib/auth/return-path.ts';
 import {updateAuthSession} from '../src/lib/auth/proxy.ts';
 import {signInWithPassword,signUpWithPassword,signOut,MAX_AUTH_BODY_BYTES} from '../src/lib/auth/mutations.ts';
 import {AuthFailure} from '../src/lib/auth/errors.ts';
-import {createSupabaseAdminClient} from '../src/lib/supabase/admin.ts';
-import {createSupabaseServerClient} from '../src/lib/supabase/server.ts';
 import {AUTH_URL,PUBLIC_KEY,APP_ORIGIN,USER_A,USER_B,COOKIE_NAME,identity,session,cookieJar,authEnvironment,authFetch,json,authRequest} from './helpers/auth.mjs';
 
-test('AUTH-01 browser client uses only validated public config; legacy alias remains privileged',t=>{
+test('AUTH-01 browser client uses only validated public config; privileged alias removed',t=>{
   authEnvironment(t);const client=createBrowserAuthClient();assert.equal(client.supabaseUrl,AUTH_URL);assert.equal(client.supabaseKey,PUBLIC_KEY);
-  assert.equal(createSupabaseServerClient,createSupabaseAdminClient);assert.deepEqual(authCookieOptions(),{path:'/',sameSite:'lax',httpOnly:false,secure:process.env.NODE_ENV==='production'});
+  assert.equal(existsSync('src/lib/supabase/server.ts'),false);assert.deepEqual(authCookieOptions(),{path:'/',sameSite:'lax',httpOnly:false,secure:process.env.NODE_ENV==='production'});
 });
 
 test('AUTH-02 server SDK sends the public apikey and request access token to Auth, never trusts cookie user',async t=>{

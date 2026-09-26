@@ -3,7 +3,7 @@ import { COMMERCE_COPY_VERSION, copyIntent } from "@/features/page-quality/comme
 import { sectionTitle } from "@/features/page-quality/policy";
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext } from "@/features/assets/service";
 import { assetRowSchema, assertAssetScope } from "@/features/assets/schemas";
 import { getPlannerView } from "@/features/page-planner/service";
@@ -17,7 +17,7 @@ import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { RegenError } from "./errors";
 import type { RegenerationInput } from "./types";
 export async function regenerationContext(projectId: string, sectionId: string, ownLeaseId?: string) {
-  const client = createSupabaseServerClient(), scope = await getAssetContext(projectId, client);
+  const client = await createUserDataClient(), scope = await getAssetContext(projectId, client);
   if (!scope.product) throw new RegenError("not_found");
   const planner = await getPlannerView(projectId), page = await readPage(client, projectId);
   if (!page || planner.detailPageId !== page.id) throw new RegenError("not_found");

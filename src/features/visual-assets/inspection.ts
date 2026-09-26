@@ -1,14 +1,14 @@
 import "server-only";
 import sharp from "sharp";
 import type { Asset } from "@/types/domain";
-import type { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { createUserDataClient } from "@/lib/supabase/user";
 import { assertAssetScope, validateSignature, validateFile } from "@/features/assets/schemas";
 import { loadSource } from "@/features/detail-extraction/source";
 import type { AssetInspection } from "./policy";
 
 // Immutable UUID object paths; short bounded cache avoids decoding on every read-only UI poll.
 const dimensions = new Map<string, { until: number; value: AssetInspection }>();
-export async function inspectVisualAssets(client: ReturnType<typeof createSupabaseServerClient>, assets: Asset[], projectId: string, productId: string) {
+export async function inspectVisualAssets(client: Awaited<ReturnType<typeof createUserDataClient>>, assets: Asset[], projectId: string, productId: string) {
   for (const asset of assets) assertAssetScope(asset, projectId, productId);
   const result: Record<string, AssetInspection> = {};
   if (!assets.length) return result;

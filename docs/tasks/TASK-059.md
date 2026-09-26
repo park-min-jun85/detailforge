@@ -1,5 +1,7 @@
 # TASK-059 — Storage Ownership / Object Isolation
 
+후속 TASK-060 완료: 일반 Storage 호출과31개 data factory를 사용자 client로 이전하고 verified issuer·atomic quota·단일 업로드 소비를 구현했다. 최종0009에서 기존 Storage74 checks도 PASS. [현재 계약](../V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md), [19항목 결과](TASK-060.md). 아래는059 당시 기록이다.
+
 2026-09-24 · C:\Projects\detailforge · package0.2.1.
 
 ## 1. Status

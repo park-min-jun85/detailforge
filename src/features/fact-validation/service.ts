@@ -1,7 +1,8 @@
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { projectRowSchema } from "@/features/projects/schemas";
 import { productRowSchema, productFactsRowSchema } from "@/features/products/schemas";
 import { assetRowSchema, parseId } from "@/features/assets/schemas";
@@ -12,7 +13,7 @@ import { getValidationProvider } from "./provider";
 import { VALIDATION_PROVIDER_TIMEOUT_MS } from "./config";
 import type { ValidationProvider, ValidationView } from "./types";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 const timeout = () => AbortSignal.timeout(10_000);
 const running = new Set<string>();
 function id(value: string) { try { return parseId(value); } catch { throw new FactValidationError("not_found"); } }
@@ -57,7 +58,7 @@ function view(context: Awaited<ReturnType<typeof loadContext>>): ValidationView 
 }
 export async function getValidationView(projectId: string): Promise<ValidationView> {
   const project = id(projectId);
-  try { return view(await loadContext(createSupabaseServerClient(), project)); } catch (error) { throw safe(error); }
+  try { return view(await loadContext(await createUserDataClient(), project)); } catch (error) { throw safe(error); }
 }
 
 async function readFacts(client: Client, productId: string) {
@@ -107,7 +108,7 @@ export async function validateFacts(projectId: string, providerFactory: () => Va
   if (running.has(project) || running.size >= 2) throw new FactValidationError("busy");
   running.add(project);
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const context = await loadContext(client, project);
     if (isValidationActive(context.state, Date.now())) throw new FactValidationError("busy");
     const provider = providerFactory(); // Missing config never changes DB state or starts a paid call.
@@ -117,7 +118,7 @@ export async function validateFacts(projectId: string, providerFactory: () => Va
     let analysis;
     try {
       // No paths, signed URLs, raw images or mutable Facts records cross this boundary.
-      const output = await invoke(provider, structuredClone({ targets: context.input.targets, evidence: context.input.evidence, coverage: context.input.coverage, warnings: context.input.warnings }));
+      const output = await withPaidOperation(client, project, "fact-validation", context.input, () => invoke(provider, structuredClone({ targets: context.input.targets, evidence: context.input.evidence, coverage: context.input.coverage, warnings: context.input.warnings })));
       try { analysis = validateFactOutput(output, context.input.targets, context.input.evidence); }
       catch { throw new FactValidationError("invalid_response"); }
     } catch (error) {

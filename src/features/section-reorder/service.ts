@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext } from "@/features/assets/service";
 import { readPage, readRows } from "@/features/section-engine/persistence";
 import { claimEditLease, releaseEditLease } from "@/features/section-engine/edit-lease";
@@ -20,7 +20,7 @@ export function safeReorderError(error: unknown) {
 export async function reorderSections(projectId: string, input: unknown) {
   try {
     if (!z.uuid().safeParse(projectId).success) throw new ReorderError("not_found");
-    const request = orderRequestSchema.parse(input), client = createSupabaseServerClient();
+    const request = orderRequestSchema.parse(input), client = await createUserDataClient();
     const scope = await getAssetContext(projectId, client), page = await readPage(client, projectId);
     if (!scope.product || !page || page.id !== request.detailPageId) throw new ReorderError("not_found");
     const journal = readReorder(page.settings);

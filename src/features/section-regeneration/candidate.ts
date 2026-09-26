@@ -5,8 +5,8 @@ import { candidateSchema, signedCandidateSchema, type Candidate } from "./schema
 import { CANDIDATE_TTL_MS } from "./config";
 import { RegenError } from "./errors";
 function signature(candidate: Candidate) {
-  const root = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!root) throw new RegenError("not_configured");
+  const root = process.env.DETAILFORGE_TICKET_SECRET?.trim();
+  if (!root || root.length < 32) throw new RegenError("not_configured");
   // Domain-separated derived key; neither the root key nor the derived key leaves the server.
   const key = createHmac("sha256", root).update("detailforge:section-candidate:v1").digest();
   return createHmac("sha256", key).update(canonicalValidationJson(candidate)).digest("hex");

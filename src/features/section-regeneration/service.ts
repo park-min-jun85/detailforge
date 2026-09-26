@@ -1,4 +1,5 @@
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -38,7 +39,7 @@ export async function regenerateSection(projectId: string, sectionId: string, va
   try {
     const request = regenerateRequestSchema.parse(value), context = await regenerationContext(projectId, sectionId);
     if (request.revision !== context.section.updated_at) throw new RegenError("conflict");
-    const provider = providerFactory(), output = await invokeRegeneration(provider, context.input);
+    const provider = providerFactory(), output = await withPaidOperation(context.client, projectId, "section-regeneration", context.input, () => invokeRegeneration(provider, context.input));
     const generatedAt = new Date().toISOString(), generationId = randomUUID();
     const content = regeneratedContent(output, context, generatedAt, generationId, provider.model);
     const latest = await regenerationContext(projectId, sectionId);

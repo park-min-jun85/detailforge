@@ -1,7 +1,8 @@
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getAssetContext } from "@/features/assets/service";
 import { AssetError, assetRowSchema, assertAssetScope, parseId } from "@/features/assets/schemas";
 import type { Asset } from "@/types/domain";
@@ -12,7 +13,7 @@ import { getAnalysisProvider } from "./provider";
 import { analysisAssetType, analysisResultSchema, isActiveAnalysis, mergeAnalysis, previousResult, readAnalysis, type AnalysisState } from "./schemas";
 import type { AnalysisProvider } from "./types";
 
-type Client = ReturnType<typeof createSupabaseServerClient>;
+type Client = Awaited<ReturnType<typeof createUserDataClient>>;
 type Scope = { projectId: string; productId: string; assetId: string };
 const running = new Set<string>();
 const dbTimeout = () => AbortSignal.timeout(10_000);
@@ -74,7 +75,7 @@ export async function analyzeAsset(projectId: string, assetId: string, providerF
   if (running.has(id) || running.size >= MAX_CONCURRENT_ANALYSES) throw new AnalysisError("busy");
   running.add(id);
   try {
-    const client = createSupabaseServerClient();
+    const client = await createUserDataClient();
     const context = await getAssetContext(projectId, client);
     if (!context.product) throw new AnalysisError("product_required");
     const productName = context.product.name;
@@ -92,7 +93,7 @@ export async function analyzeAsset(projectId: string, assetId: string, providerF
       const signed = await bounded(async () => client.storage.from("product-assets").createSignedUrl(asset.storagePath, AI_SIGNED_URL_SECONDS), 10_000, "signed_url");
       if (signed.error || !signed.data?.signedUrl) throw new AnalysisError("signed_url");
       let output: unknown;
-      try { output = await bounded((signal) => provider.analyze({ imageUrl: signed.data.signedUrl, productName }, signal), PROVIDER_TIMEOUT_MS, "timeout"); }
+      try { output = await withPaidOperation(client, projectId, "asset-analysis", { assetId: id, productName, revision: asset.metadata }, () => bounded((signal) => provider.analyze({ imageUrl: signed.data.signedUrl, productName }, signal), PROVIDER_TIMEOUT_MS, "timeout")); }
       catch (error) { throw error instanceof AnalysisError ? error : new AnalysisError("provider"); }
       const parsed = analysisResultSchema.safeParse(output);
       if (!parsed.success || !parsed.data.visualSummary.trim()) throw new AnalysisError("invalid_response");

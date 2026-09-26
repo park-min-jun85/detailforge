@@ -21,7 +21,8 @@ DetailForge 코드 작성 시 지켜야 할 기술 규칙을 모은다.
 
 ## 데이터 경계
 
-- Supabase service role client는 `src/lib/supabase/server.ts`에서만 생성한다.
+- TASK-060: 일반 DB/Storage는 `src/lib/supabase/user.ts`의 verified user client로 접근한다. admin alias는 삭제했다.
+- service-role factory는 `src/lib/supabase/admin.ts`, production 사용은 `src/lib/abuse/privileged.ts`의 좁은 admission RPC에만 허용한다. 사용자 data CRUD/Storage fallback 금지. [계약](V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md).
 - service role을 사용하는 모듈에는 `server-only` 경계를 유지한다.
 - service role key를 Client Component, 응답 payload, 오류 메시지, 로그에 포함하지 않는다.
 - Browser의 Supabase DB/Storage 변경 SDK는 Auth와 RLS 설계 전까지 만들지 않는다.

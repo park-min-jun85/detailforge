@@ -1,12 +1,13 @@
 import { CommerceCopyError } from "@/features/page-quality/commerce";
 import "server-only";
+import { withPaidOperation } from "@/lib/abuse/admission";
 import { copyQuality } from "@/features/page-quality/policy";
 import { buildConfirmedOptionSnapshot } from "./options";
 import { hasEditLease } from "./edit-lease";
 import { readReorder, hasManualOrder, visibleOrderRows } from "@/features/section-reorder/schemas";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createUserDataClient } from "@/lib/supabase/user";
 import { getPlannerView } from "@/features/page-planner/service";
 import { validationFingerprint } from "@/features/fact-validation/evidence";
 import { parseId } from "@/features/assets/schemas";
@@ -48,7 +49,7 @@ function view(context: Awaited<ReturnType<typeof load>>): SectionView & { revisi
     recoveryNeeded: Boolean(state?.backup && !isGenerationActive(state, Date.now())), assets: planner.assets };
 }
 export async function getSectionView(projectId: string) {
-  try { return view(await load(createSupabaseServerClient(), id(projectId))); } catch (error) { throw safe(error); }
+  try { return view(await load(await createUserDataClient(), id(projectId))); } catch (error) { throw safe(error); }
 }
 async function invoke(provider: SectionProvider, input: Parameters<SectionProvider["generate"]>[0]) {
   const controller = new AbortController(); let timer: ReturnType<typeof setTimeout> | undefined;
@@ -62,7 +63,7 @@ export async function generateSections(projectId: string, options: { replaceExis
   if (running.has(project) || running.size >= 2) throw new SectionEngineError("busy");
   running.add(project);
   try {
-    const client = createSupabaseServerClient(), context = await load(client, project), initial = view(context);
+    const client = await createUserDataClient(), context = await load(client, project), initial = view(context);
     if (isGenerationActive(context.state, Date.now()) || (context.page && (hasEditLease(context.page) || readReorder(context.page.settings)))) throw new SectionEngineError("busy");
     if (context.state?.backup && context.page) {
       // Recovery is explicit and costs no provider call. A subsequent user action can generate new content.
@@ -77,7 +78,7 @@ export async function generateSections(projectId: string, options: { replaceExis
     let state: GenerationState = { schemaVersion: 1, runId, status: "generating", startedAt: now, finishedAt: null, errorCode: null, backup: context.rows, staged: [] };
     let page = await writeGeneration(client, context.page, state);
     try {
-      const output = await invoke(provider, buildSectionInput(context.latest));
+      const output = await withPaidOperation(client, project, "section-engine", buildSectionInput(context.latest), () => invoke(provider, buildSectionInput(context.latest!)));
       let result;
       try { result = validateSectionOutput(output, context.latest); } catch (error) { throw new SectionEngineError(error instanceof CommerceCopyError ? "copy_quality" : "invalid_response"); }
       const latest = await load(client, project);

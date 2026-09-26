@@ -2,6 +2,10 @@
 
 ## 현재 단계
 
+TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음 TASK-061 Auth UX. [19항목 결과](TASK-060.md), [계약](../V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md).
+
+## 이전 TASK-059 기록
+
 **TASK-059 COMPLETE:** private bucket/ownership Object 정책과 Storage-first 승인 intent, 실제 A/B/anon STG-01~25 전체 PASS. 최종74 runtime checks, 최초73 checks의 upgrade/drift 검증 및 전체1470 tests·필수검사 PASS. Remote mutation0, Git stage/commit/merge/tag0. **Public SaaS deployment remains BLOCKED.** 다음 TASK-060 service-role migration / cost-abuse controls 및 intent issuance. [13항목 결과](TASK-059.md), [Storage 계약](../V0_3_STORAGE_SECURITY.md).
 
 ## 이전 TASK-058 기록
