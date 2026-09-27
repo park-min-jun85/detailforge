@@ -1,15 +1,25 @@
 import "server-only";
 
 import { NextResponse, type NextRequest } from "next/server";
-import { readPublicAuthConfig } from "./config";
+import { requirePublicAuthConfig } from "./config";
 import { createSessionClient, AUTH_RESPONSE_HEADERS } from "./session";
-import { safeAuthError } from "./errors";
+import { AuthFailure, safeAuthError } from "./errors";
+import { getCurrentUser } from "./principal";
+import { loginLocation, safeReturnPath } from "./return-path";
+import { authAppOrigin } from "./origin";
 
 export async function updateAuthSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const finish = (target: NextResponse) => {
+    for (const cookie of response.cookies.getAll()) target.cookies.set(cookie);
+    for (const [name, value] of Object.entries(AUTH_RESPONSE_HEADERS)) target.headers.set(name, value);
+    target.headers.set("Referrer-Policy", "no-referrer");
+    return target;
+  };
   try {
-    // Transitional refresh-only layer. Guards still fail closed when config is absent.
-    if (!readPublicAuthConfig()) return response;
+    // Auth endpoints own their POST/callback/session verification and cookie writes.
+    if (request.nextUrl.pathname.startsWith("/auth/")) return finish(response);
+    requirePublicAuthConfig();
     const client = createSessionClient({
       getAll: () => request.cookies.getAll(),
       setAll: (changes, cacheHeaders) => {
@@ -21,14 +31,23 @@ export async function updateAuthSession(request: NextRequest) {
         for (const [name, value] of Object.entries({ ...AUTH_RESPONSE_HEADERS, ...cacheHeaders })) response.headers.set(name, value);
       },
     });
-    // Refresh/verification only, NOT project authorization. DAL must call getUser.
-    await client.auth.getClaims();
-    for (const [name, value] of Object.entries(AUTH_RESPONSE_HEADERS)) response.headers.set(name, value);
-    return response;
+    // Verified identity BEFORE RSC/Action/API execution. Resource authorization
+    // still happens independently in the user-scoped DAL and DB/Storage RLS.
+    const principal = await getCurrentUser(client);
+    const path = request.nextUrl.pathname;
+    const authPage = path === "/login" || path === "/signup";
+    if (!principal && !authPage) {
+      if (path.startsWith("/api/") || request.method !== "GET" && request.method !== "HEAD") {
+        const safe = safeAuthError(new AuthFailure("unauthenticated"));
+        return finish(NextResponse.json({ error: { code: safe.code, message: safe.message } }, { status: safe.status }));
+      }
+      return finish(NextResponse.redirect(new URL(loginLocation(path + request.nextUrl.search), authAppOrigin())));
+    }
+    if (principal && authPage) return finish(NextResponse.redirect(new URL(safeReturnPath(request.nextUrl.searchParams.get("next")), authAppOrigin())));
+    return finish(response);
   } catch (error) {
     const safe = safeAuthError(error);
     const failure = NextResponse.json({ error: { code: safe.code, message: safe.message } }, { status: safe.status, headers: AUTH_RESPONSE_HEADERS });
-    for (const cookie of response.cookies.getAll()) failure.cookies.set(cookie);
-    return failure;
+    return finish(failure);
   }
 }

@@ -1,5 +1,11 @@
 # Tasks
 
+## TASK-061 현재 상태
+
+TASK-061에서 이메일 로그인·가입·POST 로그아웃, PKCE callback, 렌더링 전 getUser 보호 경로를 연결했다. 실제 Local Auth/Browser20·RLS143·Storage74·admission37 및 전체1481 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음은 TASK-062 Export authorization이다. [Auth UX 계약](../V0_3_AUTH_UX_AND_PROTECTED_ROUTES.md), [검증 결과](TASK-061.md).
+
+## 이전 단계 기록
+
 ## 현재 단계
 
 TASK-060에서 일반 privileged factory31개 전부를 verified principal/user JWT client로 이전했다. Storage8개 호출도 사용자 RLS를 통과하며 admin alias를 제거했다. 유일한 production admin 경계는 actor·RLS scope 검증 후 reserve/settle RPC를 호출하는1곳이다.0009는 atomic upload/AI quota와 단일 업로드 소비를 구현했다. 설정 미비 시 admission은 닫힌다. 실제 서비스37·RLS143·Storage74 checks 및 전체1476 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음 TASK-061 Auth UX. [19항목 결과](TASK-060.md), [계약](../V0_3_USER_SCOPED_ACCESS_AND_ABUSE_CONTROL.md).

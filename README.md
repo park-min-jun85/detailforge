@@ -1,5 +1,11 @@
 # DetailForge
 
+## TASK-061 현재 상태
+
+TASK-061에서 이메일 로그인·가입·POST 로그아웃, PKCE callback, 렌더링 전 getUser 보호 경로를 연결했다. 실제 Local Auth/Browser20·RLS143·Storage74·admission37 및 전체1481 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음은 TASK-062 Export authorization이다. [Auth UX 계약](docs/V0_3_AUTH_UX_AND_PROTECTED_ROUTES.md), [검증 결과](docs/tasks/TASK-061.md).
+
+## 이전 단계 기록
+
 도매상품의 사실정보와 실제 제품 사진을 보존하면서 판매용 상세페이지를 재구성하는 **v0.2.1 Local/Internal MVP**다. TASK-054 검증과 v0.2.1 tag 이후 현재 v0.3.0 Public SaaS 기반을 단계적으로 구현 중이며 package version은0.2.1을 유지한다.
 
 **공개 인터넷 SaaS 배포는 차단한다.** TASK-058 DB RLS와 TASK-059 Storage 격리를 실제 A/B/anon Local Supabase에서 검증했다. TASK-060에서 일반 데이터·Storage를 사용자 client로 이전하고 atomic upload/AI admission을 구현했다. Auth UX, Export 및 전체 공개 검증은 남아 있다. 로컬 실행도 신뢰하는 사용자만 접근하도록 한다.

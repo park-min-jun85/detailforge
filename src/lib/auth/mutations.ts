@@ -6,6 +6,7 @@ import { createAuthenticatedServerClient } from "./server";
 import { AUTH_RESPONSE_HEADERS, type AuthClient } from "./session";
 import { requireCurrentUser } from "./principal";
 import { AuthFailure, providerAuthCode, providerAuthFailure, safeAuthError } from "./errors";
+import { authAppOrigin } from "./origin";
 
 const credentials = z.strictObject({ email: z.email().max(254).trim(), password: z.string().min(1).max(1024) });
 export const MAX_AUTH_BODY_BYTES = 8192;
@@ -14,17 +15,10 @@ const requestClient: ClientFactory = responseHeaders => createAuthenticatedServe
 
 function assertAuthMutation(request: Request) {
   if (request.method !== "POST") throw new AuthFailure("forbidden");
-  const configured = process.env.DETAILFORGE_APP_ORIGIN;
-  let trusted: URL;
-  try {
-    if (!configured) throw new Error();
-    trusted = new URL(configured);
-    if (trusted.username || trusted.password || trusted.pathname !== "/" || trusted.search || trusted.hash
-      || (trusted.protocol !== "https:" && !(trusted.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(trusted.hostname)))) throw new Error();
-  } catch { throw new AuthFailure("configuration"); }
+  const trusted = authAppOrigin();
   // Existing application check plus a configured origin, never Host-derived trust.
   try { assertSameOrigin(request); } catch { throw new AuthFailure("forbidden"); }
-  if (request.headers.get("origin") !== trusted.origin) throw new AuthFailure("forbidden");
+  if (request.headers.get("origin") !== trusted) throw new AuthFailure("forbidden");
 }
 
 async function readAuthBody(request: Request, empty = false): Promise<unknown> {
@@ -63,7 +57,9 @@ async function mutate(request: Request, operation: "signup" | "signin" | "signou
     }
     const input = credentials.parse(parsed.data);
     if (operation === "signup") {
-      const { data, error } = await client.auth.signUp(input);
+      if (input.password.length < 8) throw new AuthFailure("password_rejected");
+      const { data, error } = await client.auth.signUp({ ...input,
+        options: { emailRedirectTo: new URL("/auth/callback", authAppOrigin()).href } });
       const duplicate = ["user_already_exists", "email_exists"].includes(providerAuthCode(error) ?? "");
       if (error && !duplicate) throw providerAuthFailure(error);
       // Confirmation-disabled dev projects must not silently log in through signup.
@@ -71,7 +67,7 @@ async function mutate(request: Request, operation: "signup" | "signin" | "signou
         const { error: logoutError } = await client.auth.signOut({ scope: "local" });
         if (logoutError) throw providerAuthFailure(logoutError);
       }
-      return Response.json({ status: "submitted", message: "이메일을 확인해 주세요. 이미 가입했다면 로그인 또는 비밀번호 재설정을 이용해 주세요." }, { headers });
+      return Response.json({ status: "submitted", message: "가입 요청을 접수했습니다. 확인 메일을 받았다면 인증을 완료한 뒤 로그인해 주세요. 이미 가입했거나 이메일 확인이 필요 없는 경우 바로 로그인할 수 있습니다." }, { headers });
     }
     const { error } = await client.auth.signInWithPassword(input);
     if (error) throw providerAuthFailure(error);

@@ -3,8 +3,9 @@ import { updateAuthSession } from "@/lib/auth/proxy";
 
 export function proxy(request: NextRequest) { return updateAuthSession(request); }
 
-// No redirects or route enforcement in TASK-056; legacy internal workflows remain.
+// Every application page and project API is gated before execution; DAL/RLS are
+// still the resource authorization boundary. Do not exclude RSC or prefetch.
 export const config = {
-  matcher: ["/", "/projects/:path*", "/api/projects/:path*", "/settings", "/templates",
-    "/login", "/signup", "/forgot-password", "/reset-password", "/auth/:path*"],
+  matcher: ["/", "/projects/:path*", "/api/projects/:path*", "/settings/:path*", "/templates/:path*",
+    "/login", "/signup", "/auth/:path*"],
 };

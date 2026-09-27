@@ -112,10 +112,10 @@ test('AUTH-11 SDK chunk writes/deletions carry cache headers; refresh proxy forw
   assert.match(response.headers.get('cache-control'),/no-store/);assert.equal(response.headers.get('expires'),'0');assert.equal(response.headers.get('pragma'),'no-cache');
 });
 
-test('AUTH-12 missing public env is explicit for Auth and pass-through only for the legacy refresh proxy',async t=>{
+test('AUTH-12 missing public env fails closed before protected render',async t=>{
   authEnvironment(t);delete process.env.NEXT_PUBLIC_SUPABASE_URL;delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   assert.equal(readPublicAuthConfig(),null);assert.throws(requirePublicAuthConfig,e=>e.code==='configuration');assert.throws(createBrowserAuthClient,e=>e.code==='configuration');
-  assert.equal((await updateAuthSession(new NextRequest(APP_ORIGIN+'/projects'))).status,200);
+  assert.equal((await updateAuthSession(new NextRequest(APP_ORIGIN+'/projects'))).status,503);
   await assert.rejects(getCurrentUser(),e=>e instanceof AuthFailure && e.code==='configuration');
 });
 
@@ -180,8 +180,46 @@ test('auth mutations reject missing/foreign Origin, Host spoof and wrong method;
   assert.equal((await signOut(new Request(APP_ORIGIN,{headers:{origin:APP_ORIGIN}}),factory)).status,403);assert.equal(created,0);
 });
 
-test('AUTH-15 foundation adds no auth UI/endpoints or blanket route redirects',()=>{
-  const proxy=readFileSync('src/proxy.ts','utf8');assert.doesNotMatch(proxy,/redirect\(/);
+test('AUTH-15 auth UI/endpoints are present and protected RSC/prefetch/API are not excluded',()=>{
+  const proxy=readFileSync('src/proxy.ts','utf8');assert.match(proxy,/\/api\/projects\/:path\*/);assert.doesNotMatch(proxy,/missing:|next-router-prefetch/);
   const appFiles=[];const walk=p=>{for(const e of readdirSync(p,{withFileTypes:true})){const f=p+'/'+e.name;if(e.isDirectory())walk(f);else appFiles.push(f);}};walk('src/app');
-  assert.equal(appFiles.filter(f=>/\/(login|signup|auth)\//.test(f)).length,0);
+  assert.equal(appFiles.filter(f=>/\/(login|signup|auth)\//.test(f)).length,7);
+});
+
+test('AUTHUX proxy blocks anon nested pages before render and preserves only safe next',async t=>{
+  authEnvironment(t);authFetch(t);
+  for(const path of ['/','/projects','/projects/exact/editor','/settings','/templates']){
+    const r=await updateAuthSession(new NextRequest(APP_ORIGIN+path));assert.equal(r.status,307);
+    assert.equal(r.headers.get('location'),APP_ORIGIN+loginLocation(path));assert.equal(r.headers.has('x-middleware-next'),false);
+    assert.match(r.headers.get('cache-control'),/no-store/);
+  }
+});
+test('AUTHUX anon API and direct Action POST fail with 401 instead of executing',async t=>{
+  authEnvironment(t);authFetch(t);
+  for(const [path,method]of [['/api/projects/exact/assets','GET'],['/projects/new','POST']]){
+    const r=await updateAuthSession(new NextRequest(APP_ORIGIN+path,{method}));assert.equal(r.status,401);
+    assert.equal((await r.json()).error.code,'unauthenticated');assert.equal(r.headers.has('x-middleware-next'),false);
+  }
+});
+test('AUTHUX signed in auth pages redirect safely and public pages admit anon',async t=>{
+  authEnvironment(t);authFetch(t);const jar=cookieJar(session());
+  const cookie=[...jar.values].map(([k,v])=>`${k}=${v}`).join('; ');
+  for(const path of ['/login','/signup']){
+    assert.equal((await updateAuthSession(new NextRequest(APP_ORIGIN+path))).status,200);
+    const r=await updateAuthSession(new NextRequest(APP_ORIGIN+path+'?next=https://evil.example',{headers:{cookie}}));
+    assert.equal(r.headers.get('location'),APP_ORIGIN+'/projects');
+  }
+});
+test('AUTHUX stale refresh cookies are cleared on redirect, not dropped with response',async t=>{
+  authEnvironment(t);authFetch(t,()=>json({code:'refresh_token_not_found'},401));const jar=cookieJar(session(USER_A,1));
+  const cookie=[...jar.values].map(([k,v])=>`${k}=${v}`).join('; ');
+  const r=await updateAuthSession(new NextRequest(APP_ORIGIN+'/projects',{headers:{cookie}}));assert.equal(r.status,307);
+  assert.ok(r.cookies.getAll().some(c=>c.maxAge===0));
+});
+test('AUTHUX signup rejects short passwords and uses only configured callback origin',async t=>{
+  authEnvironment(t);const calls=authFetch(t,()=>json(identity())),client=createSessionClient(cookieJar().adapter);
+  assert.equal((await signUpWithPassword(authRequest({email:'person@example.test',password:'short'}),async()=>client)).status,400);
+  assert.equal(calls.length,0);
+  assert.equal((await signUpWithPassword(authRequest(),async()=>client)).status,200);
+  assert.equal(calls[0].url.searchParams.get('redirect_to'),APP_ORIGIN+'/auth/callback');
 });
