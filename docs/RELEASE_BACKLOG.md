@@ -1,5 +1,15 @@
 # Release Backlog
 
+## TASK-062 현재 상태 — 2026-09-28
+
+TASK-062 Export authorization COMPLETE. 실제 Local Supabase/Next production/Chromium으로 EXPORT-01~25 PASS, 티켓 동시8개 중1성공/7거부를 확인했다. 사용자 JWT·쿠키를 capture에 전달하지 않으며 user-RLS snapshot + 90초 DB single-use capability를 사용한다. Production privileged boundary는 admission과 finite export RPC 두 곳이고 generic admin CRUD/Storage fallback은 없다. Public SaaS deployment remains BLOCKED: TASK-063/064/065가 남는다.
+
+[Export 보안 계약](V0_3_EXPORT_AUTHORIZATION.md). 기존 renderer/프로젝트 URL, DB·Storage RLS, admission, Auth UX 계약을 유지한다. Chrome sandbox/maintenance/부하·운영 설정은065 gate다.
+
+## 이전 단계 기록
+
+아래 내용의 미완료062 및 단일 privileged boundary 설명은 해당 단계 당시 기록이다. 현재 상태는 위 TASK-062 계약을 따른다.
+
 ## TASK-061 현재 상태
 
 TASK-061에서 이메일 로그인·가입·POST 로그아웃, PKCE callback, 렌더링 전 getUser 보호 경로를 연결했다. 실제 Local Auth/Browser20·RLS143·Storage74·admission37 및 전체1481 tests PASS. **Public SaaS deployment remains BLOCKED**. 다음은 TASK-062 Export authorization이다. [Auth UX 계약](V0_3_AUTH_UX_AND_PROTECTED_ROUTES.md), [검증 결과](tasks/TASK-061.md).

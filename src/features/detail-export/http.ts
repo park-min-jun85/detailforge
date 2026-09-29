@@ -4,9 +4,12 @@ import { EditorError } from "@/features/detail-editor/errors";
 import { disposition } from "./filename";
 import { ExportError } from "./errors";
 import { exportDetail } from "./service";
+import { authAppOrigin } from "@/lib/auth/origin";
+import { AuthFailure, safeAuthError } from "@/lib/auth/errors";
 export async function handleExport(request: Request, projectId: string, operation = exportDetail) {
-  const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
+  const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy":"no-referrer" };
   try {
+    if(operation===exportDetail && request.headers.get("origin")!==authAppOrigin())throw new ExportError("forbidden");
     let input;
     try { input = await readEditRequest(request, 2048); }
     catch (error) { throw new ExportError(error instanceof EditorError && error.code === "forbidden" ? "forbidden" : "invalid_input"); }
@@ -14,6 +17,7 @@ export async function handleExport(request: Request, projectId: string, operatio
     return new Response(new Uint8Array(result.bytes), { headers: { ...headers, "Content-Type": result.format === "png" ? "image/png" : "image/jpeg",
       "Content-Disposition": disposition(result.filename, result.format), "Content-Length": String(result.bytes.length) } });
   } catch (error) {
+    if(error instanceof AuthFailure)return Response.json({ok:false,code:error.code,message:error.message},{status:safeAuthError(error).status,headers});
     const safe = error instanceof ExportError ? error : new ExportError("unavailable");
     return Response.json({ ok: false, code: safe.code, message: safe.message }, { status: safe.status, headers });
   }

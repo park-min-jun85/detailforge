@@ -24,9 +24,9 @@ test('server context rejects absent or anonymous identity before invoking servic
     let calls=0;await assert.rejects(withUserClient({auth:{getUser:async()=>({data:{user},error:null})}},async()=>calls++));assert.equal(calls,0);
   }
 });
-test('production privileged client import is confined to admission boundary',()=>{
+test('production privileged client import is confined to finite admission and export boundaries',()=>{
   const walk=p=>readdirSync(p,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p+'/'+e.name):[p+'/'+e.name]);
   const uses=walk('src').filter(p=>/\.tsx?$/.test(p)&&/import.*createSupabaseAdminClient/.test(readFileSync(p,'utf8')));
-  assert.deepEqual(uses,['src/lib/abuse/privileged.ts']);assert.equal(existsSync('src/lib/supabase/server.ts'),false);
+  assert.deepEqual(uses,['src/features/detail-export/authorization.ts','src/lib/abuse/privileged.ts']);assert.equal(existsSync('src/lib/supabase/server.ts'),false);
   for(const p of walk('src/features').filter(p=>p.endsWith('.ts')))assert.doesNotMatch(readFileSync(p,'utf8'),/process\.env\.SUPABASE_SERVICE_ROLE_KEY/);
 });

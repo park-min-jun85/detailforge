@@ -10,8 +10,9 @@ import { exportRequestSchema } from "./schemas";
 import { exportFilename } from "./filename";
 import { imageDimensions } from "./image-header";
 import type { CaptureProvider } from "./types";
+import { authorizeExport } from "./authorization";
 const execution = globalThis as typeof globalThis & { detailExportBusy?: boolean };
-export async function exportDetail(projectId: string, request: unknown, dependencies: { capture?: CaptureProvider; read?: typeof getRenderView; origin?: string; timeoutMs?: number; signal?: AbortSignal } = {}) {
+export async function exportDetail(projectId: string, request: unknown, dependencies: { capture?: CaptureProvider; read?: typeof getRenderView; authorize?: typeof authorizeExport; origin?: string; timeoutMs?: number; signal?: AbortSignal } = {}) {
   if (!z.uuid().safeParse(projectId).success) throw new ExportError("not_found");
   const parsed = exportRequestSchema.safeParse(request);
   if (!parsed.success) throw new ExportError("invalid_input");
@@ -38,10 +39,13 @@ export async function exportDetail(projectId: string, request: unknown, dependen
     if (execution.detailExportBusy) throw new ExportError("busy");
     execution.detailExportBusy = true;
     let result;
+    let authorization;
     try {
-      result = await (dependencies.capture ?? captureWithChromium)({ url: `${origin}/projects/${projectId}/render`, width: view.width, fingerprint,
-        imageUrls: view.assets.flatMap(asset => asset.previewUrl ? [asset.previewUrl] : []), options: parsed.data }, controller.signal);
-    } finally { execution.detailExportBusy = false; }
+      authorization = await (dependencies.authorize ?? authorizeExport)(view,parsed.data,fingerprint);
+      if(controller.signal.aborted) throw new ExportError("timeout");
+      result = await (dependencies.capture ?? captureWithChromium)({ url: new URL("/export-capture",origin).href, width: view.width, fingerprint,
+        imageUrls: [], options: parsed.data, authorization }, controller.signal);
+    } finally { try { await authorization?.close(); } finally { execution.detailExportBusy = false; } }
     const dimensions = imageDimensions(result.bytes, parsed.data.format);
     checkDimensions(dimensions.width, dimensions.height, view.width);
     if (dimensions.height !== result.height || dimensions.width !== result.width || result.bytes.length > 32000000) throw new ExportError("screenshot");

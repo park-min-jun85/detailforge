@@ -8,7 +8,7 @@ import { AppSidebar } from "./app-sidebar";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
-  if (path === "/login" || path === "/signup") return <main>{children}</main>;
+  if (path === "/login" || path === "/signup" || path === "/export-capture") return <main>{children}</main>;
   return (
     <SessionBoundary>
       <a href="#main-content" className="sr-only fixed top-3 left-3 z-50 rounded-lg bg-white px-4 py-3 text-sm font-semibold shadow-md focus:not-sr-only">

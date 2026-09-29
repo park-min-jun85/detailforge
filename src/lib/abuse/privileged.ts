@@ -3,7 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 import { AuthFailure } from "@/lib/auth/errors";
 
-// The only production admin use. This module exports no client or generic CRUD.
+// Finite admission boundary. This module exports no client or generic CRUD.
 // Admission service verifies the actor and scopes the resource with a user JWT
 // before invoking these finite RPCs. SQL repeats root/parent validation.
 type Functions = Database["public"]["Functions"];

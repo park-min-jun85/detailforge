@@ -334,6 +334,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      issue_export_ticket: { Args: { p_id:string; p_actor:string; p_project:string; p_page:string; p_token_hash:string; p_worker_hash:string; p_fingerprint:string; p_options:Json; p_snapshot:Json }; Returns:undefined }
+      use_export_ticket: { Args: { p_id:string; p_token_hash:string; p_worker_hash:string; p_consume:boolean }; Returns:Json }
+      close_export_ticket: { Args: { p_id:string; p_actor:string }; Returns:undefined }
+      expire_export_tickets: { Args: Record<string,never>; Returns:undefined }
       reserve_admission: {
         Args: { p_actor: string; p_project: string; p_product: string | null; p_operation: string; p_key: string; p_fingerprint: string; p_asset?: string; p_mime?: string }
         Returns: Json

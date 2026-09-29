@@ -18,7 +18,7 @@ const png=(w=860,h=1500)=>{const b=Buffer.alloc(24);Buffer.from([137,80,78,71,13
 const jpg=(w=860,h=1500)=>Buffer.from([255,216,255,192,0,8,8,h>>8,h&255,w>>8,w&255,1]);
 const capture=async i=>({bytes:i.options.format==='png'?png(i.width):jpg(i.width),width:i.width,height:1500});
 const view=()=>({projectId,productName:'검증 상품',detailPageId:'page',width:860,state:'ready',sections:[],assets:[],readiness:{missingImageCount:0}});
-const run=(input={format:'png'},extra={})=>exportDetail(projectId,input,{origin,read:async()=>view(),capture,...extra});
+const run=(input={format:'png'},extra={})=>exportDetail(projectId,input,{origin,read:async()=>view(),capture,authorize:async()=>({id:projectId,token:"unit",worker:"unit",close:async()=>{}}),...extra});
 test('strict PNG/JPG schema, quality default and bounds, arbitrary URL forbidden',()=>{
  assert.deepEqual(exportRequestSchema.parse({format:'png'}),{format:'png'});
  assert.deepEqual(exportRequestSchema.parse({format:'jpg'}),{format:'jpg',quality:90});
@@ -39,7 +39,7 @@ test('trusted origin is fixed config, loopback allowed, production requires conf
 test('capture network allowlist only admits canonical route/static/owned signed image',()=>{
  const url=origin+'/projects/'+projectId+'/render',images=['https://storage.test/storage/v1/object/sign/a.png?token=a'];
  assert.equal(allowedCaptureRequest(url,url,images),true);assert.equal(allowedCaptureRequest(origin+'/_next/static/a.js',url,images),true);
- assert.equal(allowedCaptureRequest(images[0].replace('token=a','token=b'),url,images),true);
+ assert.equal(allowedCaptureRequest(images[0].replace('token=a','token=b'),url,images),false);
  for(const bad of ['http://169.254.169.254/','https://evil.test',origin+'/api/projects','https://storage.test/storage/v1/object/sign/other.png'])assert.equal(allowedCaptureRequest(bad,url,images),false);
 });
 test('surface selector, physical width, height and pixel budget',()=>{
@@ -61,7 +61,7 @@ test('font readiness awaits document fonts ready',async()=>{let done=false;globa
 test('missing browser returns safe actionable error',()=>{assert.throws(()=>assertBrowserInstalled('Z:/definitely-no-detailforge-chromium'),{code:'browser_missing'});});
 test('export uses canonical width and JPG default, warnings do not block',async()=>{
  let input;const output=await run({format:'jpg'},{read:async()=>({...view(),width:960,readiness:{missingImageCount:0,needsReviewCount:9,stalePlan:true,validation:'stale'}}),capture:async i=>{input=i;return capture(i);}});
- assert.equal(output.width,960);assert.equal(input.options.quality,90);assert.equal(input.url,origin+'/projects/'+projectId+'/render');assert.match(output.filename,/\.jpg$/);
+ assert.equal(output.width,960);assert.equal(input.options.quality,90);assert.equal(input.url,origin+'/export-capture');assert.match(output.filename,/\.jpg$/);
 });
 test('canonical change during capture fails instead of returning mixed content',async()=>{let reads=0;await assert.rejects(()=>run(undefined,{read:async()=>({...view(),width:++reads===1?860:960})}),{code:'changed'});});
 test('fingerprint ignores signed token rotation but detects section/style/asset change',()=>{
@@ -96,7 +96,7 @@ test('foreign origin and oversized request rejected before capture',async()=>{
 test('real read model export preserves all DB state, stores no URLs and makes no AI calls',()=>fixture(async s=>{
  await generateSections(projectId,{},provider);const before=structuredClone({project:s.project,product:s.product,facts:s.facts,assets:s.assets,page:s.page,sections:s.sections});s.requests=[];
  const old=globalThis.fetch;let ai=0;globalThis.fetch=(url,...args)=>{if(String(url).includes('openai.com')){ai++;throw Error('AI forbidden');}return old(url,...args);};
- try{await exportDetail(projectId,{format:'png'},{origin,capture});assert.equal(ai,0);assert.ok(s.requests.every(r=>r.method==='GET'));assert.deepEqual({project:s.project,product:s.product,facts:s.facts,assets:s.assets,page:s.page,sections:s.sections},before);}finally{globalThis.fetch=old;}
+ try{await exportDetail(projectId,{format:'png'},{origin,capture,authorize:async()=>({id:projectId,token:"unit",worker:"unit",close:async()=>{}})});assert.equal(ai,0);assert.ok(s.requests.every(r=>r.method==='GET'));assert.deepEqual({project:s.project,product:s.product,facts:s.facts,assets:s.assets,page:s.page,sections:s.sections},before);}finally{globalThis.fetch=old;}
 }));
 test('browser provider and review contract keep controls outside the shared surface',()=>{
  const browser=readFileSync(new URL('../src/features/detail-export/browser.ts',import.meta.url),'utf8');assert.match(browser,/import "server-only"/);assert.match(browser,/deviceScaleFactor: 1/);assert.match(browser,/surface\.screenshot/);assert.match(browser,/browser\.close/);assert.match(browser,/scale: "css"/);
