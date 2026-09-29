@@ -1,5 +1,12 @@
 # v0.3.0 Export Authorization
 
+## TASK-063 현재 상태 — 2026-09-29
+
+Cross-user Security E2E COMPLETE. 실제 Local Supabase + Next production + Chromium에서 XUSER40/exact-ID corpus97, 7-table/Storage 무변경, denied provider/capture0를 확인했다. Section 옵션 foreign/absent 응답을404로 정정했다. 이전 RLS143/Storage74/Admission37/Auth20/Export27 및 full1487 PASS. Public SaaS deployment remains BLOCKED: TASK-064/065가 남는다. [검증 계약과 전체 inventory](V0_3_CROSS_USER_SECURITY_E2E.md).
+
+아래 내용은 이전 TASK 단계의 기록이며 현재 완료 상태는 위 계약을 따른다.
+
+
 TASK-062 · 2026-09-28 · **Public SaaS deployment remains BLOCKED**.
 
 ## 기존 경로와 변경

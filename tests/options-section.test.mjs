@@ -33,6 +33,13 @@ const protectedData=s=>structuredClone({project:s.project,product:s.product,fact
 async function fixture(t,{generate=true}={}){const db=await startSectionDb();t.after(()=>db.close());const s=db.state;
  s.options={id:randomUUID(),product_id:productId,version:1,groups:{schemaVersion:1,groups:groups()},source_snapshot:{},created_at:date,updated_at:date};
  seedStrategy(s);seedValidation(s);await planPage(projectId,planner);if(generate)await generateSections(projectId,{},provider);return s;}
+
+for(const operation of ['compare','apply'])test(`option ${operation} maps an invisible project to not_found before child access`,async t=>{
+ const s=await fixture(t),row=option(s),body=request(s),before=structuredClone(s.sections);
+ s.project=null;s.requests=[];
+ await assert.rejects(operation==='compare'?compareSectionOptions(projectId,row.id):applySectionOptions(projectId,row.id,body),error=>error.code==='not_found'&&error.status===404);
+ assert.deepEqual(s.sections,before);assert.ok(s.requests.every(r=>r.table==='projects'&&r.method==='GET'));
+});
 const code=expected=>error=>error.code===expected;
 
 test('confirmed mapping preserves every UUID label and array order without splitting',()=>{const current=source(), before=structuredClone(current), snapshot=buildConfirmedOptionSnapshot(current,date);assert.deepEqual(snapshot.confirmed,current);assert.deepEqual(current,before);assert.equal(snapshot.confirmed.groups[0].values.length,6);});

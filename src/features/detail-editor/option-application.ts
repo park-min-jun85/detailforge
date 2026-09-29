@@ -14,6 +14,7 @@ import { SectionEngineError } from "@/features/section-engine/errors";
 import { editorContext } from "./service";
 import { editorSectionSchema, type EditorSection } from "./schemas";
 import { EditorError } from "./errors";
+import { AssetError } from "@/features/assets/schemas";
 
 export const optionApplySchema = z.strictObject({ revision: z.iso.datetime({ offset: true }),
   productId: z.uuid(), rowId: z.uuid(), expectedVersion: z.number().int().positive(),
@@ -25,7 +26,12 @@ export async function readOptionFreshness(projectId: string, productId: string) 
 }
 async function target(projectId: string, sectionId: string) {
   if (!z.uuid().safeParse(sectionId).success) throw new EditorError("not_found");
-  const ctx = await editorContext(projectId), row = ctx.rows.find(row => row.id === sectionId);
+  const ctx = await editorContext(projectId).catch((error: unknown) => {
+    // A missing and a foreign project share the same safe not-found response.
+    if (error instanceof AssetError && error.status === 404) throw new EditorError("not_found");
+    throw error;
+  });
+  const row = ctx.rows.find(row => row.id === sectionId);
   if (!ctx.page || !ctx.scope.product || !row || row.detail_page_id !== ctx.page.id || row.type !== "option") throw new EditorError("not_found");
   const section = editorSectionSchema.parse(row);
   if (section.content.type !== "option") throw new EditorError("invalid_input");
