@@ -1,5 +1,11 @@
 # Release Backlog
 
+## TASK-064 현재 상태 — 2026-09-30
+
+Full Own-user Workflow Regression COMPLETE. 실제 Local Supabase + Next production + Chrome에서 OWN40, PNG/JPG 860px Export, reload/re-login, mobile smoke, DB/Storage integrity를 확인했다. 일반 admin DB/Storage0, 실제 외부 provider0. 이전 RLS143/Storage74/Admission37/Auth20/Export27/Cross-user40+corpus97 및 공식 tests1487 PASS. **Public SaaS deployment remains BLOCKED: TASK-065 release validation이 남는다.** [검증 계약과 workflow inventory](V0_3_OWN_USER_WORKFLOW_REGRESSION.md).
+
+이전 TASK 상태 기록은 아래에 보존하며 현재 배포 gate는 위 상태를 따른다.
+
 ## TASK-063 현재 상태 — 2026-09-29
 
 Cross-user Security E2E COMPLETE. 실제 Local Supabase + Next production + Chromium에서 XUSER40/exact-ID corpus97, 7-table/Storage 무변경, denied provider/capture0를 확인했다. Section 옵션 foreign/absent 응답을404로 정정했다. 이전 RLS143/Storage74/Admission37/Auth20/Export27 및 full1487 PASS. Public SaaS deployment remains BLOCKED: TASK-064/065가 남는다. [검증 계약과 전체 inventory](V0_3_CROSS_USER_SECURITY_E2E.md).
