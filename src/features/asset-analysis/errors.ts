@@ -2,7 +2,7 @@ import type { Asset } from "@/types/domain";
 import type { AnalysisErrorCode } from "./schemas";
 
 export const ANALYSIS_ERRORS: Record<AnalysisErrorCode, { status: number; message: string }> = {
-  not_configured: { status: 503, message: "AI 분석 설정이 없습니다. 서버의 OPENAI_API_KEY와 모델 설정을 확인해 주세요." },
+  not_configured: { status: 503, message: "AI 분석을 사용할 수 없습니다. 관리자에게 서비스 설정을 확인해 달라고 요청해 주세요." },
   provider: { status: 502, message: "AI 서비스에서 분석을 완료하지 못했습니다. 설정과 이용 한도를 확인한 뒤 다시 시도해 주세요." },
   timeout: { status: 504, message: "AI 분석 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요." },
   invalid_response: { status: 502, message: "AI 분석 결과가 올바른 형식이 아닙니다. 결과를 적용하지 않았습니다." },

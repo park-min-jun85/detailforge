@@ -1,5 +1,11 @@
 # DetailForge
 
+## TASK-065 현재 상태 — 2026-10-01
+
+CODE/LOCAL release validation COMPLETE, Local RC PASS. Fresh/upgrade drift 0; RLS 143 / Storage 74 / Admission 37 / Auth 20 / Export 27 / Cross-user 40 + corpus 97 / Own-user 40 및 공식 1,487 tests PASS. **Production rollout: BLOCKED / OPERATOR ACTION REQUIRED.** 실제 production target/config/migration/deployment는 검증·실행하지 않았다. 운영 토폴로지·headers·Auth/Storage·한도·backup·monitoring·post-deploy smoke 승인 전 공개 배포하지 않는다. [릴리스 검증과 운영 gate](docs/V0_3_RELEASE_VALIDATION.md).
+
+아래 내용은 이전 TASK 단계 기록이며 현재 gate는 위 판정을 따른다.
+
 ## TASK-064 현재 상태 — 2026-09-30
 
 Full Own-user Workflow Regression COMPLETE. 실제 Local Supabase + Next production + Chrome에서 OWN40, PNG/JPG 860px Export, reload/re-login, mobile smoke, DB/Storage integrity를 확인했다. 일반 admin DB/Storage0, 실제 외부 provider0. 이전 RLS143/Storage74/Admission37/Auth20/Export27/Cross-user40+corpus97 및 공식 tests1487 PASS. **Public SaaS deployment remains BLOCKED: TASK-065 release validation이 남는다.** [검증 계약과 workflow inventory](docs/V0_3_OWN_USER_WORKFLOW_REGRESSION.md).

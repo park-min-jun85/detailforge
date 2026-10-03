@@ -24,7 +24,7 @@ The source-enumerated full app inventory contains 56 page/action/method entries.
 
 | Stage/UI | Action/API suffix | Production boundary | Data/Storage | Provider | Next state |
 | --- | --- | --- | --- | --- | --- |
-| /login | /auth/login | Auth handlers, GoTrue | session cookie | none | /projects |
+| /login | /auth/signin | Auth handlers, GoTrue | session cookie | none | /projects |
 | /projects/new | createProjectAction | projects/service | projects owner_id | none | list/open own Project |
 | /projects/[projectId] | saveProductAction | products/persistence | products + product_facts/source_snapshot | none | product ready |
 | Product options | /options PUT | product-options/persistence | product_options version/CAS | none | confirmed white/black |
@@ -44,7 +44,7 @@ The source-enumerated full app inventory contains 56 page/action/method entries.
 | /editor | /sections/[sectionId] PATCH | detail-editor/service | manual content/provenance | none | saved subheadline |
 | /render | GET | detail-renderer/service | user-scoped graph + signed images | none | ready 860px surface |
 | /render | /export POST | detail-export + finite capability RPC | user snapshot, ephemeral ticket | actual isolated Chromium | PNG and JPG download |
-| Logout/re-login | /auth/logout, /auth/login | Auth handlers + proxy | session revocation/new session | none | same saved graph |
+| Logout/re-login | /auth/signout, /auth/signin | Auth handlers + proxy | session revocation/new session | none | same saved graph |
 | Separate cleanup Project | deleteAsset then deleteOwnedProject service | assets/service, projects/service | Storage delete before DB cascade | none | rows/objects/intents0, namespace tombstone1 |
 
 Project deletion has no UI/API: projects/service explicitly documents that SQL cascade does not delete Storage. OWN-40 therefore exercises the supported primitives in safe order on a separate fixture. It does not claim a product-level delete UI exists.
